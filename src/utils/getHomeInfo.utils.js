@@ -1,13 +1,14 @@
 import axios from "axios";
 
-const CACHE_KEY = "homeInfoCache";
+const CACHE_KEY_PREFIX = "homeInfoCache";
 const CACHE_DURATION = 24 * 60 * 60 * 1000;
 
 export default async function getHomeInfo() {
   const api_url = import.meta.env.VITE_API_URL;
 
   const currentTime = Date.now();
-  const cachedData = JSON.parse(localStorage.getItem(CACHE_KEY));
+  const cacheKey = `${CACHE_KEY_PREFIX}:${api_url || "default"}`;
+  const cachedData = JSON.parse(localStorage.getItem(cacheKey));
 
   if (cachedData && currentTime - cachedData.timestamp < CACHE_DURATION) {
     return cachedData.data;
@@ -52,7 +53,7 @@ export default async function getHomeInfo() {
     timestamp: currentTime,
   };
 
-  localStorage.setItem(CACHE_KEY, JSON.stringify(dataToCache));
+  localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
 
   return dataToCache.data;
 }
