@@ -11,24 +11,44 @@
 }
 
 .spotlight-overlay {
-  background: none;
+  background: linear-gradient(
+    270deg,
+    #0a0a0a 0%,
+    rgba(10, 10, 10, 1) 70%,
+    rgba(10, 10, 10, 0) 100%
+  );
   pointer-events: none;
 }
 
 @media only screen and (max-width: 1300px) {
   .spotlight-overlay {
-    background: none;
+    background: linear-gradient(
+      270deg,
+      #0a0a0a 0%,
+      rgba(10, 10, 10, 1) 70%,
+      rgba(10, 10, 10, 0) 100%
+    );
   }
 }
 
 @media only screen and (max-width: 1200px) {
   .spotlight-overlay {
-    background: none;
+    background: linear-gradient(
+      270deg,
+      #0a0a0a 0%,
+      rgba(10, 10, 10, 1) 70%,
+      rgba(10, 10, 10, 0) 100%
+    );
   }
 }
 
 @media only screen and (max-width: 900px) {
   .spotlight-overlay {
-    background: none;
+    background: linear-gradient(
+      270deg,
+      #0a0a0a 0%,
+      rgba(10, 10, 10, 1) 70%,
+      rgba(10, 10, 10, 0) 100%
+    );
   }
 }
