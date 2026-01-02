@@ -91,18 +91,6 @@ function Banner({ item, index, total }) {
                 </div>
               )}
 
-              {item.tvInfo.duration && (
-                <div className="flex space-x-1 justify-center items-center">
-                  <FontAwesomeIcon
-                    icon={faClock}
-                    className="text-white/70 text-[14px]"
-                  />
-                  <p className="text-white/70 text-[17px]">
-                    {item.tvInfo.duration}
-                  </p>
-                </div>
-              )}
-
               {item.tvInfo.releaseDate && (
                 <div className="flex space-x-1 justify-center items-center">
                   <FontAwesomeIcon
