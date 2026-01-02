@@ -19,7 +19,7 @@ function Home() {
   return (
     <>
       <div className="pt-16 w-full">
-        <div className="w-full -mx-4 lg:-mx-10">
+        <div className="w-screen relative left-1/2 right-1/2 -translate-x-1/2">
           <Spotlight spotlights={homeInfo.spotlights} />
         </div>
         <div className="mt-6">
