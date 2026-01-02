@@ -93,10 +93,14 @@ const CategoryCard = React.memo(
           )
         : filteredData;
 
+    let effectiveData = pagedData;
+    if (!limit && rowsPerPage) {
+      effectiveData = pagedData.slice(0, rowsPerPage * columnsPerRow);
+    }
     if (limit) {
-      data = pagedData.slice(0, limit);
+      data = effectiveData.slice(0, limit);
     } else {
-      data = pagedData;
+      data = effectiveData;
     }
 
     const getItemsToRender = useCallback(() => {

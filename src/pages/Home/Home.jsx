@@ -35,13 +35,7 @@ function Home() {
               data={homeInfo.latest_episode}
               className="mt-[60px]"
               path="recently-updated"
-              showFilters={true}
-              pageSize={12}
-              pagination={{
-                currentPage: latestEpisodeMeta?.currentPage || 1,
-                totalPages: latestEpisodeMeta?.totalPages || 1,
-                onPageChange: fetchRecentEpisodesPage,
-              }}
+              rowsPerPage={2}
             />
             <Schedule className="mt-8" />
             <TabbedAnimeSection 
