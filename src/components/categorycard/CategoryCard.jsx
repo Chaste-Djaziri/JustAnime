@@ -137,7 +137,7 @@ const CategoryCard = React.memo(
                     )}
                     <div className="absolute bottom-0 left-0 right-0 p-3 pb-2 bg-gradient-to-t from-black/80 via-black/50 to-transparent">
                       <div className="flex items-center justify-start w-full space-x-1.5 z-[100] flex-wrap gap-y-1.5">
-                        {item.tvInfo?.sub && (
+                        {Number(item.tvInfo?.sub) > 0 && (
                           <div className="flex space-x-0.5 justify-center items-center bg-[#2a2a2a] rounded-[2px] px-2 text-white py-1">
                             <FontAwesomeIcon
                               icon={faClosedCaptioning}
@@ -148,7 +148,7 @@ const CategoryCard = React.memo(
                             </p>
                           </div>
                         )}
-                        {item.tvInfo?.dub && (
+                        {Number(item.tvInfo?.dub) > 0 && (
                           <div className="flex space-x-0.5 justify-center items-center bg-[#2a2a2a] rounded-[2px] px-2 text-white py-1">
                             <FontAwesomeIcon
                               icon={faMicrophone}
@@ -234,7 +234,7 @@ const CategoryCard = React.memo(
                   )}
                   <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 via-black/50 to-transparent">
                     <div className="flex items-center justify-start w-full space-x-1 max-[478px]:space-x-0.5 z-[100] flex-wrap gap-y-1">
-                      {item.tvInfo?.sub && (
+                      {Number(item.tvInfo?.sub) > 0 && (
                         <div className="flex space-x-0.5 justify-center items-center bg-[#2a2a2a] rounded-[2px] px-1.5 text-white py-0.5 max-[478px]:py-0.5 max-[478px]:px-1">
                           <FontAwesomeIcon
                             icon={faClosedCaptioning}
@@ -245,7 +245,7 @@ const CategoryCard = React.memo(
                           </p>
                         </div>
                       )}
-                      {item.tvInfo?.dub && (
+                      {Number(item.tvInfo?.dub) > 0 && (
                         <div className="flex space-x-0.5 justify-center items-center bg-[#2a2a2a] rounded-[2px] px-1.5 text-white py-0.5 max-[478px]:py-0.5 max-[478px]:px-1">
                           <FontAwesomeIcon
                             icon={faMicrophone}
