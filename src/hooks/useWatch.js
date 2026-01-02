@@ -117,6 +117,16 @@ export const useWatch = (animeId, initialEpisodeId) => {
           : [];
 
         const toServerParam = (server) => {
+          if (server?.name) {
+            return server.name
+              .toLowerCase()
+              .replace(/server/gi, "")
+              .replace(/\d+/g, "")
+              .replace(/\s+/g, "-")
+              .replace(/[^a-z0-9-]/g, "")
+              .replace(/-+/g, "-")
+              .replace(/^-|-$/g, "");
+          }
           if (server?.url) {
             try {
               const hostname = new URL(server.url).hostname;
@@ -125,15 +135,6 @@ export const useWatch = (animeId, initialEpisodeId) => {
             } catch (err) {
               return null;
             }
-          }
-          if (server?.name) {
-            return server.name
-              .toLowerCase()
-              .replace(/server/gi, "")
-              .replace(/\s+/g, "-")
-              .replace(/[^a-z0-9-]/g, "")
-              .replace(/-+/g, "-")
-              .replace(/^-|-$/g, "");
           }
           return null;
         };
