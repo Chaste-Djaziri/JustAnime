@@ -5,6 +5,8 @@ import {
   faMicrophone,
   faCalendar,
   faClock,
+  faChevronLeft,
+  faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/src/context/LanguageContext";
@@ -117,7 +119,7 @@ function Banner({ item, index, total }) {
         <p className="text-white/70 text-[17px] font-sm mt-4 text-left line-clamp-3 max-[1200px]:line-clamp-2 max-[1300px]:w-[500px] max-[1120px]:w-[90%] max-md:hidden">
           {item.description}
         </p>
-        <div className="mt-5 flex items-center justify-between w-full max-md:hidden">
+        <div className="mt-5 flex items-center w-full max-md:hidden">
           <Link
             to={`/watch/${item.id}`}
             className="bg-white/90 hover:bg-white text-black font-medium px-7 py-2 rounded-lg transition-all duration-200 flex items-center gap-x-2.5 shadow-lg shadow-black/10 backdrop-blur-sm hover:translate-y-[-1px]"
@@ -125,19 +127,21 @@ function Banner({ item, index, total }) {
             <FontAwesomeIcon icon={faPlay} className="text-[10px]" />
             <span>Watch Now</span>
           </Link>
-          <div className="spotlight-nav">
-            <button className="button-prev" aria-label="Previous spotlight">
-              {"<"}
-            </button>
-            <span className="spotlight-count">
-              <span className="spotlight-count-current">{index + 1}</span>
-              <span className="spotlight-count-separator">/</span>
-              <span className="spotlight-count-total">{total}</span>
-            </span>
-            <button className="button-next" aria-label="Next spotlight">
-              {">"}
-            </button>
-          </div>
+        </div>
+      </div>
+      <div className="spotlight-nav-wrap absolute right-[48px] bottom-[50px] z-[2] max-md:hidden">
+        <div className="spotlight-nav">
+          <button className="spotlight-nav-button button-prev" aria-label="Previous spotlight">
+            <FontAwesomeIcon icon={faChevronLeft} className="spotlight-nav-icon" />
+          </button>
+          <span className="spotlight-count">
+            <span className="spotlight-count-current">{index + 1}</span>
+            <span className="spotlight-count-separator">/</span>
+            <span className="spotlight-count-total">{total}</span>
+          </span>
+          <button className="spotlight-nav-button button-next" aria-label="Next spotlight">
+            <FontAwesomeIcon icon={faChevronRight} className="spotlight-nav-icon" />
+          </button>
         </div>
       </div>
     </section>
