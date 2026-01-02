@@ -22,6 +22,7 @@ const CategoryCard = React.memo(
     path,
     limit,
     pageSize = 12,
+    pagination,
   }) => {
     const { language } = useLanguage();
     const navigate = useNavigate();
