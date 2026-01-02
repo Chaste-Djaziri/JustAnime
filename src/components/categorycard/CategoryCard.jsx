@@ -174,16 +174,6 @@ const CategoryCard = React.memo(
                             {item.type}
                           </div>
                         )}
-                        {(item.tvInfo?.duration || item.duration) && (
-                          <div className="bg-[#2a2a2a] text-white rounded-[2px] px-2 py-1 text-[11px] font-medium">
-                            {item.tvInfo?.duration === "m" ||
-                            item.tvInfo?.duration === "?" ||
-                            item.duration === "m" ||
-                            item.duration === "?"
-                              ? "N/A"
-                              : item.tvInfo?.duration || item.duration || "N/A"}
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -279,16 +269,6 @@ const CategoryCard = React.memo(
                       {!item.tvInfo?.showType && item.type && (
                         <div className="bg-[#2a2a2a] text-white rounded-[2px] px-1.5 py-0.5 text-[10px] font-medium max-[478px]:py-0.5 max-[478px]:px-1">
                           {item.type}
-                        </div>
-                      )}
-                      {(item.tvInfo?.duration || item.duration) && (
-                        <div className="bg-[#2a2a2a] text-white rounded-[2px] px-1.5 py-0.5 text-[10px] font-medium max-[478px]:py-0.5 max-[478px]:px-1 max-[478px]:hidden">
-                          {item.tvInfo?.duration === "m" ||
-                          item.tvInfo?.duration === "?" ||
-                          item.duration === "m" ||
-                          item.duration === "?"
-                            ? "N/A"
-                            : item.tvInfo?.duration || item.duration || "N/A"}
                         </div>
                       )}
                     </div>
