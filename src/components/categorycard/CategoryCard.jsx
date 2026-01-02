@@ -23,6 +23,7 @@ const CategoryCard = React.memo(
     limit,
     pageSize = 12,
     pagination,
+    rowsPerPage = 2,
   }) => {
     const { language } = useLanguage();
     const navigate = useNavigate();
@@ -35,6 +36,13 @@ const CategoryCard = React.memo(
       firstRow: [],
       remainingItems: [],
     });
+    const [columnsPerRow, setColumnsPerRow] = useState(6);
+
+    const getColumnsForWidth = useCallback(() => {
+      if (window.innerWidth >= 1400) return 6;
+      if (window.innerWidth >= 758) return 4;
+      return 3;
+    }, []);
 
     const filteredData = useMemo(() => {
       const withSubs = (item) => Number(item?.tvInfo?.sub) > 0;
@@ -59,21 +67,30 @@ const CategoryCard = React.memo(
 
     useEffect(() => {
       if (isControlledPagination) {
-        pagination.onPageChange(1);
+        if (pagination.currentPage !== 1) {
+          pagination.onPageChange(1);
+        }
       } else {
         setCurrentPage(1);
       }
-    }, [activeFilter, isControlledPagination, pagination]);
+    }, [activeFilter, isControlledPagination]);
+
+    const effectivePageSize = showFilters
+      ? Math.max(1, rowsPerPage * columnsPerRow)
+      : pageSize;
 
     const totalPages = isControlledPagination
       ? Math.max(1, pagination.totalPages)
-      : Math.max(1, Math.ceil(filteredData.length / pageSize));
+      : Math.max(1, Math.ceil(filteredData.length / effectivePageSize));
     const safePage = isControlledPagination
       ? Math.min(pagination.currentPage, totalPages)
       : Math.min(currentPage, totalPages);
     const pagedData =
       showFilters && !isControlledPagination
-        ? filteredData.slice((safePage - 1) * pageSize, safePage * pageSize)
+        ? filteredData.slice(
+            (safePage - 1) * effectivePageSize,
+            safePage * effectivePageSize
+          )
         : filteredData;
 
     if (limit) {
@@ -98,8 +115,10 @@ const CategoryCard = React.memo(
     useEffect(() => {
       const handleResize = () => {
         setItemsToRender(getItemsToRender());
+        setColumnsPerRow(getColumnsForWidth());
       };
       const newItems = getItemsToRender();
+      const newColumns = getColumnsForWidth();
       setItemsToRender((prev) => {
         if (
           JSON.stringify(prev.firstRow) !== JSON.stringify(newItems.firstRow) ||
@@ -110,12 +129,13 @@ const CategoryCard = React.memo(
         }
         return prev;
       });
+      setColumnsPerRow(newColumns);
 
       window.addEventListener("resize", handleResize);
       return () => {
         window.removeEventListener("resize", handleResize);
       };
-    }, [getItemsToRender]);
+    }, [getItemsToRender, getColumnsForWidth]);
 
     return (
       <div className={`w-full ${className}`}>
