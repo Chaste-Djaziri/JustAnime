@@ -26,15 +26,22 @@ function Banner({ item, index, total }) {
       <div className="spotlight-overlay absolute inset-0 z-[1]"></div>
       
       <div className="absolute flex flex-col left-0 bottom-[40px] w-[55%] p-4 z-[2] max-[1390px]:w-[45%] max-[1390px]:bottom-[40px] max-[1300px]:w-[600px] max-[1120px]:w-[60%] max-md:w-[90%] max-md:bottom-[20px] max-[300px]:w-full">
-        <p className="text-[#ffbade] font-semibold text-[20px] w-fit max-[1300px]:text-[15px]">
+        <p className="text-[#ffbade] font-semibold text-[20px] w-fit max-[1300px]:text-[15px] max-md:mx-auto">
           #{index + 1} Spotlight
         </p>
-        <h3 className="text-white line-clamp-2 text-5xl font-bold mt-4 text-left max-[1390px]:text-[45px] max-[1300px]:text-3xl max-[1300px]:mt-3 max-md:text-2xl max-md:mt-1 max-[575px]:text-[22px] max-sm:leading-6 max-sm:w-[80%] max-[320px]:w-full">
+        <div className="hidden max-md:flex max-md:mt-2 max-md:justify-center max-md:gap-x-3 max-md:text-xs max-md:text-white/70">
+          {item.tvInfo?.showType && <span>{item.tvInfo.showType}</span>}
+          {item.tvInfo?.episodeInfo?.sub && (
+            <span>EP {item.tvInfo.episodeInfo.sub}</span>
+          )}
+          {item.tvInfo?.releaseDate && <span>{item.tvInfo.releaseDate}</span>}
+        </div>
+        <h3 className="text-white line-clamp-2 text-5xl font-bold mt-4 text-left max-[1390px]:text-[45px] max-[1300px]:text-3xl max-[1300px]:mt-3 max-md:text-2xl max-md:mt-1 max-md:text-center max-[575px]:text-[22px] max-sm:leading-6 max-sm:w-[80%] max-md:mx-auto max-[320px]:w-full">
           {language === "EN" ? item.title : item.japanese_title}
         </h3>
         
         {/* Mobile Buttons */}
-        <div className="hidden max-md:flex max-md:mt-3 max-md:w-full">
+        <div className="hidden max-md:flex max-md:mt-3 max-md:w-full max-md:justify-center">
           <Link
             to={`/watch/${item.id}`}
             className="bg-white/90 hover:bg-white text-black font-medium px-5 py-1.5 rounded-lg transition-all duration-200 flex items-center gap-x-2 text-sm"
@@ -42,6 +49,31 @@ function Banner({ item, index, total }) {
             <FontAwesomeIcon icon={faPlay} className="text-[10px]" />
             <span>Watch Now</span>
           </Link>
+        </div>
+        <div className="hidden max-md:flex max-md:mt-3 max-md:justify-center">
+          <div className="spotlight-nav spotlight-nav-mobile">
+            <button
+              type="button"
+              className="spotlight-nav-button button-prev"
+              aria-label="Previous spotlight"
+              onClick={() => swiper.slidePrev()}
+            >
+              <FontAwesomeIcon icon={faChevronLeft} className="spotlight-nav-icon" />
+            </button>
+            <span className="spotlight-count">
+              <span className="spotlight-count-current">{index + 1}</span>
+              <span className="spotlight-count-separator">/</span>
+              <span className="spotlight-count-total">{total}</span>
+            </span>
+            <button
+              type="button"
+              className="spotlight-nav-button button-next"
+              aria-label="Next spotlight"
+              onClick={() => swiper.slideNext()}
+            >
+              <FontAwesomeIcon icon={faChevronRight} className="spotlight-nav-icon" />
+            </button>
+          </div>
         </div>
 
         <div className="flex h-fit justify-start items-center w-fit space-x-5 mt-5 max-[1300px]:mt-4 max-md:hidden">

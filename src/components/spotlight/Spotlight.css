@@ -39,6 +39,10 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
+.spotlight-nav-mobile {
+  justify-content: center;
+}
+
 .spotlight-nav-button {
   cursor: pointer;
   display: inline-flex;
