@@ -125,12 +125,18 @@ function Banner({ item, index, total }) {
             <FontAwesomeIcon icon={faPlay} className="text-[10px]" />
             <span>Watch Now</span>
           </Link>
-          <div className="flex items-center space-x-2 text-white/90">
-            <div className="button-prev">{'<'}</div>
-            <span className="text-sm font-semibold">
-              {index + 1} / {total}
+          <div className="spotlight-nav">
+            <button className="button-prev" aria-label="Previous spotlight">
+              {"<"}
+            </button>
+            <span className="spotlight-count">
+              <span className="spotlight-count-current">{index + 1}</span>
+              <span className="spotlight-count-separator">/</span>
+              <span className="spotlight-count-total">{total}</span>
             </span>
-            <div className="button-next">{'>'}</div>
+            <button className="button-next" aria-label="Next spotlight">
+              {">"}
+            </button>
           </div>
         </div>
       </div>
