@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 import { useLanguage } from "@/src/context/LanguageContext";
 import "./Banner.css";
 
-function Banner({ item, index }) {
+function Banner({ item, index, total }) {
   const { language } = useLanguage();
   return (
     <section className="spotlight w-full h-full relative overflow-hidden">
@@ -117,7 +117,7 @@ function Banner({ item, index }) {
         <p className="text-white/70 text-[17px] font-sm mt-4 text-left line-clamp-3 max-[1200px]:line-clamp-2 max-[1300px]:w-[500px] max-[1120px]:w-[90%] max-md:hidden">
           {item.description}
         </p>
-        <div className="mt-5 flex items-center gap-x-4 max-md:hidden">
+        <div className="mt-5 flex items-center justify-between w-full max-md:hidden">
           <Link
             to={`/watch/${item.id}`}
             className="bg-white/90 hover:bg-white text-black font-medium px-7 py-2 rounded-lg transition-all duration-200 flex items-center gap-x-2.5 shadow-lg shadow-black/10 backdrop-blur-sm hover:translate-y-[-1px]"
@@ -125,9 +125,12 @@ function Banner({ item, index }) {
             <FontAwesomeIcon icon={faPlay} className="text-[10px]" />
             <span>Watch Now</span>
           </Link>
-          <div className="flex space-x-1.5">
-            <div className="button-prev"></div>
-            <div className="button-next"></div>
+          <div className="flex items-center space-x-2 text-white/90">
+            <div className="button-prev">{'<'}</div>
+            <span className="text-sm font-semibold">
+              {index + 1} / {total}
+            </span>
+            <div className="button-next">{'>'}</div>
           </div>
         </div>
       </div>

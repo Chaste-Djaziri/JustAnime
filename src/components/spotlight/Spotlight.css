@@ -22,31 +22,14 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
 }
 
 .button-prev:hover,
 .button-next:hover {
   background-color: #2a2a2a;
-}
-
-.button-prev::after,
-.button-next::after {
-  content: '';
-  width: 9px;
-  height: 9px;
-  border: 2px solid #ffffff;
-  border-left: 0;
-  border-bottom: 0;
-}
-
-.button-prev::after {
-  transform: rotate(-135deg);
-  margin-left: 3px;
-}
-
-.button-next::after {
-  transform: rotate(45deg);
-  margin-right: 3px;
 }
 
 .swiper-horizontal > .swiper-pagination-bullets {

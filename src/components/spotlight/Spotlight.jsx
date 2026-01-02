@@ -39,7 +39,7 @@ const Spotlight = ({ spotlights }) => {
             >
               {spotlights.map((item, index) => (
                 <SwiperSlide className="text-black relative" key={index}>
-                  <Banner item={item} index={index} />
+                  <Banner item={item} index={index} total={spotlights.length} />
                 </SwiperSlide>
               ))}
             </Swiper>
