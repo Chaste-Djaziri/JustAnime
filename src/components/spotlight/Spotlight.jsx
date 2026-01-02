@@ -1,9 +1,10 @@
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Autoplay, Pagination } from "swiper/modules";
+import { Navigation, Autoplay, Pagination, EffectFade } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/autoplay";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import "swiper/css/effect-fade";
 import "./Spotlight.css";
 import Banner from "../banner/Banner";
 
@@ -30,7 +31,9 @@ const Spotlight = ({ spotlights }) => {
                 delay: 10000,
                 disableOnInteraction: false,
               }}
-              modules={[Navigation, Autoplay, Pagination]}
+              effect="fade"
+              fadeEffect={{ crossFade: true }}
+              modules={[Navigation, Autoplay, Pagination, EffectFade]}
               className="h-[740px] max-[1390px]:h-full overflow-hidden relative"
               style={{
                 "--swiper-pagination-bullet-inactive-color": "rgba(255, 255, 255, 0.5)",
