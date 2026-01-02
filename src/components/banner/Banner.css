@@ -6,8 +6,8 @@
 }
 
 .spotlight img {
-  object-position: center right;
-  transform: scale(1.08) translateX(6%);
+  object-position: 75% center;
+  transform: scale(1.08);
 }
 
 .spotlight-overlay {
