@@ -126,6 +126,7 @@ function AnimeInfo({ random = false }) {
     status,
     type,
     otherName,
+    season,
     totalEpisodes,
     subOrDub,
     hasSub,
@@ -134,6 +135,7 @@ function AnimeInfo({ random = false }) {
     recommendations,
     relations,
     episodes,
+    url,
   } = animeInfo;
   const japanese_title = japaneseTitle || otherName || "";
   const poster = image;
@@ -165,6 +167,11 @@ function AnimeInfo({ random = false }) {
       condition: totalEpisodes,
       bgColor: "#ffffff",
       text: `${totalEpisodes} EP`,
+    },
+    {
+      condition: subOrDub,
+      bgColor: "#ffffff",
+      text: subOrDub,
     },
   ];
 
@@ -268,6 +275,7 @@ function AnimeInfo({ random = false }) {
                     { label: "Type", value: type },
                     { label: "Status", value: status },
                     { label: "Sub/Dub", value: subOrDub },
+                    { label: "Season", value: season },
                     { label: "Total Episodes", value: totalEpisodes },
                   ].map((item, index) => (
                     <InfoItem
@@ -298,9 +306,9 @@ function AnimeInfo({ random = false }) {
               )}
 
               {/* Studios & Producers */}
-              {animeInfo?.url && (
+              {url && (
                 <div className="space-y-2 pt-2 border-t border-white/10">
-                  <InfoItem label="Source" value={animeInfo.url} isProducer={false} />
+                  <InfoItem label="Source" value={url} isProducer={false} />
                 </div>
               )}
             </div>
@@ -394,6 +402,7 @@ function AnimeInfo({ random = false }) {
                       { label: "Type", value: type },
                       { label: "Status", value: status },
                       { label: "Sub/Dub", value: subOrDub },
+                      { label: "Season", value: season },
                       { label: "Total Episodes", value: totalEpisodes },
                     ].map((item, index) => (
                       <InfoItem
@@ -423,9 +432,9 @@ function AnimeInfo({ random = false }) {
                     </div>
                   )}
 
-                  {animeInfo?.url && (
+                  {url && (
                     <div className="space-y-3 pt-3 border-t border-white/10">
-                      <InfoItem label="Source" value={animeInfo.url} isProducer={false} />
+                      <InfoItem label="Source" value={url} isProducer={false} />
                     </div>
                   )}
                 </div>
@@ -459,6 +468,11 @@ function AnimeInfo({ random = false }) {
                   <p className="text-sm font-semibold truncate">
                     {episode.title || `Episode ${episode.number}`}
                   </p>
+                  <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-white/60">
+                    {episode.isFiller && <span>Filler</span>}
+                    {episode.isSubbed && <span>Sub</span>}
+                    {episode.isDubbed && <span>Dub</span>}
+                  </div>
                 </div>
                 <FontAwesomeIcon icon={faPlay} className="text-xs text-white/70" />
               </Link>
@@ -477,6 +491,7 @@ function AnimeInfo({ random = false }) {
               title: item.title,
               japanese_title: item.japaneseTitle ?? "",
               poster: item.image ?? "",
+              releaseDate: item.episodes ? `${item.episodes} EP` : "",
               tvInfo: {
                 showType: item.type,
                 sub: item.sub,
@@ -511,6 +526,12 @@ function AnimeInfo({ random = false }) {
                   <p className="text-xs text-white/50 truncate">
                     {relation.japaneseTitle}
                   </p>
+                  <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-white/60">
+                    {relation.type && <span>{relation.type}</span>}
+                    {relation.episodes && <span>{relation.episodes} EP</span>}
+                    {Number(relation.sub) > 0 && <span>Sub {relation.sub}</span>}
+                    {Number(relation.dub) > 0 && <span>Dub {relation.dub}</span>}
+                  </div>
                 </div>
               </Link>
             ))}
