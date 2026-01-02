@@ -18,7 +18,12 @@ const Spotlight = ({ spotlights }) => {
               spaceBetween={0}
               slidesPerView={1}
               loop={true}
-              allowTouchMove={false}
+              allowTouchMove={true}
+              breakpoints={{
+                1024: {
+                  allowTouchMove: false,
+                },
+              }}
               navigation={{
                 nextEl: ".button-next",
                 prevEl: ".button-prev",
