@@ -2,6 +2,7 @@ import axios from "axios";
 
 export default async function getStreamInfo(episodeId, serverParam, dub = false) {
   const baseUrl = import.meta.env.VITE_BASE_CONSUMET_URL;
+  const proxyUrl = import.meta.env.VITE_PROXY_URL;
   try {
     const url = new URL(`anime/animekai/watch/${episodeId}`, baseUrl);
     if (serverParam) {
@@ -25,6 +26,18 @@ export default async function getStreamInfo(episodeId, serverParam, dub = false)
       throw error;
     }
   } catch (error) {
+    if (proxyUrl) {
+      try {
+        const proxied = `${proxyUrl}${encodeURIComponent(
+          new URL(`anime/animekai/watch/${episodeId}`, baseUrl).toString()
+        )}`;
+        const response = await axios.get(proxied);
+        return response.data;
+      } catch (proxyError) {
+        console.error("Error fetching stream info:", proxyError);
+        return proxyError;
+      }
+    }
     console.error("Error fetching stream info:", error);
     return error;
   }
