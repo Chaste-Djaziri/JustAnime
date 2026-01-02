@@ -2,14 +2,38 @@ import axios from "axios";
 
 const CACHE_KEY = "homeInfoCache";
 const CACHE_DURATION = 24 * 60 * 60 * 1000;
+const CACHE_VERSION = 2;
+
+const mapSpotlightItem = (item) => ({
+  id: item.id,
+  title: item.title,
+  japanese_title: item.japaneseTitle ?? item.japanese_title ?? "",
+  poster: item.banner ?? item.image ?? "",
+  description: item.description ?? "",
+  url: item.url,
+  tvInfo: {
+    showType: item.type,
+    releaseDate: item.releaseDate,
+    quality: item.quality,
+    episodeInfo: {
+      sub: item.sub,
+      dub: item.dub,
+    },
+  },
+});
 
 export default async function getHomeInfo() {
   const api_url = import.meta.env.VITE_API_URL;
+  const consumet_base_url = import.meta.env.VITE_BASE_CONSUMET_URL;
 
   const currentTime = Date.now();
   const cachedData = JSON.parse(localStorage.getItem(CACHE_KEY));
 
-  if (cachedData && currentTime - cachedData.timestamp < CACHE_DURATION) {
+  if (
+    cachedData &&
+    cachedData.version === CACHE_VERSION &&
+    currentTime - cachedData.timestamp < CACHE_DURATION
+  ) {
     return cachedData.data;
   }
   const response = await axios.get(`${api_url}`);
@@ -20,7 +44,7 @@ export default async function getHomeInfo() {
     return null;
   }
   const {
-    spotlights,
+    spotlights: homeSpotlights,
     trending,
     topTen: topten,
     today: todaySchedule,
@@ -34,7 +58,25 @@ export default async function getHomeInfo() {
     genres,
   } = response.data.results;
 
+  let spotlights = homeSpotlights;
+
+  if (consumet_base_url) {
+    try {
+      const spotlightUrl = new URL(
+        "anime/animekai/spotlight",
+        consumet_base_url
+      ).toString();
+      const spotlightResponse = await axios.get(spotlightUrl);
+      if (Array.isArray(spotlightResponse.data?.results)) {
+        spotlights = spotlightResponse.data.results.map(mapSpotlightItem);
+      }
+    } catch (err) {
+      console.error("Error fetching spotlight data:", err);
+    }
+  }
+
   const dataToCache = {
+    version: CACHE_VERSION,
     data: {
       spotlights,
       trending,
