@@ -10,7 +10,7 @@ import Banner from "../banner/Banner";
 const Spotlight = ({ spotlights }) => {
   return (
     <>
-      <div className="relative h-[600px] max-[1390px]:h-[540px] max-[1300px]:h-[480px] max-md:h-[400px]">
+      <div className="relative h-[680px] max-[1390px]:h-[600px] max-[1300px]:h-[520px] max-md:h-[440px]">
         {spotlights && spotlights.length > 0 ? (
           <>
             <Swiper
@@ -27,20 +27,16 @@ const Spotlight = ({ spotlights }) => {
                 dynamicBullets: false,
               }}
               autoplay={{
-                delay: 3000,
+                delay: 10000,
                 disableOnInteraction: false,
               }}
               modules={[Navigation, Autoplay, Pagination]}
-              className="h-[600px] max-[1390px]:h-full overflow-hidden relative"
+              className="h-[680px] max-[1390px]:h-full overflow-hidden relative"
               style={{
                 "--swiper-pagination-bullet-inactive-color": "rgba(255, 255, 255, 0.5)",
                 "--swiper-pagination-bullet-inactive-opacity": "1",
               }}
             >
-              <div className="absolute right-[20px] top-[20px] flex space-x-1.5 z-[5]">
-                <div className="button-prev"></div>
-                <div className="button-next"></div>
-              </div>
               {spotlights.map((item, index) => (
                 <SwiperSlide className="text-black relative" key={index}>
                   <Banner item={item} index={index} />
