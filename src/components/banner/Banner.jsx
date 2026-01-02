@@ -17,7 +17,7 @@ function Banner({ item, index, total }) {
   const { language } = useLanguage();
   const swiper = useSwiper();
   return (
-    <section className="spotlight w-full h-full relative overflow-hidden">
+    <Link to={`/${item.id}`} className="spotlight w-full h-full relative overflow-hidden block">
       <img
         src={`${item.poster}`}
         alt={item.title}
@@ -176,7 +176,7 @@ function Banner({ item, index, total }) {
           </button>
         </div>
       </div>
-    </section>
+    </Link>
   );
 }
 
