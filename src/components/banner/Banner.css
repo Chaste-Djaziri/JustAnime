@@ -11,72 +11,72 @@
 }
 
 .spotlight-overlay {
-  background: radial-gradient(
-    circle at 20% 50%,
-    rgba(10, 10, 10, 0.95) 0%,
-    rgba(10, 10, 10, 0.85) 15%,
-    rgba(10, 10, 10, 0.25) 30%,
-    rgba(10, 10, 10, 0) 40%
+  background: linear-gradient(
+    90deg,
+    #0a0a0a 0%,
+    rgba(10, 10, 10, 0.98) 15%,
+    rgba(10, 10, 10, 0.6) 30%,
+    rgba(10, 10, 10, 0) 45%
   ),
   linear-gradient(
     to top,
     #0a0a0a 0%,
-    rgba(10, 10, 10, 0.88) 35%,
-    rgba(10, 10, 10, 0.18) 65%
+    rgba(10, 10, 10, 0.9) 35%,
+    rgba(10, 10, 10, 0.22) 65%
   );
   pointer-events: none;
 }
 
 @media only screen and (max-width: 1300px) {
   .spotlight-overlay {
-    background: radial-gradient(
-      circle at 20% 50%,
-      rgba(10, 10, 10, 0.95) 0%,
-      rgba(10, 10, 10, 0.85) 15%,
-      rgba(10, 10, 10, 0.25) 30%,
-      rgba(10, 10, 10, 0) 40%
+    background: linear-gradient(
+      90deg,
+      #0a0a0a 0%,
+      rgba(10, 10, 10, 0.98) 15%,
+      rgba(10, 10, 10, 0.6) 30%,
+      rgba(10, 10, 10, 0) 45%
     ),
     linear-gradient(
       to top,
       #0a0a0a 0%,
-      rgba(10, 10, 10, 0.88) 35%,
-      rgba(10, 10, 10, 0.18) 65%
+      rgba(10, 10, 10, 0.9) 35%,
+      rgba(10, 10, 10, 0.22) 65%
     );
   }
 }
 
 @media only screen and (max-width: 1200px) {
   .spotlight-overlay {
-    background: radial-gradient(
-      circle at 20% 50%,
-      rgba(10, 10, 10, 0.95) 0%,
-      rgba(10, 10, 10, 0.85) 15%,
-      rgba(10, 10, 10, 0.25) 30%,
-      rgba(10, 10, 10, 0) 40%
+    background: linear-gradient(
+      90deg,
+      #0a0a0a 0%,
+      rgba(10, 10, 10, 0.98) 15%,
+      rgba(10, 10, 10, 0.6) 30%,
+      rgba(10, 10, 10, 0) 45%
     ),
     linear-gradient(
       to top,
       #0a0a0a 0%,
-      rgba(10, 10, 10, 0.88) 35%,
-      rgba(10, 10, 10, 0.18) 65%
+      rgba(10, 10, 10, 0.9) 35%,
+      rgba(10, 10, 10, 0.22) 65%
     );
   }
 }
 
 @media only screen and (max-width: 900px) {
   .spotlight-overlay {
-    background: radial-gradient(
-      circle at 20% 50%,
-      rgba(10, 10, 10, 0.95) 0%,
-      rgba(10, 10, 10, 0.85) 15%,
-      rgba(10, 10, 10, 0.25) 30%,
-      rgba(10, 10, 10, 0) 40%
+    background: linear-gradient(
+      90deg,
+      #0a0a0a 0%,
+      rgba(10, 10, 10, 0.98) 15%,
+      rgba(10, 10, 10, 0.6) 30%,
+      rgba(10, 10, 10, 0) 45%
     ),
     linear-gradient(
       to top,
       #0a0a0a 0%,
-      rgba(10, 10, 10, 0.88) 35%,
-      rgba(10, 10, 10, 0.18) 65%
+      rgba(10, 10, 10, 0.9) 35%,
+      rgba(10, 10, 10, 0.22) 65%
     );
   }
 }
