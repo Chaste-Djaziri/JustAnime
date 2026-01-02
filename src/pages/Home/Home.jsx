@@ -18,11 +18,11 @@ function Home() {
   if (!homeInfo) return <Error error="404" />;
   return (
     <>
-      <div className="pt-16 w-full">
+      <div className="w-full">
         <div className="w-screen relative left-1/2 right-1/2 -translate-x-1/2">
           <Spotlight spotlights={homeInfo.spotlights} />
         </div>
-        <div className="mt-6">
+        <div className="pt-16 mt-6">
           <Genre data={homeInfo.genres} />
         </div>
         <ContinueWatching />

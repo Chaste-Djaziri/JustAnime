@@ -10,7 +10,7 @@ import Banner from "../banner/Banner";
 const Spotlight = ({ spotlights }) => {
   return (
     <>
-      <div className="relative h-[520px] max-[1390px]:h-[470px] max-[1300px]:h-[420px] max-md:h-[360px]">
+      <div className="relative h-[600px] max-[1390px]:h-[540px] max-[1300px]:h-[480px] max-md:h-[400px]">
         {spotlights && spotlights.length > 0 ? (
           <>
             <Swiper
@@ -31,7 +31,7 @@ const Spotlight = ({ spotlights }) => {
                 disableOnInteraction: false,
               }}
               modules={[Navigation, Autoplay, Pagination]}
-              className="h-[520px] max-[1390px]:h-full overflow-hidden relative"
+              className="h-[600px] max-[1390px]:h-full overflow-hidden relative"
               style={{
                 "--swiper-pagination-bullet-inactive-color": "rgba(255, 255, 255, 0.5)",
                 "--swiper-pagination-bullet-inactive-opacity": "1",
