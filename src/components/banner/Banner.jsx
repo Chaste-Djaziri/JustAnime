@@ -21,7 +21,7 @@ function Banner({ item, index, total }) {
       <img
         src={`${item.poster}`}
         alt={item.title}
-        className="absolute inset-0 object-cover w-full h-full"
+        className="absolute inset-0 object-contain object-right w-full h-full bg-[#0a0a0a]"
       />
       <div className="spotlight-overlay absolute inset-0 z-[1]"></div>
       
