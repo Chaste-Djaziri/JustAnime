@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faClosedCaptioning,
@@ -15,93 +15,23 @@ const CategoryCard = React.memo(
     label,
     data,
     showViewMore = true,
-    showFilters = false,
     className,
     categoryPage = false,
     cardStyle,
     path,
     limit,
-    pageSize = 12,
-    pagination,
-    rowsPerPage = 2,
   }) => {
     const { language } = useLanguage();
     const navigate = useNavigate();
     
-    const [activeFilter, setActiveFilter] = useState("all");
-    const [currentPage, setCurrentPage] = useState(1);
-    const sourceData = Array.isArray(data) ? data : [];
+    if (limit) {
+      data = data.slice(0, limit);
+    }
 
     const [itemsToRender, setItemsToRender] = useState({
       firstRow: [],
       remainingItems: [],
     });
-    const [columnsPerRow, setColumnsPerRow] = useState(6);
-
-    const getColumnsForWidth = useCallback(() => {
-      if (window.innerWidth >= 1400) return 6;
-      if (window.innerWidth >= 758) return 4;
-      return 3;
-    }, []);
-
-    const filteredData = useMemo(() => {
-      const withSubs = (item) => Number(item?.tvInfo?.sub) > 0;
-      const withDubs = (item) => Number(item?.tvInfo?.dub) > 0;
-
-      switch (activeFilter) {
-        case "sub":
-          return sourceData.filter((item) => withSubs(item));
-        case "dub":
-          return sourceData.filter((item) => withDubs(item));
-        case "all":
-        default:
-          return sourceData.filter((item) => withSubs(item) || withDubs(item));
-      }
-    }, [activeFilter, sourceData]);
-
-    const isControlledPagination =
-      pagination &&
-      typeof pagination.currentPage === "number" &&
-      typeof pagination.totalPages === "number" &&
-      typeof pagination.onPageChange === "function";
-
-    useEffect(() => {
-      if (isControlledPagination) {
-        if (pagination.currentPage !== 1) {
-          pagination.onPageChange(1);
-        }
-      } else {
-        setCurrentPage(1);
-      }
-    }, [activeFilter, isControlledPagination]);
-
-    const effectivePageSize = showFilters
-      ? Math.max(1, rowsPerPage * columnsPerRow)
-      : pageSize;
-
-    const totalPages = isControlledPagination
-      ? Math.max(1, pagination.totalPages)
-      : Math.max(1, Math.ceil(filteredData.length / effectivePageSize));
-    const safePage = isControlledPagination
-      ? Math.min(pagination.currentPage, totalPages)
-      : Math.min(currentPage, totalPages);
-    const pagedData =
-      showFilters && !isControlledPagination
-        ? filteredData.slice(
-            (safePage - 1) * effectivePageSize,
-            safePage * effectivePageSize
-          )
-        : filteredData;
-
-    let effectiveData = pagedData;
-    if (!limit && rowsPerPage) {
-      effectiveData = pagedData.slice(0, rowsPerPage * columnsPerRow);
-    }
-    if (limit) {
-      data = effectiveData.slice(0, limit);
-    } else {
-      data = effectiveData;
-    }
 
     const getItemsToRender = useCallback(() => {
       if (categoryPage) {
@@ -119,10 +49,8 @@ const CategoryCard = React.memo(
     useEffect(() => {
       const handleResize = () => {
         setItemsToRender(getItemsToRender());
-        setColumnsPerRow(getColumnsForWidth());
       };
       const newItems = getItemsToRender();
-      const newColumns = getColumnsForWidth();
       setItemsToRender((prev) => {
         if (
           JSON.stringify(prev.firstRow) !== JSON.stringify(newItems.firstRow) ||
@@ -133,13 +61,12 @@ const CategoryCard = React.memo(
         }
         return prev;
       });
-      setColumnsPerRow(newColumns);
 
       window.addEventListener("resize", handleResize);
       return () => {
         window.removeEventListener("resize", handleResize);
       };
-    }, [getItemsToRender, getColumnsForWidth]);
+    }, [getItemsToRender]);
 
     return (
       <div className={`w-full ${className}`}>
@@ -147,62 +74,7 @@ const CategoryCard = React.memo(
           <h1 className="font-semibold text-2xl text-white max-[478px]:text-[18px] capitalize tracking-wide">
             {label}
           </h1>
-          {showFilters ? (
-            <div className="flex flex-wrap items-center justify-end gap-3">
-              <div className="flex items-center gap-1.5 rounded-md bg-[#1a1a1a] p-1">
-                {[
-                  { id: "all", label: "All" },
-                  { id: "sub", label: "Sub" },
-                  { id: "dub", label: "Dub" },
-                ].map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => setActiveFilter(option.id)}
-                    className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${
-                      activeFilter === option.id
-                        ? "bg-white text-black"
-                        : "text-white/70 hover:text-white"
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-              <div className="flex items-center gap-2 text-white/70 text-xs">
-                <button
-                  type="button"
-                  onClick={() =>
-                    isControlledPagination
-                      ? pagination.onPageChange(Math.max(1, safePage - 1))
-                      : setCurrentPage((page) => Math.max(1, page - 1))
-                  }
-                  className="h-7 w-7 flex items-center justify-center rounded-md bg-[#1a1a1a] hover:bg-[#252525] transition-colors disabled:opacity-40"
-                  disabled={safePage === 1}
-                  aria-label="Previous page"
-                >
-                  <FaChevronRight className="text-[10px] rotate-180" />
-                </button>
-                <span className="min-w-[60px] text-center">
-                  {safePage} / {totalPages}
-                </span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    isControlledPagination
-                      ? pagination.onPageChange(Math.min(totalPages, safePage + 1))
-                      : setCurrentPage((page) => Math.min(totalPages, page + 1))
-                  }
-                  className="h-7 w-7 flex items-center justify-center rounded-md bg-[#1a1a1a] hover:bg-[#252525] transition-colors disabled:opacity-40"
-                  disabled={safePage === totalPages}
-                  aria-label="Next page"
-                >
-                  <FaChevronRight className="text-[10px]" />
-                </button>
-              </div>
-            </div>
-          ) : (
-            showViewMore && (
+          {showViewMore && (
             <Link
               to={`/${path}`}
               className="flex items-center gap-x-1 py-1 px-2 -mr-2 rounded-md
@@ -213,7 +85,6 @@ const CategoryCard = React.memo(
               <FaChevronRight className="text-[10px] transform transition-transform duration-300 
                 group-hover:translate-x-0.5" />
             </Link>
-            )
           )}
         </div>
         <>
@@ -266,7 +137,7 @@ const CategoryCard = React.memo(
                     )}
                     <div className="absolute bottom-0 left-0 right-0 p-3 pb-2 bg-gradient-to-t from-black/80 via-black/50 to-transparent">
                       <div className="flex items-center justify-start w-full space-x-1.5 z-[100] flex-wrap gap-y-1.5">
-                        {Number(item.tvInfo?.sub) > 0 && (
+                        {item.tvInfo?.sub && (
                           <div className="flex space-x-0.5 justify-center items-center bg-[#2a2a2a] rounded-[2px] px-2 text-white py-1">
                             <FontAwesomeIcon
                               icon={faClosedCaptioning}
@@ -277,7 +148,7 @@ const CategoryCard = React.memo(
                             </p>
                           </div>
                         )}
-                        {Number(item.tvInfo?.dub) > 0 && (
+                        {item.tvInfo?.dub && (
                           <div className="flex space-x-0.5 justify-center items-center bg-[#2a2a2a] rounded-[2px] px-2 text-white py-1">
                             <FontAwesomeIcon
                               icon={faMicrophone}
@@ -301,6 +172,16 @@ const CategoryCard = React.memo(
                         {!item.tvInfo?.showType && item.type && (
                           <div className="bg-[#2a2a2a] text-white rounded-[2px] px-2 py-1 text-[11px] font-medium">
                             {item.type}
+                          </div>
+                        )}
+                        {(item.tvInfo?.duration || item.duration) && (
+                          <div className="bg-[#2a2a2a] text-white rounded-[2px] px-2 py-1 text-[11px] font-medium">
+                            {item.tvInfo?.duration === "m" ||
+                            item.tvInfo?.duration === "?" ||
+                            item.duration === "m" ||
+                            item.duration === "?"
+                              ? "N/A"
+                              : item.tvInfo?.duration || item.duration || "N/A"}
                           </div>
                         )}
                       </div>
@@ -363,7 +244,7 @@ const CategoryCard = React.memo(
                   )}
                   <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 via-black/50 to-transparent">
                     <div className="flex items-center justify-start w-full space-x-1 max-[478px]:space-x-0.5 z-[100] flex-wrap gap-y-1">
-                      {Number(item.tvInfo?.sub) > 0 && (
+                      {item.tvInfo?.sub && (
                         <div className="flex space-x-0.5 justify-center items-center bg-[#2a2a2a] rounded-[2px] px-1.5 text-white py-0.5 max-[478px]:py-0.5 max-[478px]:px-1">
                           <FontAwesomeIcon
                             icon={faClosedCaptioning}
@@ -374,7 +255,7 @@ const CategoryCard = React.memo(
                           </p>
                         </div>
                       )}
-                      {Number(item.tvInfo?.dub) > 0 && (
+                      {item.tvInfo?.dub && (
                         <div className="flex space-x-0.5 justify-center items-center bg-[#2a2a2a] rounded-[2px] px-1.5 text-white py-0.5 max-[478px]:py-0.5 max-[478px]:px-1">
                           <FontAwesomeIcon
                             icon={faMicrophone}
@@ -398,6 +279,16 @@ const CategoryCard = React.memo(
                       {!item.tvInfo?.showType && item.type && (
                         <div className="bg-[#2a2a2a] text-white rounded-[2px] px-1.5 py-0.5 text-[10px] font-medium max-[478px]:py-0.5 max-[478px]:px-1">
                           {item.type}
+                        </div>
+                      )}
+                      {(item.tvInfo?.duration || item.duration) && (
+                        <div className="bg-[#2a2a2a] text-white rounded-[2px] px-1.5 py-0.5 text-[10px] font-medium max-[478px]:py-0.5 max-[478px]:px-1 max-[478px]:hidden">
+                          {item.tvInfo?.duration === "m" ||
+                          item.tvInfo?.duration === "?" ||
+                          item.duration === "m" ||
+                          item.duration === "?"
+                            ? "N/A"
+                            : item.tvInfo?.duration || item.duration || "N/A"}
                         </div>
                       )}
                     </div>

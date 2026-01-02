@@ -2,10 +2,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useParams, Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/src/context/LanguageContext";
+import { useHomeInfo } from "@/src/context/HomeInfoContext";
 import { useWatch } from "@/src/hooks/useWatch";
 import BouncingLoader from "@/src/components/ui/bouncingloader/Bouncingloader";
+import IframePlayer from "@/src/components/player/IframePlayer";
 import Episodelist from "@/src/components/episodelist/Episodelist";
 import website_name from "@/src/config/website";
+import Sidecard from "@/src/components/sidecard/Sidecard";
 import {
   faClosedCaptioning,
   faMicrophone,
@@ -13,6 +16,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Servers from "@/src/components/servers/Servers";
 import { Skeleton } from "@/src/components/ui/Skeleton/Skeleton";
+import SidecardLoader from "@/src/components/Loader/Sidecard.loader";
 import Watchcontrols from "@/src/components/watchcontrols/Watchcontrols";
 import useWatchControl from "@/src/hooks/useWatchControl";
 import Player from "@/src/components/player/Player";
@@ -25,6 +29,7 @@ export default function Watch() {
   let initialEpisodeId = queryParams.get("ep");
   const [tags, setTags] = useState([]);
   const { language } = useLanguage();
+  const { homeInfo } = useHomeInfo();
   const isFirstSet = useRef(true);
   const [showNextEpisodeSchedule, setShowNextEpisodeSchedule] = useState(true);
   const {
@@ -44,6 +49,7 @@ export default function Watch() {
     thumbnail,
     setIsFullOverview,
     activeEpisodeNum,
+    seasons,
     episodeId,
     setEpisodeId,
     activeServerId,
@@ -68,30 +74,24 @@ export default function Watch() {
   const controlsRef = useRef(null);
   const episodesRef = useRef(null);
 
-  const getEpisodeNumberFromId = (epId) => {
-    if (!epId) return null;
-    const match = epId.match(/\$ep=(\d+)/);
-    return match ? Number(match[1]) : null;
-  };
-
   useEffect(() => {
     if (!episodes || episodes.length === 0) return;
-
-    const isValidEpisode = episodes.some((ep) => ep.id === episodeId);
-
+    
+    const isValidEpisode = episodes.some(ep => {
+      const epNumber = ep.id.split('ep=')[1];
+      return epNumber === episodeId; 
+    });
+    
+    // If missing or invalid episodeId, fallback to first
     if (!episodeId || !isValidEpisode) {
-      const fallbackId = episodes[0]?.id;
+      const fallbackId = episodes[0].id.match(/ep=(\d+)/)?.[1];
       if (fallbackId && fallbackId !== episodeId) {
         setEpisodeId(fallbackId);
       }
       return;
     }
-
-    const activeEpisode = episodes.find((ep) => ep.id === episodeId);
-    const episodeNumber = activeEpisode?.number ?? getEpisodeNumberFromId(episodeId);
-    const newUrl = episodeNumber
-      ? `/watch/${animeId}?ep=${episodeNumber}`
-      : `/watch/${animeId}?ep=${episodeId}`;
+  
+    const newUrl = `/watch/${animeId}?ep=${episodeId}`;
     if (isFirstSet.current) {
       navigate(newUrl, { replace: true });
       isFirstSet.current = false;
@@ -198,36 +198,26 @@ export default function Watch() {
   useEffect(() => {
     setTags([
       {
-        condition: animeInfo?.type,
-        bgColor: "#FFBADE",
-        text: animeInfo?.type,
-      },
-      {
-        condition: animeInfo?.status,
+        condition: animeInfo?.animeInfo?.tvInfo?.rating,
         bgColor: "#ffffff",
-        text: animeInfo?.status,
+        text: animeInfo?.animeInfo?.tvInfo?.rating,
       },
       {
-        condition: animeInfo?.hasSub,
+        condition: animeInfo?.animeInfo?.tvInfo?.quality,
+        bgColor: "#FFBADE",
+        text: animeInfo?.animeInfo?.tvInfo?.quality,
+      },
+      {
+        condition: animeInfo?.animeInfo?.tvInfo?.sub,
         icon: faClosedCaptioning,
         bgColor: "#B0E3AF",
-        text: "Sub",
+        text: animeInfo?.animeInfo?.tvInfo?.sub,
       },
       {
-        condition: animeInfo?.hasDub,
+        condition: animeInfo?.animeInfo?.tvInfo?.dub,
         icon: faMicrophone,
         bgColor: "#B9E7FF",
-        text: "Dub",
-      },
-      {
-        condition: animeInfo?.totalEpisodes,
-        bgColor: "#ffffff",
-        text: `${animeInfo?.totalEpisodes} EP`,
-      },
-      {
-        condition: animeInfo?.subOrDub,
-        bgColor: "#ffffff",
-        text: animeInfo?.subOrDub,
+        text: animeInfo?.animeInfo?.tvInfo?.dub,
       },
     ]);
   }, [animeId, animeInfo]);
@@ -240,13 +230,22 @@ export default function Watch() {
             <div ref={playerRef} className="player w-full h-fit bg-black flex flex-col rounded-xl overflow-hidden">
               {/* Video Container */}
               <div ref={videoContainerRef} className="w-full relative aspect-video bg-black">
-                {!buffering ? (
-                  <Player
+                {!buffering ? (["hd-1", "hd-4"].includes(activeServerName.toLowerCase()) ?
+                  <IframePlayer
+                    episodeId={episodeId}
+                    servertype={activeServerType}
+                    serverName={activeServerName}
+                    animeInfo={animeInfo}
+                    episodeNum={activeEpisodeNum}
+                    episodes={episodes}
+                    playNext={(id) => setEpisodeId(id)}
+                    autoNext={autoNext}
+                  /> : <Player
                     streamUrl={streamUrl}
                     subtitles={subtitles}
                     intro={intro}
                     outro={outro}
-                    serverName={activeServerName?.toLowerCase()}
+                    serverName={activeServerName.toLowerCase()}
                     thumbnail={thumbnail}
                     autoSkipIntro={autoSkipIntro}
                     autoPlay={autoPlay}
@@ -353,6 +352,59 @@ export default function Watch() {
               </div>
             </div>
 
+            {/* Mobile-only Seasons Section */}
+            {seasons?.length > 0 && (
+              <div className="hidden max-[1200px]:block bg-[#141414] rounded-lg p-4">
+                <h2 className="text-xl font-semibold mb-4 text-white">More Seasons</h2>
+                <div className="grid grid-cols-2 gap-2">
+                  {seasons.map((season, index) => (
+                    <Link
+                      to={`/${season.id}`}
+                      key={index}
+                      className={`relative w-full aspect-[3/1] rounded-lg overflow-hidden cursor-pointer group ${
+                        animeId === String(season.id)
+                          ? "ring-2 ring-white/40 shadow-lg shadow-white/10"
+                          : ""
+                      }`}
+                    >
+                      <img
+                        src={season.season_poster}
+                        alt={season.season}
+                        className={`w-full h-full object-cover scale-150 ${
+                          animeId === String(season.id)
+                            ? "opacity-50"
+                            : "opacity-40 group-hover:opacity-50 transition-opacity"
+                        }`}
+                      />
+                      {/* Dots Pattern Overlay */}
+                      <div 
+                        className="absolute inset-0 z-10" 
+                        style={{ 
+                          backgroundImage: `url('data:image/svg+xml,<svg width="3" height="3" viewBox="0 0 3 3" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="1.5" cy="1.5" r="0.5" fill="white" fill-opacity="0.25"/></svg>')`,
+                          backgroundSize: '3px 3px'
+                        }}
+                      />
+                      {/* Dark Gradient Overlay */}
+                      <div className={`absolute inset-0 z-20 bg-gradient-to-r ${
+                        animeId === String(season.id)
+                          ? "from-black/50 to-transparent"
+                          : "from-black/40 to-transparent"
+                      }`} />
+                      {/* Title Container */}
+                      <div className="absolute inset-0 z-30 flex items-center justify-center">
+                        <p className={`text-[14px] font-bold text-center px-2 transition-colors duration-300 ${
+                          animeId === String(season.id)
+                            ? "text-white"
+                            : "text-white/90 group-hover:text-white"
+                        }`}>
+                          {season.season}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Mobile-only Episodes Section */}
             <div className="hidden max-[1200px]:block">
@@ -375,9 +427,9 @@ export default function Watch() {
             {/* Anime Info Section */}
             <div className="bg-[#141414] rounded-lg p-4">
               <div className="flex gap-x-6 max-[600px]:flex-row max-[600px]:gap-4">
-                {animeInfo && animeInfo?.image ? (
+                {animeInfo && animeInfo?.poster ? (
                   <img
-                    src={`${animeInfo?.image}`}
+                    src={`${animeInfo?.poster}`}
                     alt=""
                     className="w-[120px] h-[180px] object-cover rounded-md max-[600px]:w-[100px] max-[600px]:h-[150px]"
                   />
@@ -391,7 +443,7 @@ export default function Watch() {
                       className="group"
                     >
                       <h1 className="text-[28px] font-medium text-white leading-tight group-hover:text-gray-300 transition-colors max-[600px]:text-[20px]">
-                        {language ? animeInfo?.title : animeInfo?.japaneseTitle}
+                        {language ? animeInfo?.title : animeInfo?.japanese_title}
                       </h1>
                       <div className="flex items-center gap-1.5 mt-1 text-gray-400 text-sm group-hover:text-white transition-colors max-[600px]:text-[12px] max-[600px]:mt-0.5">
                         <span>View Details</span>
@@ -418,13 +470,13 @@ export default function Watch() {
                       <Skeleton className="w-[70px] h-[20px] rounded-xl" />
                     )}
                   </div>
-                  {animeInfo?.description && (
+                  {animeInfo?.animeInfo?.Overview && (
                     <p className="text-[15px] text-gray-400 leading-relaxed max-[600px]:text-[13px] max-[600px]:leading-normal">
-                      {animeInfo?.description.length > 270 ? (
+                      {animeInfo?.animeInfo?.Overview.length > 270 ? (
                         <>
                           {isFullOverview
-                            ? animeInfo?.description
-                            : `${animeInfo?.description.slice(0, 270)}...`}
+                            ? animeInfo?.animeInfo?.Overview
+                            : `${animeInfo?.animeInfo?.Overview.slice(0, 270)}...`}
                           <button
                             className="ml-2 text-gray-300 hover:text-white transition-colors max-[600px]:text-[12px] max-[600px]:ml-1"
                             onClick={() => setIsFullOverview(!isFullOverview)}
@@ -433,7 +485,7 @@ export default function Watch() {
                           </button>
                         </>
                       ) : (
-                        animeInfo?.description
+                        animeInfo?.animeInfo?.Overview
                       )}
                     </p>
                   )}
@@ -441,6 +493,59 @@ export default function Watch() {
               </div>
             </div>
 
+            {/* Desktop-only Seasons Section */}
+            {seasons?.length > 0 && (
+              <div className="bg-[#141414] rounded-lg p-4 max-[1200px]:hidden">
+                <h2 className="text-xl font-semibold mb-4 text-white">More Seasons</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
+                  {seasons.map((season, index) => (
+                    <Link
+                      to={`/${season.id}`}
+                      key={index}
+                      className={`relative w-full aspect-[3/1] rounded-lg overflow-hidden cursor-pointer group ${
+                        animeId === String(season.id)
+                          ? "ring-2 ring-white/40 shadow-lg shadow-white/10"
+                          : ""
+                      }`}
+                    >
+                      <img
+                        src={season.season_poster}
+                        alt={season.season}
+                        className={`w-full h-full object-cover scale-150 ${
+                          animeId === String(season.id)
+                            ? "opacity-50"
+                            : "opacity-40 group-hover:opacity-50 transition-opacity"
+                        }`}
+                      />
+                      {/* Dots Pattern Overlay */}
+                      <div 
+                        className="absolute inset-0 z-10" 
+                        style={{ 
+                          backgroundImage: `url('data:image/svg+xml,<svg width="3" height="3" viewBox="0 0 3 3" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="1.5" cy="1.5" r="0.5" fill="white" fill-opacity="0.25"/></svg>')`,
+                          backgroundSize: '3px 3px'
+                        }}
+                      />
+                      {/* Dark Gradient Overlay */}
+                      <div className={`absolute inset-0 z-20 bg-gradient-to-r ${
+                        animeId === String(season.id)
+                          ? "from-black/50 to-transparent"
+                          : "from-black/40 to-transparent"
+                      }`} />
+                      {/* Title Container */}
+                      <div className="absolute inset-0 z-30 flex items-center justify-center">
+                        <p className={`text-[14px] sm:text-[16px] font-bold text-center px-2 sm:px-4 transition-colors duration-300 ${
+                          animeId === String(season.id)
+                            ? "text-white"
+                            : "text-white/90 group-hover:text-white"
+                        }`}>
+                          {season.season}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Column - Episodes and Related (Desktop Only) */}
@@ -461,7 +566,32 @@ export default function Watch() {
               )}
             </div>
 
+            {/* Related Anime Section */}
+            {animeInfo && animeInfo.related_data ? (
+              <div className="bg-[#141414] rounded-lg p-4">
+                <h2 className="text-xl font-semibold mb-4 text-white">Related Anime</h2>
+                <Sidecard
+                  data={animeInfo.related_data}
+                  className="!mt-0"
+                />
+              </div>
+            ) : (
+              <div className="mt-6">
+                <SidecardLoader />
+              </div>
+            )}
           </div>
+
+          {/* Mobile-only Related Section */}
+          {animeInfo && animeInfo.related_data && (
+            <div className="hidden max-[1200px]:block bg-[#141414] rounded-lg p-4">
+              <h2 className="text-xl font-semibold mb-4 text-white">Related Anime</h2>
+              <Sidecard
+                data={animeInfo.related_data}
+                className="!mt-0"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

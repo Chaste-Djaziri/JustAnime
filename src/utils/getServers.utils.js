@@ -1,24 +1,12 @@
 import axios from "axios";
 
-export default async function getServers(episodeId, dub = false) {
+export default async function getServers(animeId, episodeId) {
   try {
-    const baseUrl = import.meta.env.VITE_BASE_CONSUMET_URL;
-    const proxyUrl = import.meta.env.VITE_PROXY_URL;
-    const url = new URL(`anime/animekai/servers/${episodeId}`, baseUrl);
-    if (dub) {
-      url.searchParams.set("dub", "true");
-    }
-    try {
-      const response = await axios.get(url.toString());
-      return response.data;
-    } catch (error) {
-      if (proxyUrl) {
-        const proxied = `${proxyUrl}${encodeURIComponent(url.toString())}`;
-        const response = await axios.get(proxied);
-        return response.data;
-      }
-      throw error;
-    }
+    const api_url = import.meta.env.VITE_API_URL;
+    const response = await axios.get(
+      `${api_url}/servers/${animeId}?ep=${episodeId}`
+    );
+    return response.data.results;
   } catch (error) {
     console.error(error);
     return error;

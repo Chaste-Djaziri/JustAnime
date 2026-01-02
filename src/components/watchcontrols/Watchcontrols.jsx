@@ -30,13 +30,15 @@ export default function WatchControls({
   onButtonClick,
 }) {
   const [currentEpisodeIndex, setCurrentEpisodeIndex] = useState(
-    episodes?.findIndex((episode) => episode.id === episodeId)
+    episodes?.findIndex(
+      (episode) => episode.id.match(/ep=(\d+)/)?.[1] === episodeId
+    )
   );
 
   useEffect(() => {
     if (episodes?.length > 0) {
       const newIndex = episodes.findIndex(
-        (episode) => episode.id === episodeId
+        (episode) => episode.id.match(/ep=(\d+)/)?.[1] === episodeId
       );
       setCurrentEpisodeIndex(newIndex);
     }
@@ -65,7 +67,9 @@ export default function WatchControls({
         <button
           onClick={() => {
             if (currentEpisodeIndex > 0) {
-              onButtonClick(episodes[currentEpisodeIndex - 1].id);
+              onButtonClick(
+                episodes[currentEpisodeIndex - 1].id.match(/ep=(\d+)/)?.[1]
+              );
             }
           }}
           disabled={currentEpisodeIndex <= 0}
@@ -80,7 +84,9 @@ export default function WatchControls({
         <button
           onClick={() => {
             if (currentEpisodeIndex < episodes?.length - 1) {
-              onButtonClick(episodes[currentEpisodeIndex + 1].id);
+              onButtonClick(
+                episodes[currentEpisodeIndex + 1].id.match(/ep=(\d+)/)?.[1]
+              );
             }
           }}
           disabled={currentEpisodeIndex >= episodes?.length - 1}

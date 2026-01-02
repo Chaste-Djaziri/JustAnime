@@ -12,22 +12,21 @@ import ContinueWatching from "@/src/components/continue/ContinueWatching";
 import TabbedAnimeSection from "@/src/components/tabbed-anime/TabbedAnimeSection";
 
 function Home() {
-  const { homeInfo, homeInfoLoading, error, fetchRecentEpisodesPage } = useHomeInfo();
-  const latestEpisodeMeta = homeInfo?.latest_episode_meta;
+  const { homeInfo, homeInfoLoading, error } = useHomeInfo();
   if (homeInfoLoading) return <Loader type="home" />;
   if (error) return <Error />;
   if (!homeInfo) return <Error error="404" />;
   return (
     <>
-      <div className="w-full">
+      <div className="pt-16 w-full">
         <div className="w-screen relative left-1/2 right-1/2 -translate-x-1/2">
           <Spotlight spotlights={homeInfo.spotlights} />
         </div>
-        <div className="pt-16 -mt-4">
+        <div className="mt-6">
           <Genre data={homeInfo.genres} />
         </div>
         <ContinueWatching />
-        
+
         <div className="w-full grid grid-cols-[minmax(0,75%),minmax(0,25%)] gap-x-6 max-[1200px]:flex flex-col">
           <div>
             <CategoryCard
@@ -35,7 +34,7 @@ function Home() {
               data={homeInfo.latest_episode}
               className="mt-[60px]"
               path="recently-updated"
-              rowsPerPage={2}
+              limit={12}
             />
             <Schedule className="mt-8" />
             <TabbedAnimeSection 
