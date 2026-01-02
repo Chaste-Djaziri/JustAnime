@@ -23,7 +23,7 @@ function Episodelist({
   const [showDropDown, setShowDropDown] = useState(false);
   const [selectedRange, setSelectedRange] = useState([1, 100]);
   const [activeRange, setActiveRange] = useState("1-100");
-  const [episodeNum, setEpisodeNum] = useState(currentEpisode);
+  const [episodeNum, setEpisodeNum] = useState(null);
   const dropDownRef = useRef(null);
   const [searchedEpisode, setSearchedEpisode] = useState(null);
 
@@ -64,11 +64,11 @@ function Episodelist({
 
   function handleChange(e) {
     const value = e.target.value;
-    if (value.trim() === "") {
-      const newRange = findRangeForEpisode(1);
-      setSelectedRange(newRange);
-      setActiveRange(`${newRange[0]}-${newRange[1]}`);
-      setSearchedEpisode(null);
+      if (value.trim() === "") {
+        const newRange = findRangeForEpisode(1);
+        setSelectedRange(newRange);
+        setActiveRange(`${newRange[0]}-${newRange[1]}`);
+        setSearchedEpisode(null);
     } else if (!value || isNaN(value)) {
       setSearchedEpisode(null);
     } else if (
@@ -80,9 +80,9 @@ function Episodelist({
       setSelectedRange(newRange);
       setActiveRange(`${newRange[0]}-${newRange[1]}`);
       setSearchedEpisode(null);
-    } else if (!isNaN(value) && value.trim() !== "") {
+      } else if (!isNaN(value) && value.trim() !== "") {
       const num = parseInt(value, 10);
-      const foundEpisode = episodes.find((item) => item?.episode_no === num);
+      const foundEpisode = episodes.find((item) => item?.number === num);
       if (foundEpisode) {
         const newRange = findRangeForEpisode(num);
         setSelectedRange(newRange);
@@ -128,11 +128,9 @@ function Episodelist({
   };
 
   useEffect(() => {
-    const activeEpisode = episodes.find(
-      (item) => item?.id.match(/ep=(\d+)/)?.[1] === activeEpisodeId
-    );
+    const activeEpisode = episodes.find((item) => item?.id === activeEpisodeId);
     if (activeEpisode) {
-      setEpisodeNum(activeEpisode?.episode_no);
+      setEpisodeNum(activeEpisode?.number);
     }
   }, [activeEpisodeId, episodes]);
 
@@ -217,10 +215,10 @@ function Episodelist({
             ? episodes
                 .slice(selectedRange[0] - 1, selectedRange[1])
                 .map((item, index) => {
-                  const episodeNumber = item?.id.match(/ep=(\d+)/)?.[1];
+                  const episodeNumber = item?.number;
                   const isActive =
-                    activeEpisodeId === episodeNumber ||
-                    currentEpisode === episodeNumber;
+                    activeEpisodeId === item?.id ||
+                    currentEpisode === item?.id;
                   const isSearched = searchedEpisode === item?.id;
 
                   return (
@@ -241,24 +239,24 @@ function Episodelist({
                            : "bg-[#2a2a2a] text-gray-400"
                        } ${isSearched ? "ring-2 ring-white" : ""}`}
                       onClick={() => {
-                        if (episodeNumber) {
-                          onEpisodeClick(episodeNumber);
-                          setActiveEpisodeId(episodeNumber);
+                        if (item?.id) {
+                          onEpisodeClick(item.id);
+                          setActiveEpisodeId(item.id);
                           setSearchedEpisode(null);
                         }
                       }}
                     >
                       <span className="transition-colors">
-                        {index + selectedRange[0]}
+                        {episodeNumber || index + selectedRange[0]}
                       </span>
                     </div>
                   );
                 })
             : episodes?.map((item, index) => {
-                const episodeNumber = item?.id.match(/ep=(\d+)/)?.[1];
+                const episodeNumber = item?.number;
                 const isActive =
-                  activeEpisodeId === episodeNumber ||
-                  currentEpisode === episodeNumber;
+                  activeEpisodeId === item?.id ||
+                  currentEpisode === item?.id;
                 const isSearched = searchedEpisode === item?.id;
 
                 return (
@@ -273,15 +271,15 @@ function Episodelist({
                       isActive ? "bg-[#2a2a2a]" : ""
                     } ${isSearched ? "ring-1 ring-white" : ""}`}
                     onClick={() => {
-                      if (episodeNumber) {
-                        onEpisodeClick(episodeNumber);
-                        setActiveEpisodeId(episodeNumber);
+                      if (item?.id) {
+                        onEpisodeClick(item.id);
+                        setActiveEpisodeId(item.id);
                         setSearchedEpisode(null);
                       }
                     }}
                   >
                     <p className={`text-[14px] font-medium max-[600px]:text-[13px] ${isActive ? "text-white" : "text-gray-400"}`}>
-                      {index + 1}
+                      {episodeNumber || index + 1}
                     </p>
                     <div className="w-full flex items-center justify-between gap-x-[5px]">
                       <h1 className={`line-clamp-1 text-[14px] transition-colors max-[600px]:text-[13px] ${

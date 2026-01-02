@@ -1,10 +1,15 @@
 import axios from "axios";
 
-export default async function getStreamInfo(animeId,episodeId,serverName,type) {
-  const api_url = import.meta.env.VITE_API_URL;
+export default async function getStreamInfo(episodeId, serverName, dub = false) {
+  const baseUrl = import.meta.env.VITE_BASE_CONSUMET_URL;
   try {
-    const response = await axios.get(`${api_url}/stream?id=${animeId}?ep=${episodeId}&server=${serverName}&type=${type}`);
-    return response.data.results;
+    const url = new URL(`anime/animekai/watch/${episodeId}`, baseUrl);
+    if (serverName) {
+      url.searchParams.set("server", serverName);
+    }
+    url.searchParams.set("dub", dub ? "true" : "false");
+    const response = await axios.get(url.toString());
+    return response.data;
   } catch (error) {
     console.error("Error fetching stream info:", error);
     return error;

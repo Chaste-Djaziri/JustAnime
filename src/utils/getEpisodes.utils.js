@@ -1,12 +1,17 @@
 import axios from "axios";
 
 export default async function getEpisodes(id) {
-  const api_url = import.meta.env.VITE_API_URL;
+  const baseUrl = import.meta.env.VITE_BASE_CONSUMET_URL;
   try {
-    const response = await axios.get(`${api_url}/episodes/${id}`);
-    return response.data.results;
+    const url = new URL("anime/animekai/info", baseUrl);
+    url.searchParams.set("id", id);
+    const response = await axios.get(url.toString());
+    return {
+      episodes: response.data?.episodes || [],
+      totalEpisodes: response.data?.totalEpisodes || 0,
+    };
   } catch (error) {
-    console.error("Error fetching anime info:", error);
+    console.error("Error fetching episodes:", error);
     return error;
   }
 }

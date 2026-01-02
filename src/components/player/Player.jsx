@@ -65,16 +65,12 @@ export default function Player({
   const proxy = import.meta.env.VITE_PROXY_URL;
   const m3u8proxy = import.meta.env.VITE_M3U8_PROXY_URL?.split(",") || [];
   const [currentEpisodeIndex, setCurrentEpisodeIndex] = useState(
-    episodes?.findIndex(
-      (episode) => episode.id.match(/ep=(\d+)/)?.[1] === episodeId
-    )
+    episodes?.findIndex((episode) => episode.id === episodeId)
   );
 
   useEffect(() => {
     if (episodes?.length > 0) {
-      const newIndex = episodes.findIndex(
-        (episode) => episode.id.match(/ep=(\d+)/)?.[1] === episodeId
-      );
+      const newIndex = episodes.findIndex((episode) => episode.id === episodeId);
       setCurrentEpisodeIndex(newIndex);
     }
   }, [episodeId, episodes]);
@@ -119,9 +115,7 @@ export default function Player({
         if (duration > 0 && currentTime >= duration) {
             art.pause();
             if (currentEpisodeIndex < episodes?.length - 1 && autoNext) {
-              playNext(
-                episodes[currentEpisodeIndex + 1].id.match(/ep=(\d+)/)?.[1]
-              );
+              playNext(episodes[currentEpisodeIndex + 1].id);
           }
         }
       });
@@ -133,9 +127,7 @@ export default function Player({
         if (duration > 0 && currentTime >= duration) {
             art.pause();
             if (currentEpisodeIndex < episodes?.length - 1 && autoNext) {
-              playNext(
-                episodes[currentEpisodeIndex + 1].id.match(/ep=(\d+)/)?.[1]
-              );
+              playNext(episodes[currentEpisodeIndex + 1].id);
           }
         }
       });
@@ -209,20 +201,31 @@ export default function Player({
 
   useEffect(() => {
     if (!streamUrl || !artRef.current) return;
-    const iframeUrl = streamInfo?.streamingLink?.iframe;
     const headers = {};
-    headers.referer=new URL(iframeUrl).origin+"/";
-    console.log(m3u8proxy[Math.floor(Math.random() * m3u8proxy?.length)] +
-        encodeURIComponent(streamUrl) +
-         "&headers=" +
-         encodeURIComponent(JSON.stringify(headers)));
+    if (streamInfo?.headers?.Referer) {
+      headers.referer = streamInfo.headers.Referer;
+    } else if (streamInfo?.headers?.referer) {
+      headers.referer = streamInfo.headers.referer;
+    } else if (streamInfo?.streamingLink?.iframe) {
+      headers.referer = new URL(streamInfo.streamingLink.iframe).origin + "/";
+    }
+    if (streamInfo?.headers?.["User-Agent"]) {
+      headers["User-Agent"] = streamInfo.headers["User-Agent"];
+    } else if (streamInfo?.headers?.["user-agent"]) {
+      headers["User-Agent"] = streamInfo.headers["user-agent"];
+    }
+
+    const proxyUrl = m3u8proxy.length
+      ? m3u8proxy[Math.floor(Math.random() * m3u8proxy.length)]
+      : "";
+    const finalUrl = proxyUrl
+      ? `${proxyUrl}${encodeURIComponent(streamUrl)}&headers=${encodeURIComponent(
+          JSON.stringify(headers)
+        )}`
+      : streamUrl;
 
     const art = new Artplayer({
-      url:
-        m3u8proxy[Math.floor(Math.random() * m3u8proxy?.length)] +
-        encodeURIComponent(streamUrl) +
-         "&headers=" +
-         encodeURIComponent(JSON.stringify(headers)),
+      url: finalUrl,
       container: artRef.current,
       type: "m3u8",
       autoplay: autoPlay,
@@ -476,13 +479,12 @@ export default function Player({
       const continueWatching = JSON.parse(localStorage.getItem("continueWatching")) || [];
       const newEntry = {
         id: animeInfo?.id,
-        data_id: animeInfo?.data_id,
+        data_id: animeInfo?.id,
         episodeId,
         episodeNum,
-        adultContent: animeInfo?.adultContent,
-        poster: animeInfo?.poster,
+        poster: animeInfo?.image,
         title: animeInfo?.title,
-        japanese_title: animeInfo?.japanese_title,
+        japanese_title: animeInfo?.japaneseTitle,
         leftAt: leftAtRef.current,
       };
 
