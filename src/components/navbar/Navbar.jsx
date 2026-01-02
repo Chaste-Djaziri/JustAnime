@@ -56,8 +56,8 @@ function Navbar() {
   return (
     <SearchProvider>
       <nav
-        className={`fixed top-0 left-0 w-full z-[1000000] transition-all duration-300 ease-in-out bg-[#0a0a0a]
-          ${isScrolled ? "bg-opacity-80 backdrop-blur-md shadow-lg" : "bg-opacity-100"}`}
+        className={`fixed top-0 left-0 w-full z-[1000000] transition-all duration-300 ease-in-out
+          ${isScrolled ? "bg-[#0a0a0a] bg-opacity-80 backdrop-blur-md shadow-lg" : "bg-transparent"}`}
       >
         <div className="max-w-[1920px] mx-auto px-4 h-16 flex items-center justify-between">
           {/* Left Section */}
