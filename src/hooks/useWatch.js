@@ -119,15 +119,15 @@ export const useWatch = (animeId, initialEpisodeId) => {
         const normalizedServers = [
           ...((Array.isArray(subServers) ? subServers : []).map((server) => ({
             type: "sub",
-            data_id: `sub:${server.name}`,
+            data_id: `sub:${server.url || server.name}`,
             serverName: server.name,
-            url: server.url,
+            serverParam: server.url || server.name,
           }))),
           ...((Array.isArray(dubServers) ? dubServers : []).map((server) => ({
             type: "dub",
-            data_id: `dub:${server.name}`,
+            data_id: `dub:${server.url || server.name}`,
             serverName: server.name,
-            url: server.url,
+            serverParam: server.url || server.name,
           }))),
         ];
 
@@ -173,7 +173,7 @@ export const useWatch = (animeId, initialEpisodeId) => {
         if (server) {
           const data = await getStreamInfo(
             episodeId,
-            server.serverName,
+            server.serverParam,
             server.type === "dub"
           );
           setStreamInfo(data);
