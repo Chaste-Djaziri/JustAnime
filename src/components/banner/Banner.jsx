@@ -9,11 +9,13 @@ import {
   faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
+import { useSwiper } from "swiper/react";
 import { useLanguage } from "@/src/context/LanguageContext";
 import "./Banner.css";
 
 function Banner({ item, index, total }) {
   const { language } = useLanguage();
+  const swiper = useSwiper();
   return (
     <section className="spotlight w-full h-full relative overflow-hidden">
       <img
@@ -131,7 +133,12 @@ function Banner({ item, index, total }) {
       </div>
       <div className="spotlight-nav-wrap absolute right-[48px] bottom-[50px] z-[2] max-md:hidden">
         <div className="spotlight-nav">
-          <button className="spotlight-nav-button button-prev" aria-label="Previous spotlight">
+          <button
+            type="button"
+            className="spotlight-nav-button button-prev"
+            aria-label="Previous spotlight"
+            onClick={() => swiper.slidePrev()}
+          >
             <FontAwesomeIcon icon={faChevronLeft} className="spotlight-nav-icon" />
           </button>
           <span className="spotlight-count">
@@ -139,7 +146,12 @@ function Banner({ item, index, total }) {
             <span className="spotlight-count-separator">/</span>
             <span className="spotlight-count-total">{total}</span>
           </span>
-          <button className="spotlight-nav-button button-next" aria-label="Next spotlight">
+          <button
+            type="button"
+            className="spotlight-nav-button button-next"
+            aria-label="Next spotlight"
+            onClick={() => swiper.slideNext()}
+          >
             <FontAwesomeIcon icon={faChevronRight} className="spotlight-nav-icon" />
           </button>
         </div>
