@@ -2,7 +2,7 @@ import axios from "axios";
 
 const CACHE_KEY = "homeInfoCache";
 const CACHE_DURATION = 24 * 60 * 60 * 1000;
-const CACHE_VERSION = 2;
+const CACHE_VERSION = 3;
 
 const mapSpotlightItem = (item) => ({
   id: item.id,
@@ -19,6 +19,19 @@ const mapSpotlightItem = (item) => ({
       sub: item.sub,
       dub: item.dub,
     },
+  },
+});
+
+const mapRecentEpisodeItem = (item) => ({
+  id: item.id,
+  title: item.title,
+  japanese_title: item.japaneseTitle ?? item.japanese_title ?? "",
+  poster: item.image ?? item.poster ?? "",
+  releaseDate: item.releaseDate ?? "",
+  tvInfo: {
+    showType: item.type,
+    sub: item.sub ?? (item.subOrDub === "sub" ? item.episodeNumber : null),
+    dub: item.dub ?? (item.subOrDub === "dub" ? item.episodeNumber : null),
   },
 });
 
@@ -52,13 +65,14 @@ export default async function getHomeInfo() {
     mostPopular: most_popular,
     mostFavorite: most_favorite,
     latestCompleted: latest_completed,
-    latestEpisode: latest_episode,
+    latestEpisode: homeLatestEpisode,
     topUpcoming: top_upcoming,
     recentlyAdded: recently_added,
     genres,
   } = response.data.results;
 
   let spotlights = homeSpotlights;
+  let latest_episode = homeLatestEpisode;
 
   if (consumet_base_url) {
     try {
@@ -72,6 +86,20 @@ export default async function getHomeInfo() {
       }
     } catch (err) {
       console.error("Error fetching spotlight data:", err);
+    }
+
+    try {
+      const recentUrl = new URL(
+        "anime/animekai/recent-episodes",
+        consumet_base_url
+      );
+      recentUrl.searchParams.set("page", "1");
+      const recentResponse = await axios.get(recentUrl.toString());
+      if (Array.isArray(recentResponse.data?.results)) {
+        latest_episode = recentResponse.data.results.map(mapRecentEpisodeItem);
+      }
+    } catch (err) {
+      console.error("Error fetching recent episodes:", err);
     }
   }
 
