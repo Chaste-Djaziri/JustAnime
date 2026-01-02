@@ -2,7 +2,7 @@ import axios from "axios";
 
 const CACHE_KEY = "homeInfoCache";
 const CACHE_DURATION = 24 * 60 * 60 * 1000;
-const CACHE_VERSION = 3;
+const CACHE_VERSION = 4;
 
 const mapSpotlightItem = (item) => ({
   id: item.id,
@@ -89,14 +89,29 @@ export default async function getHomeInfo() {
     }
 
     try {
-      const recentUrl = new URL(
-        "anime/animekai/recent-episodes",
-        consumet_base_url
-      );
-      recentUrl.searchParams.set("page", "1");
-      const recentResponse = await axios.get(recentUrl.toString());
-      if (Array.isArray(recentResponse.data?.results)) {
-        latest_episode = recentResponse.data.results.map(mapRecentEpisodeItem);
+      const recentItems = [];
+      let page = 1;
+      let hasNextPage = true;
+      let totalPages = 1;
+
+      while (hasNextPage && page <= totalPages) {
+        const recentUrl = new URL(
+          "anime/animekai/recent-episodes",
+          consumet_base_url
+        );
+        recentUrl.searchParams.set("page", String(page));
+        const recentResponse = await axios.get(recentUrl.toString());
+        const results = recentResponse.data?.results;
+        if (Array.isArray(results)) {
+          recentItems.push(...results.map(mapRecentEpisodeItem));
+        }
+        hasNextPage = Boolean(recentResponse.data?.hasNextPage);
+        totalPages = Number(recentResponse.data?.totalPages || totalPages);
+        page += 1;
+      }
+
+      if (recentItems.length > 0) {
+        latest_episode = recentItems;
       }
     } catch (err) {
       console.error("Error fetching recent episodes:", err);

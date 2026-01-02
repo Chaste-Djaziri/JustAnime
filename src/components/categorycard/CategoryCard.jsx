@@ -35,32 +35,18 @@ const CategoryCard = React.memo(
       remainingItems: [],
     });
 
-    const isChinaItem = (item) => {
-      const titleText = `${item?.title || ""} ${item?.japanese_title || ""}`.toLowerCase();
-      return (
-        item?.isChina === true ||
-        /china|chinese|donghua|zhong|hua/.test(titleText) ||
-        /[\u4e00-\u9fff]/.test(titleText)
-      );
-    };
-
     const filteredData = useMemo(() => {
       const withSubs = (item) => Number(item?.tvInfo?.sub) > 0;
       const withDubs = (item) => Number(item?.tvInfo?.dub) > 0;
-      const notChina = (item) => !isChinaItem(item);
 
       switch (activeFilter) {
         case "sub":
-          return sourceData.filter((item) => withSubs(item) && notChina(item));
+          return sourceData.filter((item) => withSubs(item));
         case "dub":
-          return sourceData.filter((item) => withDubs(item) && notChina(item));
-        case "china":
-          return sourceData.filter((item) => isChinaItem(item));
+          return sourceData.filter((item) => withDubs(item));
         case "all":
         default:
-          return sourceData.filter(
-            (item) => (withSubs(item) || withDubs(item)) && notChina(item)
-          );
+          return sourceData.filter((item) => withSubs(item) || withDubs(item));
       }
     }, [activeFilter, sourceData]);
 
@@ -128,7 +114,6 @@ const CategoryCard = React.memo(
                   { id: "all", label: "All" },
                   { id: "sub", label: "Sub" },
                   { id: "dub", label: "Dub" },
-                  { id: "china", label: "China" },
                 ].map((option) => (
                   <button
                     key={option.id}
