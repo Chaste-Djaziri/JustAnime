@@ -22,7 +22,7 @@ function Home() {
         <div className="w-screen relative left-1/2 right-1/2 -translate-x-1/2">
           <Spotlight spotlights={homeInfo.spotlights} />
         </div>
-        <div className="pt-16 mt-1">
+        <div className="pt-16 mt-0">
           <Genre data={homeInfo.genres} />
         </div>
         <ContinueWatching />
