@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faClosedCaptioning,
@@ -15,23 +15,70 @@ const CategoryCard = React.memo(
     label,
     data,
     showViewMore = true,
+    showFilters = false,
     className,
     categoryPage = false,
     cardStyle,
     path,
     limit,
+    pageSize = 12,
   }) => {
     const { language } = useLanguage();
     const navigate = useNavigate();
     
-    if (limit) {
-      data = data.slice(0, limit);
-    }
+    const [activeFilter, setActiveFilter] = useState("all");
+    const [currentPage, setCurrentPage] = useState(1);
+    const sourceData = Array.isArray(data) ? data : [];
 
     const [itemsToRender, setItemsToRender] = useState({
       firstRow: [],
       remainingItems: [],
     });
+
+    const isChinaItem = (item) => {
+      const titleText = `${item?.title || ""} ${item?.japanese_title || ""}`.toLowerCase();
+      return (
+        item?.isChina === true ||
+        /china|chinese|donghua|zhong|hua/.test(titleText) ||
+        /[\u4e00-\u9fff]/.test(titleText)
+      );
+    };
+
+    const filteredData = useMemo(() => {
+      const withSubs = (item) => Number(item?.tvInfo?.sub) > 0;
+      const withDubs = (item) => Number(item?.tvInfo?.dub) > 0;
+      const notChina = (item) => !isChinaItem(item);
+
+      switch (activeFilter) {
+        case "sub":
+          return sourceData.filter((item) => withSubs(item) && notChina(item));
+        case "dub":
+          return sourceData.filter((item) => withDubs(item) && notChina(item));
+        case "china":
+          return sourceData.filter((item) => isChinaItem(item));
+        case "all":
+        default:
+          return sourceData.filter(
+            (item) => (withSubs(item) || withDubs(item)) && notChina(item)
+          );
+      }
+    }, [activeFilter, sourceData]);
+
+    useEffect(() => {
+      setCurrentPage(1);
+    }, [activeFilter]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
+    const safePage = Math.min(currentPage, totalPages);
+    const pagedData = showFilters
+      ? filteredData.slice((safePage - 1) * pageSize, safePage * pageSize)
+      : filteredData;
+
+    if (limit) {
+      data = pagedData.slice(0, limit);
+    } else {
+      data = pagedData;
+    }
 
     const getItemsToRender = useCallback(() => {
       if (categoryPage) {
@@ -74,7 +121,57 @@ const CategoryCard = React.memo(
           <h1 className="font-semibold text-2xl text-white max-[478px]:text-[18px] capitalize tracking-wide">
             {label}
           </h1>
-          {showViewMore && (
+          {showFilters ? (
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              <div className="flex items-center gap-1.5 rounded-md bg-[#1a1a1a] p-1">
+                {[
+                  { id: "all", label: "All" },
+                  { id: "sub", label: "Sub" },
+                  { id: "dub", label: "Dub" },
+                  { id: "china", label: "China" },
+                ].map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => setActiveFilter(option.id)}
+                    className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${
+                      activeFilter === option.id
+                        ? "bg-white text-black"
+                        : "text-white/70 hover:text-white"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2 text-white/70 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                  className="h-7 w-7 flex items-center justify-center rounded-md bg-[#1a1a1a] hover:bg-[#252525] transition-colors disabled:opacity-40"
+                  disabled={safePage === 1}
+                  aria-label="Previous page"
+                >
+                  <FaChevronRight className="text-[10px] rotate-180" />
+                </button>
+                <span className="min-w-[60px] text-center">
+                  {safePage} / {totalPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((page) => Math.min(totalPages, page + 1))
+                  }
+                  className="h-7 w-7 flex items-center justify-center rounded-md bg-[#1a1a1a] hover:bg-[#252525] transition-colors disabled:opacity-40"
+                  disabled={safePage === totalPages}
+                  aria-label="Next page"
+                >
+                  <FaChevronRight className="text-[10px]" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            showViewMore && (
             <Link
               to={`/${path}`}
               className="flex items-center gap-x-1 py-1 px-2 -mr-2 rounded-md
@@ -85,6 +182,7 @@ const CategoryCard = React.memo(
               <FaChevronRight className="text-[10px] transform transition-transform duration-300 
                 group-hover:translate-x-0.5" />
             </Link>
+            )
           )}
         </div>
         <>

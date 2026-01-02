@@ -34,7 +34,8 @@ function Home() {
               data={homeInfo.latest_episode}
               className="mt-[60px]"
               path="recently-updated"
-              limit={12}
+              showFilters={true}
+              pageSize={12}
             />
             <Schedule className="mt-8" />
             <TabbedAnimeSection 
