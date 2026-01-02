@@ -8,8 +8,18 @@ export default async function getStreamInfo(episodeId, serverParam, dub = false)
       url.searchParams.set("server", serverParam);
     }
     url.searchParams.set("dub", dub ? "true" : "false");
-    const response = await axios.get(url.toString());
-    return response.data;
+    try {
+      const response = await axios.get(url.toString());
+      return response.data;
+    } catch (error) {
+      if (serverParam) {
+        const fallbackUrl = new URL(`anime/animekai/watch/${episodeId}`, baseUrl);
+        fallbackUrl.searchParams.set("dub", dub ? "true" : "false");
+        const fallbackResponse = await axios.get(fallbackUrl.toString());
+        return fallbackResponse.data;
+      }
+      throw error;
+    }
   } catch (error) {
     console.error("Error fetching stream info:", error);
     return error;

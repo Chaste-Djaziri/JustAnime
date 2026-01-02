@@ -116,19 +116,42 @@ export const useWatch = (animeId, initialEpisodeId) => {
           ? await getServers(episodeId, true)
           : [];
 
+        const toServerParam = (server) => {
+          if (server?.url) {
+            try {
+              const hostname = new URL(server.url).hostname;
+              const parts = hostname.split(".");
+              return parts.length > 1 ? parts[parts.length - 2] : hostname;
+            } catch (err) {
+              return null;
+            }
+          }
+          if (server?.name) {
+            return server.name
+              .toLowerCase()
+              .replace(/server/gi, "")
+              .replace(/\s+/g, "-")
+              .replace(/[^a-z0-9-]/g, "")
+              .replace(/-+/g, "-")
+              .replace(/^-|-$/g, "");
+          }
+          return null;
+        };
+
+        const normalizeServer = (server, type) => ({
+          type,
+          data_id: `${type}:${server.url || server.name}`,
+          serverName: server.name,
+          serverParam: toServerParam(server),
+        });
+
         const normalizedServers = [
-          ...((Array.isArray(subServers) ? subServers : []).map((server) => ({
-            type: "sub",
-            data_id: `sub:${server.url || server.name}`,
-            serverName: server.name,
-            serverParam: server.url || server.name,
-          }))),
-          ...((Array.isArray(dubServers) ? dubServers : []).map((server) => ({
-            type: "dub",
-            data_id: `dub:${server.url || server.name}`,
-            serverName: server.name,
-            serverParam: server.url || server.name,
-          }))),
+          ...((Array.isArray(subServers) ? subServers : []).map((server) =>
+            normalizeServer(server, "sub")
+          )),
+          ...((Array.isArray(dubServers) ? dubServers : []).map((server) =>
+            normalizeServer(server, "dub")
+          )),
         ];
 
         const savedServerName = localStorage.getItem("server_name");
