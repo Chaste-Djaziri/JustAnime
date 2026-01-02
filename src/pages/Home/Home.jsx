@@ -12,7 +12,8 @@ import ContinueWatching from "@/src/components/continue/ContinueWatching";
 import TabbedAnimeSection from "@/src/components/tabbed-anime/TabbedAnimeSection";
 
 function Home() {
-  const { homeInfo, homeInfoLoading, error } = useHomeInfo();
+  const { homeInfo, homeInfoLoading, error, fetchRecentEpisodesPage } = useHomeInfo();
+  const latestEpisodeMeta = homeInfo?.latest_episode_meta;
   if (homeInfoLoading) return <Loader type="home" />;
   if (error) return <Error />;
   if (!homeInfo) return <Error error="404" />;
@@ -36,6 +37,11 @@ function Home() {
               path="recently-updated"
               showFilters={true}
               pageSize={12}
+              pagination={{
+                currentPage: latestEpisodeMeta?.currentPage || 1,
+                totalPages: latestEpisodeMeta?.totalPages || 1,
+                onPageChange: fetchRecentEpisodesPage,
+              }}
             />
             <Schedule className="mt-8" />
             <TabbedAnimeSection 

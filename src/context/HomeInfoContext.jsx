@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import getHomeInfo from '../utils/getHomeInfo.utils.js';
+import getRecentEpisodesPage from "../utils/getRecentEpisodes.utils.js";
 
 const HomeInfoContext = createContext();
 
@@ -7,6 +8,26 @@ export const HomeInfoProvider = ({ children }) => {
     const [homeInfo, setHomeInfo] = useState(null);
     const [homeInfoLoading, setHomeInfoLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    const fetchRecentEpisodesPage = async (page) => {
+        try {
+            const data = await getRecentEpisodesPage(page);
+            setHomeInfo((prev) => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    latest_episode: data.results,
+                    latest_episode_meta: {
+                        currentPage: data.currentPage,
+                        totalPages: data.totalPages,
+                        hasNextPage: data.hasNextPage,
+                    },
+                };
+            });
+        } catch (err) {
+            console.error("Error fetching recent episodes:", err);
+        }
+    };
     useEffect(() => {
         const fetchHomeInfo = async () => {
             try {
@@ -22,7 +43,7 @@ export const HomeInfoProvider = ({ children }) => {
         fetchHomeInfo();
     }, []);
     return (
-        <HomeInfoContext.Provider value={{ homeInfo, homeInfoLoading, error }}>
+        <HomeInfoContext.Provider value={{ homeInfo, homeInfoLoading, error, fetchRecentEpisodesPage }}>
             {children}
         </HomeInfoContext.Provider>
     );

@@ -50,15 +50,30 @@ const CategoryCard = React.memo(
       }
     }, [activeFilter, sourceData]);
 
-    useEffect(() => {
-      setCurrentPage(1);
-    }, [activeFilter]);
+    const isControlledPagination =
+      pagination &&
+      typeof pagination.currentPage === "number" &&
+      typeof pagination.totalPages === "number" &&
+      typeof pagination.onPageChange === "function";
 
-    const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
-    const safePage = Math.min(currentPage, totalPages);
-    const pagedData = showFilters
-      ? filteredData.slice((safePage - 1) * pageSize, safePage * pageSize)
-      : filteredData;
+    useEffect(() => {
+      if (isControlledPagination) {
+        pagination.onPageChange(1);
+      } else {
+        setCurrentPage(1);
+      }
+    }, [activeFilter, isControlledPagination, pagination]);
+
+    const totalPages = isControlledPagination
+      ? Math.max(1, pagination.totalPages)
+      : Math.max(1, Math.ceil(filteredData.length / pageSize));
+    const safePage = isControlledPagination
+      ? Math.min(pagination.currentPage, totalPages)
+      : Math.min(currentPage, totalPages);
+    const pagedData =
+      showFilters && !isControlledPagination
+        ? filteredData.slice((safePage - 1) * pageSize, safePage * pageSize)
+        : filteredData;
 
     if (limit) {
       data = pagedData.slice(0, limit);
@@ -132,7 +147,11 @@ const CategoryCard = React.memo(
               <div className="flex items-center gap-2 text-white/70 text-xs">
                 <button
                   type="button"
-                  onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                  onClick={() =>
+                    isControlledPagination
+                      ? pagination.onPageChange(Math.max(1, safePage - 1))
+                      : setCurrentPage((page) => Math.max(1, page - 1))
+                  }
                   className="h-7 w-7 flex items-center justify-center rounded-md bg-[#1a1a1a] hover:bg-[#252525] transition-colors disabled:opacity-40"
                   disabled={safePage === 1}
                   aria-label="Previous page"
@@ -145,7 +164,9 @@ const CategoryCard = React.memo(
                 <button
                   type="button"
                   onClick={() =>
-                    setCurrentPage((page) => Math.min(totalPages, page + 1))
+                    isControlledPagination
+                      ? pagination.onPageChange(Math.min(totalPages, safePage + 1))
+                      : setCurrentPage((page) => Math.min(totalPages, page + 1))
                   }
                   className="h-7 w-7 flex items-center justify-center rounded-md bg-[#1a1a1a] hover:bg-[#252525] transition-colors disabled:opacity-40"
                   disabled={safePage === totalPages}
