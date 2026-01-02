@@ -23,7 +23,7 @@ function Genre({ data }) {
   }, []);
 
   return (
-    <div className="relative pt-[20px] max-sm:pt-[15px]">
+    <div className="relative pt-0">
       <div className="relative flex items-center min-h-[32px] max-sm:min-h-[28px]">
         {/* Content first for proper stacking */}
         <div 
