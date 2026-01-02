@@ -19,7 +19,9 @@ function Home() {
   return (
     <>
       <div className="pt-16 w-full">
-        <Spotlight spotlights={homeInfo.spotlights} />
+        <div className="w-full -mx-4 lg:-mx-10">
+          <Spotlight spotlights={homeInfo.spotlights} />
+        </div>
         <div className="mt-6">
           <Genre data={homeInfo.genres} />
         </div>
