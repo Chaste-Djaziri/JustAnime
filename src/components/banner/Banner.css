@@ -12,10 +12,10 @@
 
 .spotlight-overlay {
   background: radial-gradient(
-    circle at 100% 50%,
+    circle at 30% 50%,
     rgba(10, 10, 10, 1) 0%,
-    rgba(10, 10, 10, 1) 40%,
-    rgba(10, 10, 10, 0) 65%
+    rgba(10, 10, 10, 1) 25%,
+    rgba(10, 10, 10, 0) 45%
   ),
   linear-gradient(
     270deg,
@@ -29,10 +29,10 @@
 @media only screen and (max-width: 1300px) {
   .spotlight-overlay {
     background: radial-gradient(
-      circle at 100% 50%,
+      circle at 30% 50%,
       rgba(10, 10, 10, 1) 0%,
-      rgba(10, 10, 10, 1) 40%,
-      rgba(10, 10, 10, 0) 65%
+      rgba(10, 10, 10, 1) 25%,
+      rgba(10, 10, 10, 0) 45%
     ),
     linear-gradient(
       270deg,
@@ -46,10 +46,10 @@
 @media only screen and (max-width: 1200px) {
   .spotlight-overlay {
     background: radial-gradient(
-      circle at 100% 50%,
+      circle at 30% 50%,
       rgba(10, 10, 10, 1) 0%,
-      rgba(10, 10, 10, 1) 40%,
-      rgba(10, 10, 10, 0) 65%
+      rgba(10, 10, 10, 1) 25%,
+      rgba(10, 10, 10, 0) 45%
     ),
     linear-gradient(
       270deg,
@@ -63,10 +63,10 @@
 @media only screen and (max-width: 900px) {
   .spotlight-overlay {
     background: radial-gradient(
-      circle at 100% 50%,
+      circle at 30% 50%,
       rgba(10, 10, 10, 1) 0%,
-      rgba(10, 10, 10, 1) 40%,
-      rgba(10, 10, 10, 0) 65%
+      rgba(10, 10, 10, 1) 25%,
+      rgba(10, 10, 10, 0) 45%
     ),
     linear-gradient(
       270deg,
