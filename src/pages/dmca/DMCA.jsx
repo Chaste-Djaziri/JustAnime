@@ -51,7 +51,7 @@ function DMCA() {
               href="/contact" 
               className="text-white hover:text-white/80 underline underline-offset-4 decoration-white/20 hover:decoration-white/40 transition-colors"
             >
-              https://justanime.to/contact
+              /contact
             </a>
           </p>
           <p className="mt-3 leading-relaxed text-base">
