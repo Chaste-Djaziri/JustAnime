@@ -3,27 +3,8 @@ export const CONSUMET_BASE_URL =
   import.meta.env.VITE_BASE_CONSUMET_URL ||
   "/consumet";
 
-export const AVAILABLE_PROVIDERS = [
-  { id: "hianime", name: "HiAnime (hianime.at)" },
-  { id: "justanime", name: "JustAnime (justanime.to)" },
-];
-
-export const getActiveProvider = () => {
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("justanime_preferred_source");
-    if (stored) return stored;
-  }
-  return import.meta.env.VITE_CONSUMET_PROVIDER || "hianime";
-};
-
-export const setActiveProvider = (provider) => {
-  if (typeof window !== "undefined") {
-    localStorage.setItem("justanime_preferred_source", provider);
-    window.dispatchEvent(new Event("justanime_source_change"));
-  }
-};
-
-export const CONSUMET_PROVIDER = getActiveProvider();
+export const CONSUMET_PROVIDER =
+  import.meta.env.VITE_CONSUMET_PROVIDER || "hianime";
 
 /**
  * Returns the URL for the active consumet anime provider.
@@ -31,11 +12,12 @@ export const CONSUMET_PROVIDER = getActiveProvider();
  */
 export function getConsumetAnimeUrl(endpoint = "", explicitProvider = null) {
   const base = CONSUMET_BASE_URL.replace(/\/$/, "");
-  const provider = (explicitProvider || getActiveProvider()).replace(
+  const provider = (explicitProvider || CONSUMET_PROVIDER).replace(
     /^\/|\/$/g,
     ""
   );
   const cleanEndpoint = endpoint ? `/${endpoint.replace(/^\//, "")}` : "";
   return `${base}/anime/${provider}${cleanEndpoint}`;
 }
+
 
