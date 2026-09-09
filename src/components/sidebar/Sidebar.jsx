@@ -1,6 +1,6 @@
 import { FaChevronLeft } from "react-icons/fa";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFilm, faRandom, faHome, faClock, faFire, faTv, faPlay, faCirclePlay, faFilePen, faUser } from "@fortawesome/free-solid-svg-icons";
+import { faFilm, faRandom, faHome, faClock, faFire, faTv, faPlay, faCirclePlay, faFilePen, faUser, faSliders } from "@fortawesome/free-solid-svg-icons";
 import { useLanguage } from "@/src/context/LanguageContext";
 import { useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -8,6 +8,7 @@ import "./Sidebar.css";
 
 const MENU_ITEMS = [
   { name: "Home", path: "/home", icon: faHome },
+  { name: "Filter Anime", path: "/filter", icon: faSliders },
   { name: "Profile & Watchlist", path: "/profile", icon: faUser },
   { name: "Recently Added", path: "/recently-added", icon: faCirclePlay },
   { name: "Top Upcoming", path: "/top-upcoming", icon: faFilePen },
