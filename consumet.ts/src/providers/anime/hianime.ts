@@ -189,7 +189,7 @@ class Hianime extends AnimeParser {
     if (0 >= page) {
       page = 1;
     }
-    return this.scrapeCardPage(`${this.baseUrl}/filter?status=1&sort=recently_updated&page=${page}`);
+    return this.scrapeCardPage(`${this.baseUrl}/latest-completed?page=${page}`);
   }
   /**
    * @param page number
@@ -462,6 +462,81 @@ class Hianime extends AnimeParser {
       });
 
       return res;
+    } catch (error) {
+      throw new Error('Something went wrong. Please try again later.');
+    }
+  }
+
+  async fetchFeaturedBlocks(): Promise<{
+    topAiring: IAnimeResult[];
+    mostPopular: IAnimeResult[];
+    mostFavorite: IAnimeResult[];
+    latestCompleted: IAnimeResult[];
+  }> {
+    try {
+      const blocks: {
+        topAiring: IAnimeResult[];
+        mostPopular: IAnimeResult[];
+        mostFavorite: IAnimeResult[];
+        latestCompleted: IAnimeResult[];
+      } = {
+        topAiring: [],
+        mostPopular: [],
+        mostFavorite: [],
+        latestCompleted: [],
+      };
+
+      const { data } = await this.client.get(`${this.baseUrl}/home`);
+      const $ = load(data);
+      const keys: (keyof typeof blocks)[] = ['topAiring', 'mostPopular', 'mostFavorite', 'latestCompleted'];
+
+      $('#anime-featured .anif-block').each((i, block) => {
+        const key = keys[i];
+        if (!key) return;
+
+        $(block).find('.ulclear li').each((_, li) => {
+          const item = $(li);
+          const filmName = item.find('.film-name a');
+          const title = filmName.text().trim();
+          const jname = filmName.attr('data-jname') || '';
+          const href = filmName.attr('href') || '';
+          const id = href.replace(/^\//, '').split('/').pop()?.split('?')[0] || '';
+
+          const posterImg = item.find('.film-poster img');
+          const rawImg = posterImg.attr('data-src') || posterImg.attr('src') || '';
+          const image = rawImg ? (rawImg.startsWith('http') ? rawImg : `${this.baseUrl}${rawImg.startsWith('/') ? '' : '/'}${rawImg}`) : '';
+
+          const showType = item.find('.fdi-item').first().text().trim() || 'TV';
+          const subText = item.find('.tick-sub').text().trim();
+          const dubText = item.find('.tick-dub').text().trim();
+          const epsText = item.find('.tick-eps').text().trim();
+
+          const sub = subText ? parseInt(subText.replace(/[^\d]/g, ''), 10) || null : null;
+          const dub = dubText ? parseInt(dubText.replace(/[^\d]/g, ''), 10) || null : null;
+          const episodes = epsText ? parseInt(epsText.replace(/[^\d]/g, ''), 10) || null : sub;
+
+          blocks[key].push({
+            id,
+            title,
+            japaneseTitle: jname,
+            image,
+            poster: image,
+            type: showType as any,
+            sub: sub ?? undefined,
+            dub: dub ?? undefined,
+            episodes: episodes ?? undefined,
+            url: href.startsWith('http') ? href : `${this.baseUrl}/${id}`,
+            tvInfo: {
+              showType,
+              sub,
+              dub,
+              episodes,
+            },
+          } as any);
+        });
+      });
+
+      return blocks;
     } catch (error) {
       throw new Error('Something went wrong. Please try again later.');
     }
