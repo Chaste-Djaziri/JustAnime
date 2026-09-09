@@ -448,7 +448,7 @@ class Hianime extends AnimeParser {
 
         const img = posterLink.find('img');
         const rawImg = img.attr('src') || img.attr('data-src') || '';
-        const image = this.ensureAbsoluteUrl(rawImg);
+        const image = rawImg ? (rawImg.startsWith('http') ? rawImg : `${this.baseUrl}${rawImg.startsWith('/') ? '' : '/'}${rawImg}`) : '';
 
         res.results.push({
           id: id || `${rank}`,
