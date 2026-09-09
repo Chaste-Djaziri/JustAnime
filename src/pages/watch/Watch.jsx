@@ -42,9 +42,37 @@ export default function Watch() {
   const [lightsOff, setLightsOff] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportSubmitted, setReportSubmitted] = useState(false);
-  const [shareToast, setShareToast] = useState(false);
-
   const playerSectionRef = useRef(null);
+  const [playerHeight, setPlayerHeight] = useState(null);
+
+  // Synchronize episode list height to match player component exactly on desktop
+  useEffect(() => {
+    const updateHeight = () => {
+      if (window.innerWidth >= 1024 && playerSectionRef.current) {
+        setPlayerHeight(playerSectionRef.current.offsetHeight);
+      } else {
+        setPlayerHeight(null);
+      }
+    };
+
+    updateHeight();
+    const timer = setTimeout(updateHeight, 300);
+
+    let resizeObserver;
+    if (playerSectionRef.current && window.ResizeObserver) {
+      resizeObserver = new ResizeObserver(() => {
+        updateHeight();
+      });
+      resizeObserver.observe(playerSectionRef.current);
+    }
+    window.addEventListener("resize", updateHeight);
+
+    return () => {
+      clearTimeout(timer);
+      if (resizeObserver) resizeObserver.disconnect();
+      window.removeEventListener("resize", updateHeight);
+    };
+  }, [buffering, streamUrl, servers, episodeId]);
 
   const {
     buffering,
@@ -572,12 +600,15 @@ export default function Watch() {
             </div>
           </div>
 
-          {/* Right Column: Episode Drawer, Next Episode Schedule, SEASONS, RELATED, RECOMMENDATIONS */}
+          {/* Right Column: Episode Drawer (Height equal to player), More Seasons (HiAnime), Next Episode, RELATED, RECOMMENDATIONS */}
           <div className="flex flex-col gap-2.5 w-full min-w-0">
-            {/* Episode List Drawer */}
-            <div className="w-full">
+            {/* Episode List Drawer - Equal Height to Player Component */}
+            <div
+              style={playerHeight ? { height: `${playerHeight}px` } : {}}
+              className="w-full flex-shrink-0 transition-[height] duration-150"
+            >
               {!episodes ? (
-                <div className="h-64 flex items-center justify-center bg-[#121214] border border-zinc-800 rounded-2xl">
+                <div className="h-full min-h-[300px] flex items-center justify-center bg-[#121214] border border-zinc-800 rounded-2xl">
                   <BouncingLoader />
                 </div>
               ) : (
@@ -591,6 +622,76 @@ export default function Watch() {
               )}
             </div>
 
+            {/* More Seasons Component (HiAnime Style) */}
+            {seasons && seasons.length > 0 && (
+              <div className="w-full bg-[#121214] border border-zinc-800 rounded-2xl p-3 sm:p-3.5 shadow-xl">
+                <div className="flex items-center gap-2 mb-2.5 text-white font-bold text-xs sm:text-sm tracking-wide">
+                  <FontAwesomeIcon icon={faLayerGroup} className="text-zinc-400 text-xs" />
+                  <span>More Seasons</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {seasons.map((season, index) => {
+                    const isCurrentSeason = animeId === String(season.id);
+                    return (
+                      <Link
+                        to={`/${season.id}`}
+                        key={season.id || index}
+                        className={`relative w-full aspect-[3/1] rounded-lg overflow-hidden cursor-pointer group transition-all ${
+                          isCurrentSeason
+                            ? "ring-2 ring-white/60 shadow-lg shadow-white/10"
+                            : "hover:ring-1 hover:ring-white/30 border border-zinc-800"
+                        }`}
+                      >
+                        {/* Background Poster Image */}
+                        {season.season_poster ? (
+                          <img
+                            src={season.season_poster}
+                            alt={season.season}
+                            className={`w-full h-full object-cover scale-150 ${
+                              isCurrentSeason
+                                ? "opacity-50"
+                                : "opacity-40 group-hover:opacity-60 transition-opacity"
+                            }`}
+                          />
+                        ) : null}
+
+                        {/* Dots Pattern Overlay */}
+                        <div
+                          className="absolute inset-0 z-10 pointer-events-none"
+                          style={{
+                            backgroundImage: `url('data:image/svg+xml,<svg width="3" height="3" viewBox="0 0 3 3" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="1.5" cy="1.5" r="0.5" fill="white" fill-opacity="0.25"/></svg>')`,
+                            backgroundSize: "3px 3px",
+                          }}
+                        />
+
+                        {/* Dark Gradient Overlay */}
+                        <div
+                          className={`absolute inset-0 z-20 bg-gradient-to-r ${
+                            isCurrentSeason
+                              ? "from-black/60 to-transparent"
+                              : "from-black/50 to-transparent"
+                          }`}
+                        />
+
+                        {/* Title Container */}
+                        <div className="absolute inset-0 z-30 flex items-center justify-center">
+                          <p
+                            className={`text-xs font-bold text-center px-1.5 transition-colors line-clamp-1 ${
+                              isCurrentSeason
+                                ? "text-white font-extrabold"
+                                : "text-white/90 group-hover:text-white"
+                            }`}
+                          >
+                            {season.season}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Next Episode Schedule Notification */}
             <div className="w-full bg-[#121214] border border-zinc-800 rounded-2xl p-3.5 flex items-center justify-between text-xs shadow-lg">
               <div className="flex items-center gap-2.5 text-zinc-300">
@@ -602,59 +703,6 @@ export default function Watch() {
                 </span>
               </div>
             </div>
-
-            {/* SEASONS Section (Black and White Theme) */}
-            {seasons && seasons.length > 0 && (
-              <div className="w-full bg-[#121214] border border-zinc-800 rounded-2xl p-4 shadow-xl">
-                <div className="flex items-center gap-2 mb-3 text-white font-bold text-sm tracking-wide">
-                  <FontAwesomeIcon icon={faLayerGroup} className="text-zinc-400 text-xs" />
-                  <span>SEASONS</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2.5">
-                  {seasons.map((season, index) => {
-                    const isCurrentSeason = animeId === String(season.id);
-                    return (
-                      <Link
-                        to={`/${season.id}`}
-                        key={season.id || index}
-                        className={`relative aspect-[16/8] rounded-xl overflow-hidden cursor-pointer group border transition-all ${
-                          isCurrentSeason
-                            ? "border-white ring-2 ring-white/30 shadow-[0_0_15px_rgba(255,255,255,0.15)] bg-white/10"
-                            : "border-zinc-800 hover:border-zinc-700 bg-zinc-900"
-                        }`}
-                      >
-                        {/* Background Poster Image */}
-                        {season.season_poster ? (
-                          <img
-                            src={season.season_poster}
-                            alt={season.season}
-                            className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${
-                              isCurrentSeason ? "opacity-50" : "opacity-35 group-hover:opacity-50"
-                            }`}
-                          />
-                        ) : null}
-
-                        {/* Dark Gradient Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-
-                        {/* Centered Season Title */}
-                        <div className="absolute inset-0 flex items-center justify-center p-2 text-center">
-                          <span
-                            className={`text-xs font-bold transition-colors ${
-                              isCurrentSeason
-                                ? "text-white font-extrabold"
-                                : "text-zinc-300 group-hover:text-white"
-                            }`}
-                          >
-                            {season.season}
-                          </span>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
             {/* RELATED Section */}
             {animeInfo?.related_data && animeInfo.related_data.length > 0 && (
