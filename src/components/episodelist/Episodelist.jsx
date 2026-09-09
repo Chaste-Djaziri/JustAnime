@@ -220,7 +220,7 @@ function Episodelist({
       {/* Episode Container */}
       <div
         ref={listContainerRef}
-        className="w-full flex-1 overflow-y-auto p-2.5 space-y-2 max-h-[calc(100vh-230px)] max-[1200px]:max-h-[460px] custom-scrollbar"
+        className="w-full flex-1 min-h-0 overflow-y-auto p-2.5 space-y-2 max-[1024px]:max-h-[460px] custom-scrollbar"
       >
         {filteredEpisodes.length === 0 ? (
           <div className="text-center py-10 text-xs text-zinc-500">
