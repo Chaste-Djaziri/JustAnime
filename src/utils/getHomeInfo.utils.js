@@ -2,7 +2,7 @@ import axios from "axios";
 import { getConsumetAnimeUrl } from "../config/api.config";
 import { mapConsumetAnimeList } from "../helper/animeMapper";
 
-const CACHE_KEY_PREFIX = "homeInfoCache_v6";
+const CACHE_KEY_PREFIX = "homeInfoCache_v7";
 const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours
 
 export default async function getHomeInfo() {
@@ -16,7 +16,9 @@ export default async function getHomeInfo() {
     cachedData &&
     currentTime - cachedData.timestamp < CACHE_DURATION &&
     Array.isArray(cachedData.data?.trending) &&
-    cachedData.data.trending.length >= 12
+    cachedData.data.trending.length >= 12 &&
+    Array.isArray(cachedData.data?.latest_completed) &&
+    cachedData.data.latest_completed.length > 0
   ) {
     return cachedData.data;
   }
@@ -26,6 +28,7 @@ export default async function getHomeInfo() {
     const [
       spotlightsRes,
       trendingRes,
+      featuredRes,
       topAiringRes,
       mostPopularRes,
       mostFavoriteRes,
@@ -37,6 +40,7 @@ export default async function getHomeInfo() {
     ] = await Promise.allSettled([
       axios.get(getConsumetAnimeUrl("spotlight")),
       axios.get(getConsumetAnimeUrl("trending")),
+      axios.get(getConsumetAnimeUrl("featured")),
       axios.get(getConsumetAnimeUrl("top-airing")),
       axios.get(getConsumetAnimeUrl("most-popular")),
       axios.get(getConsumetAnimeUrl("most-favorite")),
@@ -55,20 +59,31 @@ export default async function getHomeInfo() {
       trendingRes.status === "fulfilled"
         ? mapConsumetAnimeList(trendingRes.value.data)
         : [];
+
+    const featured = featuredRes.status === "fulfilled" ? featuredRes.value.data : null;
+
     const top_airing =
-      topAiringRes.status === "fulfilled"
+      featured?.topAiring && featured.topAiring.length > 0
+        ? mapConsumetAnimeList(featured.topAiring)
+        : topAiringRes.status === "fulfilled"
         ? mapConsumetAnimeList(topAiringRes.value.data)
         : [];
     const most_popular =
-      mostPopularRes.status === "fulfilled"
+      featured?.mostPopular && featured.mostPopular.length > 0
+        ? mapConsumetAnimeList(featured.mostPopular)
+        : mostPopularRes.status === "fulfilled"
         ? mapConsumetAnimeList(mostPopularRes.value.data)
         : [];
     const most_favorite =
-      mostFavoriteRes.status === "fulfilled"
+      featured?.mostFavorite && featured.mostFavorite.length > 0
+        ? mapConsumetAnimeList(featured.mostFavorite)
+        : mostFavoriteRes.status === "fulfilled"
         ? mapConsumetAnimeList(mostFavoriteRes.value.data)
         : [];
     const latest_completed =
-      latestCompletedRes.status === "fulfilled"
+      featured?.latestCompleted && featured.latestCompleted.length > 0
+        ? mapConsumetAnimeList(featured.latestCompleted)
+        : latestCompletedRes.status === "fulfilled"
         ? mapConsumetAnimeList(latestCompletedRes.value.data)
         : [];
     const latest_episode =
