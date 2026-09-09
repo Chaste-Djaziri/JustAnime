@@ -71,8 +71,8 @@ function Genres() {
     <div className="w-full min-h-screen bg-black text-white pt-[76px] pb-16">
       <div className="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-y-8">
         {/* Hero Header */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-zinc-900/80 via-zinc-900/50 to-zinc-950/80 border border-zinc-800/80 p-6 sm:p-8 backdrop-blur-xl shadow-2xl">
-          <div className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 bg-pink-500/[0.05] rounded-full blur-3xl" />
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-zinc-900/90 via-zinc-900/60 to-zinc-950/90 border border-zinc-800 p-6 sm:p-8 backdrop-blur-xl shadow-2xl">
+          <div className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 bg-white/[0.03] rounded-full blur-3xl" />
           <div className="pointer-events-none absolute -bottom-24 -right-24 w-96 h-96 bg-zinc-800/20 rounded-full blur-3xl" />
 
           {/* Breadcrumbs */}
@@ -87,7 +87,7 @@ function Genres() {
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-3 flex-wrap">
-                <div className="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/30 flex items-center justify-center text-pink-400">
+                <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white">
                   <FontAwesomeIcon icon={faTags} className="text-base" />
                 </div>
                 <h1 className="font-bold text-2xl sm:text-3xl text-white tracking-tight">
@@ -111,7 +111,7 @@ function Genres() {
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
                   placeholder="Filter genres by name..."
-                  className="w-full bg-zinc-950/90 text-white placeholder-zinc-500 pl-9 pr-8 py-2.5 rounded-xl border border-zinc-800 focus:border-pink-500/60 focus:outline-none text-xs transition-all shadow-inner"
+                  className="w-full bg-zinc-950/90 text-white placeholder-zinc-500 pl-9 pr-8 py-2.5 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none text-xs transition-all shadow-inner"
                 />
                 <FontAwesomeIcon
                   icon={faMagnifyingGlass}
@@ -131,7 +131,7 @@ function Genres() {
                 to="/filter"
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-800/90 hover:bg-zinc-700 border border-zinc-700 text-xs font-semibold text-zinc-200 hover:text-white transition-all shrink-0 shadow-sm"
               >
-                <FontAwesomeIcon icon={faSliders} className="text-xs text-pink-400" />
+                <FontAwesomeIcon icon={faSliders} className="text-xs text-white" />
                 <span>Advanced Filter</span>
               </Link>
             </div>
@@ -144,18 +144,18 @@ function Genres() {
             <Link
               key={genre.id}
               to={`/genre/${genre.id}`}
-              className="group relative flex flex-col p-5 rounded-2xl bg-[#141419]/90 hover:bg-[#1c1c24] border border-white/5 hover:border-pink-500/40 transition-all duration-300 shadow-lg hover:shadow-pink-500/10 hover:-translate-y-1"
+              className="group relative flex flex-col p-5 rounded-2xl bg-[#141419]/90 hover:bg-[#1c1c24] border border-white/5 hover:border-white/30 transition-all duration-300 shadow-lg hover:shadow-white/5 hover:-translate-y-1"
             >
               <div className="flex items-center justify-between mb-2.5">
                 <span className="text-2xl select-none group-hover:scale-110 transition-transform">
                   {genre.icon}
                 </span>
-                <span className="text-zinc-600 group-hover:text-pink-400 transition-colors text-xs">
+                <span className="text-zinc-600 group-hover:text-white transition-colors text-xs">
                   <FontAwesomeIcon icon={faArrowRight} />
                 </span>
               </div>
 
-              <h2 className="text-base font-bold text-white group-hover:text-pink-400 transition-colors mb-1 tracking-wide">
+              <h2 className="text-base font-bold text-white group-hover:text-white transition-colors mb-1 tracking-wide">
                 {genre.name}
               </h2>
 
@@ -173,7 +173,7 @@ function Genres() {
             </p>
             <button
               onClick={() => setSearchFilter("")}
-              className="text-xs text-pink-400 underline hover:text-pink-300"
+              className="text-xs text-zinc-300 underline hover:text-white"
             >
               Clear filter and view all genres
             </button>

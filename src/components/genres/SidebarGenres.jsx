@@ -8,6 +8,7 @@ export default function SidebarGenres({ genres }) {
 
   const defaultGenres = [
     "Action",
+    "Adult Cast",
     "Adventure",
     "Cars",
     "Comedy",
@@ -54,9 +55,17 @@ export default function SidebarGenres({ genres }) {
 
   return (
     <div className="bg-[#141419] border border-white/5 rounded-2xl p-4 sm:p-5 shadow-lg">
-      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-white/5">
-        <FontAwesomeIcon icon={faTags} className="text-amber-400 text-base" />
-        <h3 className="text-lg font-bold text-white tracking-wide">Genres</h3>
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
+        <div className="flex items-center gap-2">
+          <FontAwesomeIcon icon={faTags} className="text-white text-sm" />
+          <h3 className="text-lg font-bold text-white tracking-wide">Genres</h3>
+        </div>
+        <Link
+          to="/genres"
+          className="text-xs text-zinc-400 hover:text-white transition-colors"
+        >
+          View all
+        </Link>
       </div>
 
       <div className="grid grid-cols-3 gap-1.5">

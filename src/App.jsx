@@ -23,6 +23,7 @@ import SplashScreen from "./components/splashscreen/SplashScreen";
 import Terms from "./pages/terms/Terms";
 import DMCA from "./pages/dmca/DMCA";
 import Contact from "./pages/contact/Contact";
+import Genres from "./pages/genres/Genres";
 
 function App() {
   const location = useLocation();
@@ -47,14 +48,21 @@ function App() {
               <Route path="/home" element={<Home />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route path="/:id" element={<AnimeInfo />} />
-            <Route path="/watch/:id" element={<Watch />} />
-            <Route path="/random" element={<AnimeInfo random={true} />} />
-            <Route path="/404-not-found-page" element={<Error error="404" />} />
-            <Route path="/error-page" element={<Error />} />
-            <Route path="/terms-of-service" element={<Terms />} />
+              <Route path="/watch/:id" element={<Watch />} />
+              <Route path="/random" element={<AnimeInfo random={true} />} />
+              <Route path="/404-not-found-page" element={<Error error="404" />} />
+              <Route path="/error-page" element={<Error />} />
+              <Route path="/terms-of-service" element={<Terms />} />
             <Route path="/dmca" element={<DMCA />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/producer/:id" element={<Producer />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="/filter" element={<Search />} />
+            <Route path="/filtter" element={<Search />} />
+            <Route path="/genres" element={<Genres />} />
+            <Route path="/genre" element={<Genres />} />
+            <Route path="/genre/:genre" element={<Category />} />
+            <Route path="/genres/:genre" element={<Category />} />
             {/* Render category routes */}
             {categoryRoutes.map((path) => (
               <Route
@@ -73,10 +81,8 @@ function App() {
                 element={<AtoZ path={path} />}
               />
             ))}
-            <Route path="/producer/:id" element={<Producer />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/filter" element={<Search />} />
-            <Route path="/filtter" element={<Search />} />
+            {/* Anime info route */}
+            <Route path="/:id" element={<AnimeInfo />} />
             {/* Catch-all route for 404 */}
             <Route path="*" element={<Error error="404" />} />
           </Routes>

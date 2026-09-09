@@ -275,7 +275,7 @@ function AnimeInfo({ random = false }) {
                   <div className="flex flex-wrap gap-1">
                     {info.Genres.map((genre, index) => (
                       <Link
-                        to={`/genre/${genre.split(" ").join("-")}`}
+                        to={`/genre/${genre.toLowerCase().replace(/\s+/g, "-")}`}
                         key={index}
                         className="px-2 py-0.5 text-[10px] bg-white/5 rounded-md hover:bg-white/10 transition-colors"
                       >
@@ -414,7 +414,7 @@ function AnimeInfo({ random = false }) {
                       <div className="flex flex-wrap gap-1.5">
                         {info.Genres.map((genre, index) => (
                           <Link
-                            to={`/genre/${genre.split(" ").join("-")}`}
+                            to={`/genre/${genre.toLowerCase().replace(/\s+/g, "-")}`}
                             key={index}
                             className="px-3 py-1 text-xs bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
                           >

@@ -67,16 +67,18 @@ function DatePickerPill({
   const hasDate = Boolean(year || month || day);
 
   return (
-    <div className="flex items-center gap-1.5 sm:gap-2 bg-[#20202a] hover:bg-[#252532] border border-white/10 rounded-xl px-3 py-2 transition-all shrink-0 relative group">
+    <div className="flex items-center gap-1.5 sm:gap-2 bg-[#18181b] hover:bg-[#222226] border border-zinc-700/60 rounded-xl px-3 py-2 transition-all shrink-0 relative group">
       <span className="text-xs font-bold text-white tracking-wide shrink-0 select-none">
-        {label}
+        {label}:
       </span>
 
       {/* Year Select */}
       <select
         value={year}
         onChange={(e) => onDateChange?.({ year: e.target.value, month, day })}
-        className="bg-transparent text-xs font-medium text-pink-400 hover:text-pink-300 focus:outline-none cursor-pointer pr-1"
+        className={`bg-transparent text-xs font-medium focus:outline-none cursor-pointer pr-1 transition-colors ${
+          year ? "text-white font-semibold" : "text-zinc-400 hover:text-zinc-200"
+        }`}
       >
         <option value="" className="bg-zinc-900 text-zinc-400">
           Year
@@ -92,7 +94,9 @@ function DatePickerPill({
       <select
         value={month}
         onChange={(e) => onDateChange?.({ year, month: e.target.value, day })}
-        className="bg-transparent text-xs font-medium text-pink-400 hover:text-pink-300 focus:outline-none cursor-pointer pr-1"
+        className={`bg-transparent text-xs font-medium focus:outline-none cursor-pointer pr-1 transition-colors ${
+          month ? "text-white font-semibold" : "text-zinc-400 hover:text-zinc-200"
+        }`}
       >
         <option value="" className="bg-zinc-900 text-zinc-400">
           Month
@@ -108,7 +112,9 @@ function DatePickerPill({
       <select
         value={day}
         onChange={(e) => onDateChange?.({ year, month, day: e.target.value })}
-        className="bg-transparent text-xs font-medium text-pink-400 hover:text-pink-300 focus:outline-none cursor-pointer pr-1"
+        className={`bg-transparent text-xs font-medium focus:outline-none cursor-pointer pr-1 transition-colors ${
+          day ? "text-white font-semibold" : "text-zinc-400 hover:text-zinc-200"
+        }`}
       >
         <option value="" className="bg-zinc-900 text-zinc-400">
           Day
@@ -124,7 +130,7 @@ function DatePickerPill({
       <button
         type="button"
         onClick={handleCalendarClick}
-        className="text-zinc-400 hover:text-pink-400 transition-colors p-1 text-xs shrink-0"
+        className="text-zinc-400 hover:text-white transition-colors p-1 text-xs shrink-0"
         title="Open interactive calendar"
       >
         <FontAwesomeIcon icon={faCalendarDays} />

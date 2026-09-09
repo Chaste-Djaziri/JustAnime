@@ -148,15 +148,18 @@ const POPULAR_SEARCHES = [
 ];
 
 function FilterPill({ label, value, options, onChange }) {
+  const isSelected = value && value !== "all" && value !== "default";
   return (
-    <div className="flex items-center gap-1.5 sm:gap-2 bg-[#20202a] hover:bg-[#252532] border border-white/10 rounded-xl px-3.5 py-2 transition-all shrink-0">
+    <div className="flex items-center gap-1.5 sm:gap-2 bg-[#18181b] hover:bg-[#222226] border border-zinc-700/60 rounded-xl px-3.5 py-2 transition-all shrink-0">
       <span className="text-xs font-bold text-white tracking-wide shrink-0 select-none">
-        {label}
+        {label}:
       </span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-transparent text-xs font-medium text-pink-400 hover:text-pink-300 focus:outline-none cursor-pointer pr-1 capitalize"
+        className={`bg-transparent text-xs font-medium focus:outline-none cursor-pointer pr-1 capitalize transition-colors ${
+          isSelected ? "text-white font-semibold" : "text-zinc-400 hover:text-zinc-200"
+        }`}
       >
         {options.map((opt) => (
           <option
@@ -874,7 +877,7 @@ function Search() {
         {isFilterOpen && (
           <form
             onSubmit={handleApplyFilter}
-            className="p-6 sm:p-8 rounded-2xl bg-[#181822] border border-white/10 shadow-2xl backdrop-blur-xl flex flex-col gap-6"
+            className="p-6 sm:p-8 rounded-2xl bg-[#141418] border border-zinc-800 shadow-2xl backdrop-blur-xl flex flex-col gap-6"
           >
             {/* Filter Section */}
             <div>
@@ -987,7 +990,7 @@ function Search() {
             </div>
 
             {/* Genre Section */}
-            <div className="pt-2 border-t border-white/5">
+            <div className="pt-2 border-t border-zinc-800/80">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-white font-bold text-base tracking-wide">
                   Genre
@@ -1013,8 +1016,8 @@ function Search() {
                       onClick={() => toggleGenre(genre.id)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                         isSelected
-                          ? "bg-pink-500 text-white font-semibold shadow-md shadow-pink-500/20 scale-105"
-                          : "bg-[#20202a] hover:bg-[#282836] border border-white/10 text-zinc-300 hover:text-white"
+                          ? "bg-white text-black font-bold shadow-md shadow-white/10 scale-105"
+                          : "bg-[#18181b] hover:bg-zinc-800 border border-zinc-800/80 text-zinc-300 hover:text-white"
                       }`}
                     >
                       {genre.name}
@@ -1025,17 +1028,17 @@ function Search() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/5">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-800/80">
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="px-5 py-2.5 rounded-xl bg-[#20202a] hover:bg-[#2a2a38] text-zinc-300 hover:text-white text-xs font-semibold border border-white/10 transition-all"
+                className="px-5 py-2.5 rounded-xl bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs font-semibold border border-zinc-700/60 transition-all"
               >
                 Reset
               </button>
               <button
                 type="submit"
-                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold transition-all shadow-lg hover:shadow-pink-500/30 active:scale-95"
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-bold transition-all shadow-lg hover:shadow-white/20 active:scale-95"
               >
                 <FontAwesomeIcon icon={faFilter} className="text-xs" />
                 <span>Filter</span>
@@ -1073,7 +1076,7 @@ function Search() {
             <div className="flex items-center gap-3 mb-6">
               <button
                 onClick={() => setIsFilterOpen(true)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold transition-all shadow"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-bold transition-all shadow"
               >
                 <FontAwesomeIcon icon={faSliders} className="text-xs" />
                 <span>Open Advanced Filter</span>

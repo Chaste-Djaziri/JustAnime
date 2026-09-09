@@ -4,7 +4,7 @@ import { mapConsumetAnimeList } from "../helper/animeMapper";
 
 const normalizeCategoryPath = (path) => {
   if (!path) return "";
-  const clean = path.replace(/^\//, "");
+  const clean = path.replace(/^\//, "").toLowerCase();
   // Map common frontend route aliases to Consumet routes
   const aliases = {
     "most-popular": "most-popular",
