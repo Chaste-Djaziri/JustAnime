@@ -12,7 +12,7 @@ export default function FeaturedColumns({
     { title: "Top Airing", path: "top-airing", items: Array.isArray(topAiring) ? topAiring.slice(0, 5) : [] },
     { title: "Most Popular", path: "most-popular", items: Array.isArray(mostPopular) ? mostPopular.slice(0, 5) : [] },
     { title: "Most Favorite", path: "most-favorite", items: Array.isArray(mostFavorite) ? mostFavorite.slice(0, 5) : [] },
-    { title: "Latest Completed", path: "completed", items: Array.isArray(latestCompleted) ? latestCompleted.slice(0, 5) : [] },
+    { title: "Latest Completed", path: "latest-completed", items: Array.isArray(latestCompleted) ? latestCompleted.slice(0, 5) : [] },
   ];
 
   return (
