@@ -178,7 +178,7 @@ export default function Watch() {
     animeInfo?.animeInfo?.alID;
 
   return (
-    <div className="w-full min-h-screen bg-[#0a0a0c] text-white font-sans relative">
+    <div className="w-full min-h-screen bg-[#0a0a0c] text-white font-sans relative pt-16">
       {/* Lights Off Backdrop */}
       {lightsOff && (
         <div
@@ -187,18 +187,18 @@ export default function Watch() {
         />
       )}
 
-      {/* Top Notice Bar */}
+      {/* Top Notice Bar - Directly Under Header */}
       {showNotice && (
-        <div className="w-full bg-[#181818] text-white border-b border-zinc-800 px-4 py-2 flex items-center justify-between text-xs sm:text-sm font-medium sticky top-0 z-30 shadow-md">
-          <div className="flex items-center gap-2 max-w-5xl mx-auto flex-1">
-            <FontAwesomeIcon icon={faCircleExclamation} className="text-sm shrink-0 text-zinc-400" />
-            <span className="truncate">
+        <div className="w-full bg-[#1e1509] text-orange-400 border-b border-[#3b250d] px-4 py-2.5 flex items-center justify-between text-xs sm:text-sm font-medium z-30 shadow-md">
+          <div className="flex items-center gap-2.5 max-w-[1920px] mx-auto flex-1">
+            <FontAwesomeIcon icon={faCircleExclamation} className="text-orange-500 text-sm shrink-0" />
+            <span className="truncate text-orange-300">
               Some servers are under maintenance. Please switch servers if needed.
             </span>
           </div>
           <button
             onClick={() => setShowNotice(false)}
-            className="text-zinc-400 hover:text-white transition-colors p-1"
+            className="text-orange-400/80 hover:text-white transition-colors p-1"
             title="Dismiss notice"
           >
             <FontAwesomeIcon icon={faXmark} className="text-sm" />
