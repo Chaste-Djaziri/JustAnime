@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useParams, Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/src/context/LanguageContext";
@@ -20,6 +19,7 @@ import SidecardLoader from "@/src/components/Loader/Sidecard.loader";
 import Watchcontrols from "@/src/components/watchcontrols/Watchcontrols";
 import useWatchControl from "@/src/hooks/useWatchControl";
 import Player from "@/src/components/player/Player";
+import { getCleanEpisodeId, isEpisodeMatch } from "@/src/helper/episodeHelper";
 
 export default function Watch() {
   const location = useLocation();
@@ -55,6 +55,7 @@ export default function Watch() {
     activeServerId,
     setActiveServerId,
     servers,
+    activeServer,
     serverLoading,
     activeServerType,
     setActiveServerType,
@@ -77,14 +78,11 @@ export default function Watch() {
   useEffect(() => {
     if (!episodes || episodes.length === 0) return;
     
-    const isValidEpisode = episodes.some(ep => {
-      const epNumber = ep.id.split('ep=')[1];
-      return epNumber === episodeId; 
-    });
+    const isValidEpisode = episodes.some(ep => isEpisodeMatch(ep, episodeId));
     
-    // If missing or invalid episodeId, fallback to first
+    // If missing or invalid episodeId, fallback to first episode
     if (!episodeId || !isValidEpisode) {
-      const fallbackId = episodes[0].id.match(/ep=(\d+)/)?.[1];
+      const fallbackId = getCleanEpisodeId(episodes[0]);
       if (fallbackId && fallbackId !== episodeId) {
         setEpisodeId(fallbackId);
       }
@@ -230,33 +228,58 @@ export default function Watch() {
             <div ref={playerRef} className="player w-full h-fit bg-black flex flex-col rounded-xl overflow-hidden">
               {/* Video Container */}
               <div ref={videoContainerRef} className="w-full relative aspect-video bg-black">
-                {!buffering ? (["hd-1", "hd-4"].includes(activeServerName.toLowerCase()) ?
-                  <IframePlayer
-                    episodeId={episodeId}
-                    servertype={activeServerType}
-                    serverName={activeServerName}
-                    animeInfo={animeInfo}
-                    episodeNum={activeEpisodeNum}
-                    episodes={episodes}
-                    playNext={(id) => setEpisodeId(id)}
-                    autoNext={autoNext}
-                  /> : <Player
-                    streamUrl={streamUrl}
-                    subtitles={subtitles}
-                    intro={intro}
-                    outro={outro}
-                    serverName={activeServerName.toLowerCase()}
-                    thumbnail={thumbnail}
-                    autoSkipIntro={autoSkipIntro}
-                    autoPlay={autoPlay}
-                    autoNext={autoNext}
-                    episodeId={episodeId}
-                    episodes={episodes}
-                    playNext={(id) => setEpisodeId(id)}
-                    animeInfo={animeInfo}
-                    episodeNum={activeEpisodeNum}
-                    streamInfo={streamInfo}
-                  />
+                {!buffering ? (
+                  (activeServer?.url?.startsWith("http") ||
+                   activeServerName?.toLowerCase()?.includes("zoko") ||
+                   activeServerName?.toLowerCase() === "hd-1" ||
+                   activeServerName?.toLowerCase() === "hd-4" ||
+                   activeServerName?.toLowerCase()?.includes("vidstream") ||
+                   activeServerName?.toLowerCase()?.includes("vidplay") ||
+                   !streamUrl) ? (
+                    <IframePlayer
+                      episodeId={episodeId}
+                      servertype={activeServerType}
+                      serverName={activeServerName}
+                      activeServer={activeServer}
+                      animeInfo={animeInfo}
+                      episodeNum={activeEpisodeNum}
+                      episodes={episodes}
+                      playNext={(id) => setEpisodeId(id)}
+                      autoNext={autoNext}
+                      autoPlay={autoPlay}
+                    />
+                  ) : (
+                    <Player
+                      streamUrl={streamUrl}
+                      subtitles={subtitles}
+                      intro={intro}
+                      outro={outro}
+                      serverName={activeServerName?.toLowerCase()}
+                      thumbnail={thumbnail}
+                      autoSkipIntro={autoSkipIntro}
+                      autoPlay={autoPlay}
+                      autoNext={autoNext}
+                      episodeId={episodeId}
+                      episodes={episodes}
+                      playNext={(id) => setEpisodeId(id)}
+                      animeInfo={animeInfo}
+                      episodeNum={activeEpisodeNum}
+                      streamInfo={streamInfo}
+                      onPlaybackError={() => {
+                        const zoko =
+                          servers?.find(
+                            (s) =>
+                              s.serverName === "ZokoAnime" &&
+                              s.type === activeServerType
+                          ) || servers?.find((s) => s.serverName === "ZokoAnime");
+                        if (zoko) {
+                          setActiveServerId(zoko.data_id);
+                          setActiveServerName(zoko.serverName);
+                          setActiveServerType(zoko.type);
+                        }
+                      }}
+                    />
+                  )
                 ) : (
                   <div className="absolute inset-0 flex justify-center items-center bg-black">
                     <BouncingLoader />
