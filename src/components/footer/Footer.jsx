@@ -6,13 +6,13 @@ function Footer() {
   return (
     <footer className="w-full mt-16">
       {/* Logo Section */}
-      <div className="max-w-[1920px] mx-auto px-4 mb-4">
-        <div className="flex justify-center sm:justify-start items-center gap-6">
-          <Link to="/home" className="inline-block">
+      <div className="max-w-[1920px] mx-auto px-4 py-6">
+        <div className="flex justify-center sm:justify-start items-center">
+          <Link to="/home" className="inline-block group">
             <img
               src="/kizora_full.png"
               alt={logoTitle}
-              className="h-[80px] sm:h-[100px] w-auto max-w-[280px] object-contain"
+              className="h-[160px] sm:h-[200px] md:h-[240px] lg:h-[280px] w-auto max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.02] drop-shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
             />
           </Link>
         </div>
