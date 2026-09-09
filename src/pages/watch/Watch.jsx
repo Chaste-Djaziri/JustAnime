@@ -45,35 +45,6 @@ export default function Watch() {
   const playerSectionRef = useRef(null);
   const [playerHeight, setPlayerHeight] = useState(null);
 
-  // Synchronize episode list height to match player component exactly on desktop
-  useEffect(() => {
-    const updateHeight = () => {
-      if (window.innerWidth >= 1024 && playerSectionRef.current) {
-        setPlayerHeight(playerSectionRef.current.offsetHeight);
-      } else {
-        setPlayerHeight(null);
-      }
-    };
-
-    updateHeight();
-    const timer = setTimeout(updateHeight, 300);
-
-    let resizeObserver;
-    if (playerSectionRef.current && window.ResizeObserver) {
-      resizeObserver = new ResizeObserver(() => {
-        updateHeight();
-      });
-      resizeObserver.observe(playerSectionRef.current);
-    }
-    window.addEventListener("resize", updateHeight);
-
-    return () => {
-      clearTimeout(timer);
-      if (resizeObserver) resizeObserver.disconnect();
-      window.removeEventListener("resize", updateHeight);
-    };
-  }, [buffering, streamUrl, servers, episodeId]);
-
   const {
     buffering,
     streamInfo,
@@ -111,6 +82,35 @@ export default function Watch() {
     autoNext,
     setAutoNext,
   } = useWatchControl();
+
+  // Synchronize episode list height to match player component exactly on desktop
+  useEffect(() => {
+    const updateHeight = () => {
+      if (window.innerWidth >= 1024 && playerSectionRef.current) {
+        setPlayerHeight(playerSectionRef.current.offsetHeight);
+      } else {
+        setPlayerHeight(null);
+      }
+    };
+
+    updateHeight();
+    const timer = setTimeout(updateHeight, 300);
+
+    let resizeObserver;
+    if (playerSectionRef.current && window.ResizeObserver) {
+      resizeObserver = new ResizeObserver(() => {
+        updateHeight();
+      });
+      resizeObserver.observe(playerSectionRef.current);
+    }
+    window.addEventListener("resize", updateHeight);
+
+    return () => {
+      clearTimeout(timer);
+      if (resizeObserver) resizeObserver.disconnect();
+      window.removeEventListener("resize", updateHeight);
+    };
+  }, [buffering, streamUrl, servers, episodeId]);
 
   // Active episode object
   const currentEpObject = useMemo(() => {
