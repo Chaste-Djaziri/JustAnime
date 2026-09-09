@@ -22,6 +22,7 @@ export const mapConsumetAnimeItem = (item) => {
     japanese_title:
       item.japaneseTitle || item.japanese_title || item.title || "",
     poster: item.image || item.poster || item.banner || "",
+    rank: item.rank ?? null,
     description: item.description || "",
     releaseDate,
     type: showType,
