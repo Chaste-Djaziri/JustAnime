@@ -130,13 +130,13 @@ function Episodelist({
   }, [epTotal]);
 
   return (
-    <div className="flex flex-col w-full h-full bg-[#111115] border border-zinc-800/80 rounded-2xl overflow-hidden shadow-xl">
-      {/* Top Header Controls */}
-      <div className="sticky top-0 z-10 flex items-center justify-between px-3 py-2.5 bg-[#14141a] border-b border-zinc-800/80 gap-2">
+    <div className="flex flex-col w-full h-full bg-[#111111] border border-zinc-800 rounded-2xl overflow-hidden shadow-xl">
+      {/* Top Header Controls - Black & White Theme */}
+      <div className="sticky top-0 z-10 flex items-center justify-between px-3 py-2.5 bg-[#161616] border-b border-zinc-800 gap-2">
         {/* Range Selector */}
         <div className="relative" ref={dropDownRef}>
           <button
-            className="bg-[#1c1c24] hover:bg-[#252530] text-xs text-zinc-200 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 border border-zinc-800 transition-colors font-medium"
+            className="bg-[#222222] hover:bg-[#2c2c2c] text-xs text-white px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 border border-zinc-700 transition-colors font-medium"
             onClick={() => setShowDropDown((prev) => !prev)}
           >
             <span>{activeRange}</span>
@@ -148,7 +148,7 @@ function Episodelist({
             />
           </button>
           {showDropDown && (
-            <div className="absolute top-full left-0 mt-1 w-36 bg-[#181820] border border-zinc-800 rounded-xl shadow-2xl py-1 z-50 max-h-56 overflow-y-auto no-scrollbar">
+            <div className="absolute top-full left-0 mt-1 w-36 bg-[#1b1b1b] border border-zinc-700 rounded-xl shadow-2xl py-1 z-50 max-h-56 overflow-y-auto no-scrollbar">
               {ranges.map((range) => {
                 const isSelected = activeRange === range;
                 return (
@@ -156,8 +156,8 @@ function Episodelist({
                     key={range}
                     className={`px-3 py-1.5 text-xs cursor-pointer flex items-center justify-between transition-colors ${
                       isSelected
-                        ? "bg-purple-900/40 text-purple-300 font-semibold"
-                        : "text-zinc-300 hover:bg-zinc-800/80 hover:text-white"
+                        ? "bg-white text-black font-bold"
+                        : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
                     }`}
                     onClick={() => {
                       handleRangeSelect(range);
@@ -166,7 +166,7 @@ function Episodelist({
                   >
                     <span>{range}</span>
                     {isSelected && (
-                      <FontAwesomeIcon icon={faCheck} className="text-[10px] text-purple-400" />
+                      <FontAwesomeIcon icon={faCheck} className="text-[10px] text-black" />
                     )}
                   </div>
                 );
@@ -186,19 +186,19 @@ function Episodelist({
             placeholder="Filter episodes..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#1c1c24] text-xs text-zinc-200 placeholder-zinc-500 pl-7 pr-2 py-1.5 rounded-lg border border-zinc-800 focus:outline-none focus:border-purple-500 transition-colors"
+            className="w-full bg-[#222222] text-xs text-white placeholder-zinc-500 pl-7 pr-2 py-1.5 rounded-lg border border-zinc-750 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-colors"
           />
         </div>
 
         {/* View Mode Toggles */}
-        <div className="flex items-center gap-1 bg-[#181820] p-0.5 rounded-lg border border-zinc-800">
+        <div className="flex items-center gap-1 bg-[#1c1c1c] p-0.5 rounded-lg border border-zinc-800">
           <button
             onClick={() => setViewMode("list")}
             title="Compact View"
             className={`p-1.5 rounded-md transition-colors ${
               viewMode === "list"
-                ? "bg-purple-600 text-white shadow-xs"
-                : "text-zinc-400 hover:text-zinc-200"
+                ? "bg-white text-black font-semibold shadow-xs"
+                : "text-zinc-400 hover:text-white"
             }`}
           >
             <FontAwesomeIcon icon={faEye} className="text-[11px] block" />
@@ -208,8 +208,8 @@ function Episodelist({
             title="Thumbnail View"
             className={`p-1.5 rounded-md transition-colors ${
               viewMode === "thumbnail"
-                ? "bg-purple-600 text-white shadow-xs"
-                : "text-zinc-400 hover:text-zinc-200"
+                ? "bg-white text-black font-semibold shadow-xs"
+                : "text-zinc-400 hover:text-white"
             }`}
           >
             <FontAwesomeIcon icon={faImage} className="text-[11px] block" />
@@ -227,7 +227,7 @@ function Episodelist({
             No episodes found.
           </div>
         ) : viewMode === "thumbnail" ? (
-          // Thumbnail View (Miruro Style)
+          // Thumbnail View - Black and White Theme
           filteredEpisodes.map((item, index) => {
             const epCleanId = getCleanEpisodeId(item);
             const isActive =
@@ -252,8 +252,8 @@ function Episodelist({
                 }}
                 className={`group flex items-start gap-3 p-2 rounded-xl transition-all cursor-pointer border ${
                   isActive
-                    ? "bg-[#251538] border-purple-500/70 shadow-[0_0_15px_rgba(168,85,247,0.25)] ring-1 ring-purple-500/40"
-                    : "bg-[#16161d] border-zinc-800/80 hover:bg-[#1e1e27] hover:border-zinc-700"
+                    ? "bg-[#252528] border-white/90 shadow-[0_0_15px_rgba(255,255,255,0.12)] ring-1 ring-white/60"
+                    : "bg-[#18181b] border-zinc-800 hover:bg-[#222226] hover:border-zinc-700"
                 }`}
               >
                 {/* Thumbnail with EP Badge */}
@@ -266,11 +266,13 @@ function Episodelist({
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-600">
+                    <div className="w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-500">
                       <FontAwesomeIcon icon={faCirclePlay} className="text-lg" />
                     </div>
                   )}
-                  <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-black/80 text-white border border-white/10 tracking-tight">
+                  <div className={`absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-bold tracking-tight ${
+                    isActive ? "bg-white text-black font-extrabold" : "bg-black/80 text-white border border-white/10"
+                  }`}>
                     EP {epNum}
                   </div>
                 </div>
@@ -281,8 +283,8 @@ function Episodelist({
                     <h4
                       className={`text-xs font-medium line-clamp-1 transition-colors ${
                         isActive
-                          ? "text-purple-200 font-semibold"
-                          : "text-zinc-200 group-hover:text-purple-300"
+                          ? "text-white font-bold"
+                          : "text-zinc-200 group-hover:text-white"
                       }`}
                     >
                       {epTitle}
@@ -297,10 +299,10 @@ function Episodelist({
                   {/* Badges & Date */}
                   <div className="flex items-center justify-between text-[10px] text-zinc-400 mt-1.5 pt-1 border-t border-white/5">
                     <div className="flex items-center gap-1.5">
-                      <span className="flex items-center gap-1 bg-zinc-800/70 px-1 py-0.5 rounded text-zinc-400">
+                      <span className="flex items-center gap-1 bg-zinc-800 px-1 py-0.5 rounded text-zinc-300">
                         <FontAwesomeIcon icon={faClosedCaptioning} className="text-[9px]" />
                       </span>
-                      <span className="flex items-center gap-1 bg-zinc-800/70 px-1 py-0.5 rounded text-zinc-400">
+                      <span className="flex items-center gap-1 bg-zinc-800 px-1 py-0.5 rounded text-zinc-300">
                         <FontAwesomeIcon icon={faMicrophone} className="text-[9px]" />
                       </span>
                     </div>
@@ -315,7 +317,7 @@ function Episodelist({
             );
           })
         ) : (
-          // Compact / Grid View
+          // Compact / Grid View - Black and White
           <div className="grid grid-cols-5 gap-1.5 p-1">
             {filteredEpisodes.map((item, index) => {
               const epCleanId = getCleanEpisodeId(item);
@@ -336,8 +338,8 @@ function Episodelist({
                   }}
                   className={`flex items-center justify-center rounded-lg h-9 text-xs font-semibold cursor-pointer transition-all border ${
                     isActive
-                      ? "bg-purple-600 text-white border-purple-400 shadow-md ring-1 ring-purple-400"
-                      : "bg-[#181820] text-zinc-300 border-zinc-800 hover:bg-zinc-800 hover:text-white"
+                      ? "bg-white text-black border-white shadow-md font-bold"
+                      : "bg-[#1f1f1f] text-zinc-300 border-zinc-800 hover:bg-[#2c2c2c] hover:text-white"
                   }`}
                 >
                   <span>{epNum}</span>
