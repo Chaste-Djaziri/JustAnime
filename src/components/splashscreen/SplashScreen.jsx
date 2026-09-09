@@ -8,12 +8,12 @@ import { faAngleRight } from "@fortawesome/free-solid-svg-icons";
 
 const FAQ_ITEMS = [
   {
-    question: "Is JustAnime safe?",
-    answer: "Yes, JustAnime is completely safe to use. We ensure all content is properly scanned and secured for our users."
+    question: "Is Kizora safe?",
+    answer: "Yes, Kizora is completely safe to use. We ensure all content is properly scanned and secured for our users."
   },
   {
-    question: "What makes JustAnime the best site to watch anime free online?",
-    answer: "JustAnime offers high-quality streaming, a vast library of anime, no intrusive ads, and a user-friendly interface - all completely free."
+    question: "What makes Kizora the best site to watch anime free online?",
+    answer: "Kizora offers high-quality streaming, a vast library of anime, no intrusive ads, and a user-friendly interface - all completely free."
   },
   {
     question: "How do I request an anime?",
@@ -51,7 +51,7 @@ function SplashScreen() {
       <div className="splash-overlay"></div>
       <div className="content-wrapper">
         <div className="logo-container">
-          <img src="/logo.png" alt={logoTitle} className="logo" />
+          <img src="/kizora.png" alt={logoTitle} className="logo" />
         </div>
 
         <div className="search-container">
