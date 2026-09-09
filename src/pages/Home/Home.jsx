@@ -1,5 +1,6 @@
 import website_name from "@/src/config/website.js";
 import Spotlight from "@/src/components/spotlight/Spotlight.jsx";
+import Genre from "@/src/components/genres/Genre.jsx";
 import TrendingCarousel from "@/src/components/trending/TrendingCarousel.jsx";
 import FeaturedColumns from "@/src/components/featured/FeaturedColumns.jsx";
 import CategoryCard from "@/src/components/categorycard/CategoryCard.jsx";
@@ -27,13 +28,14 @@ function Home() {
   return (
     <>
       <div className="pt-16 w-full overflow-x-hidden">
-        {/* 1. Full-width Spotlight Slider */}
-        <div className="w-screen relative left-1/2 right-1/2 -translate-x-1/2">
+        {/* 1. Hero Spotlight & Genre Ribbon */}
+        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 mt-2 space-y-3">
           <Spotlight spotlights={homeInfo.spotlights} />
+          <Genre data={homeInfo.genres} />
         </div>
 
         {/* 2. Full-width Trending Carousel (Ranks 01-10) */}
-        <div className="mt-4">
+        <div className="mt-6">
           <TrendingCarousel trending={trendingData} />
         </div>
 
