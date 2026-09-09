@@ -472,6 +472,11 @@ class Hianime extends AnimeParser {
     mostPopular: IAnimeResult[];
     mostFavorite: IAnimeResult[];
     latestCompleted: IAnimeResult[];
+    top10: {
+      today: IAnimeResult[];
+      week: IAnimeResult[];
+      month: IAnimeResult[];
+    };
   }> {
     try {
       const blocks: {
@@ -484,6 +489,16 @@ class Hianime extends AnimeParser {
         mostPopular: [],
         mostFavorite: [],
         latestCompleted: [],
+      };
+
+      const top10: {
+        today: IAnimeResult[];
+        week: IAnimeResult[];
+        month: IAnimeResult[];
+      } = {
+        today: [],
+        week: [],
+        month: [],
       };
 
       const { data } = await this.client.get(`${this.baseUrl}/home`);
@@ -536,10 +551,66 @@ class Hianime extends AnimeParser {
         });
       });
 
-      return blocks;
+      const periods: { id: string; key: keyof typeof top10 }[] = [
+        { id: 'top-viewed-day', key: 'today' },
+        { id: 'top-viewed-week', key: 'week' },
+        { id: 'top-viewed-month', key: 'month' },
+      ];
+
+      for (const p of periods) {
+        $(`#${p.id} li`).each((i, li) => {
+          const item = $(li);
+          const filmName = item.find('.film-name a');
+          const title = filmName.text().trim();
+          const jname = filmName.attr('data-jname') || '';
+          const href = filmName.attr('href') || '';
+          const id = href.replace(/^\//, '').split('/').pop()?.split('?')[0] || '';
+
+          const posterImg = item.find('.film-poster img');
+          const rawImg = posterImg.attr('data-src') || posterImg.attr('src') || '';
+          const image = rawImg ? (rawImg.startsWith('http') ? rawImg : `${this.baseUrl}${rawImg.startsWith('/') ? '' : '/'}${rawImg}`) : '';
+
+          const subText = item.find('.tick-sub').text().trim();
+          const dubText = item.find('.tick-dub').text().trim();
+          const sub = subText ? parseInt(subText.replace(/[^\d]/g, ''), 10) || null : null;
+          const dub = dubText ? parseInt(dubText.replace(/[^\d]/g, ''), 10) || null : null;
+
+          top10[p.key].push({
+            id,
+            title,
+            japaneseTitle: jname,
+            image,
+            poster: image,
+            type: 'TV' as any,
+            sub: sub ?? undefined,
+            dub: dub ?? undefined,
+            url: href.startsWith('http') ? href : `${this.baseUrl}/${id}`,
+            rank: i + 1,
+            tvInfo: {
+              showType: 'TV',
+              sub,
+              dub,
+            },
+          } as any);
+        });
+      }
+
+      return {
+        ...blocks,
+        top10,
+      };
     } catch (error) {
       throw new Error('Something went wrong. Please try again later.');
     }
+  }
+
+  async fetchTop10(): Promise<{
+    today: IAnimeResult[];
+    week: IAnimeResult[];
+    month: IAnimeResult[];
+  }> {
+    const featured = await this.fetchFeaturedBlocks();
+    return featured.top10;
   }
 
   async fetchSearchSuggestions(query: string): Promise<ISearch<IAnimeResult>> {
