@@ -20,6 +20,7 @@ export default async function getHomeInfo() {
   try {
     const [
       spotlightsRes,
+      trendingRes,
       topAiringRes,
       mostPopularRes,
       mostFavoriteRes,
@@ -30,6 +31,7 @@ export default async function getHomeInfo() {
       genresRes,
     ] = await Promise.allSettled([
       axios.get(getConsumetAnimeUrl("spotlight")),
+      axios.get(getConsumetAnimeUrl("trending")),
       axios.get(getConsumetAnimeUrl("top-airing")),
       axios.get(getConsumetAnimeUrl("most-popular")),
       axios.get(getConsumetAnimeUrl("most-favorite")),
@@ -43,6 +45,10 @@ export default async function getHomeInfo() {
     const spotlights =
       spotlightsRes.status === "fulfilled"
         ? mapConsumetAnimeList(spotlightsRes.value.data)
+        : [];
+    const trending =
+      trendingRes.status === "fulfilled"
+        ? mapConsumetAnimeList(trendingRes.value.data)
         : [];
     const top_airing =
       topAiringRes.status === "fulfilled"
@@ -86,13 +92,14 @@ export default async function getHomeInfo() {
     // If at least spotlights or top_airing or most_popular returned data:
     if (
       spotlights.length > 0 ||
+      trending.length > 0 ||
       top_airing.length > 0 ||
       most_popular.length > 0 ||
       latest_episode.length > 0
     ) {
       const formattedData = {
         spotlights,
-        trending: top_airing.slice(0, 10),
+        trending: trending.length > 0 ? trending.slice(0, 12) : top_airing.slice(0, 12),
         topten: most_popular.slice(0, 10),
         todaySchedule: [],
         top_airing,
