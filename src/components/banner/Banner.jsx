@@ -48,11 +48,17 @@ function Banner({ item, index, total }) {
       <div className="spotlight-overlay z-[1]"></div>
 
       {/* Top Bar: Countdown Pill on Left, Slide Controls on Right */}
-      <div className="absolute top-0 left-0 right-0 z-10 px-6 sm:px-10 md:px-12 pt-6 sm:pt-7 flex items-center justify-between pointer-events-auto">
+      <div className="absolute top-0 left-0 right-0 z-10 px-6 sm:px-10 md:px-14 pt-6 sm:pt-8 md:pt-9 flex items-center justify-between pointer-events-auto">
         {/* Top-Left Episode Countdown Pill */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-xs font-semibold text-zinc-200 shadow-lg">
-          <FontAwesomeIcon icon={faClock} className="text-[11px] text-zinc-400" />
-          <span>{countdownText}</span>
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-xs shadow-lg">
+          <FontAwesomeIcon icon={faClock} className="text-[12px] text-zinc-300" />
+          <span className="font-bold text-white tracking-wide">
+            {item.tvInfo?.sub || item.sub ? `EP ${item.tvInfo?.sub || item.sub}` : `EP ${index + 1}`}
+          </span>
+          <span className="text-zinc-400 text-[11px] font-medium tracking-wider">IN</span>
+          <span className="font-semibold text-zinc-200">
+            {item.tvInfo?.airingTime || "2d 2h 18m"}
+          </span>
         </div>
 
         {/* Top-Right Slide Navigation Controls */}
@@ -61,7 +67,7 @@ function Banner({ item, index, total }) {
             type="button"
             className="w-8 h-8 rounded-lg bg-black/50 hover:bg-black/80 active:scale-90 backdrop-blur-md border border-white/15 text-white flex items-center justify-center transition-all cursor-pointer shadow-md"
             aria-label="Previous slide"
-            onClick={() => swiper.slidePrev()}
+            onClick={() => swiper?.slidePrev()}
           >
             <FontAwesomeIcon icon={faChevronLeft} className="text-xs text-white" />
           </button>
@@ -74,7 +80,7 @@ function Banner({ item, index, total }) {
             type="button"
             className="w-8 h-8 rounded-lg bg-black/50 hover:bg-black/80 active:scale-90 backdrop-blur-md border border-white/15 text-white flex items-center justify-center transition-all cursor-pointer shadow-md"
             aria-label="Next slide"
-            onClick={() => swiper.slideNext()}
+            onClick={() => swiper?.slideNext()}
           >
             <FontAwesomeIcon icon={faChevronRight} className="text-xs text-white" />
           </button>
@@ -82,7 +88,7 @@ function Banner({ item, index, total }) {
       </div>
 
       {/* Bottom Content Area */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 px-6 sm:px-10 md:px-12 pb-6 sm:pb-7 flex flex-col justify-end">
+      <div className="absolute bottom-0 left-0 right-0 z-10 px-6 sm:px-10 md:px-14 pb-7 sm:pb-9 md:pb-10 flex flex-col justify-end">
         {/* Meta Info Line */}
         <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-zinc-300 font-medium mb-2 drop-shadow">
           <span>{item.tvInfo?.showType || item.type || "TV"}</span>
