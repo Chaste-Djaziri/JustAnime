@@ -74,7 +74,7 @@ const fullScreenOffIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 
 
 const logo = `<p style="display: flex; gap: 7px; align-items: center; background-color:#1F2020; padding:5px;padding-inline:7px; border-radius:5px">
     <b style="color: white;">Powered by</b>
-    <img src="/logo.png" alt="Zenime Logo" style="height: 20px; object-fit: contain;" />
+    <img src="/kizora.png" alt="Kizora Logo" style="height: 20px; object-fit: contain;" />
 </p>`;
 
 export {
