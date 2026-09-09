@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently -n \"web,api\" -c \"blue,green\" \"vite\" \"npm run api:start\"",
+    "dev": "concurrently -n \"web,api\" -c \"blue,green\" \"vite\" \"npm run api:dev\"",
     "dev:web": "vite",
-    "dev:api": "npm run api:start",
+    "dev:api": "npm run api:dev",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
