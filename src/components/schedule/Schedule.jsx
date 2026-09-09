@@ -68,15 +68,24 @@ const Schedule = () => {
     try {
       setLoading(true);
 
-      // Check if cached data exists
+      // Check if non-empty cached data exists
       const cachedData = localStorage.getItem(`schedule-${date}`);
+      let parsedData = null;
       if (cachedData) {
-        const parsedData = JSON.parse(cachedData);
-        setscheduleData(Array.isArray(parsedData) ? parsedData : []);
+        try {
+          parsedData = JSON.parse(cachedData);
+        } catch (_) {}
+      }
+
+      if (Array.isArray(parsedData) && parsedData.length > 0) {
+        setscheduleData(parsedData);
       } else {
         const data = await getSchedInfo(date);
-        setscheduleData(Array.isArray(data) ? data : []);
-        localStorage.setItem(`schedule-${date}`, JSON.stringify(data || []));
+        const validData = Array.isArray(data) ? data : [];
+        setscheduleData(validData);
+        if (validData.length > 0) {
+          localStorage.setItem(`schedule-${date}`, JSON.stringify(validData));
+        }
       }
     } catch (err) {
       console.error("Error fetching schedule info:", err);
