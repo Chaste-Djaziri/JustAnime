@@ -42,6 +42,7 @@ export default function Watch() {
   const [lightsOff, setLightsOff] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportSubmitted, setReportSubmitted] = useState(false);
+  const [shareToast, setShareToast] = useState(false);
   const playerSectionRef = useRef(null);
   const [playerHeight, setPlayerHeight] = useState(null);
 
