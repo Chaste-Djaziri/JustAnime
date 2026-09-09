@@ -5,8 +5,10 @@ import {
   faRandom,
   faMagnifyingGlass,
   faXmark,
+  faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { useLanguage } from "@/src/context/LanguageContext";
+import { useAuth } from "@/src/context/AuthContext";
 import { Link, useLocation } from "react-router-dom";
 import Sidebar from "../sidebar/Sidebar";
 import { SearchProvider } from "@/src/context/SearchContext";
@@ -16,6 +18,7 @@ import MobileSearch from "../searchbar/MobileSearch";
 function Navbar() {
   const location = useLocation();
   const { language, toggleLanguage } = useLanguage();
+  const { user } = useAuth();
   const [isNotHomePage, setIsNotHomePage] = useState(
     location.pathname !== "/" && location.pathname !== "/home"
   );
@@ -89,25 +92,60 @@ function Navbar() {
             </div>
           </div>
 
-          {/* Language Toggle - Desktop */}
-          <div className="hidden md:flex items-center gap-1 bg-[#1f1f23] border border-white/10 rounded-lg p-1">
-            {["EN", "JP"].map((lang) => (
-              <button
-                key={lang}
-                onClick={() => toggleLanguage(lang)}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
-                  language === lang
-                    ? "bg-[#3F3F46] text-white font-semibold"
-                    : "text-gray-400 hover:text-white"
-                }`}
-              >
-                {lang}
-              </button>
-            ))}
+          {/* Right Section - Language & Profile */}
+          <div className="hidden md:flex items-center gap-3">
+            {/* Language Toggle - Desktop */}
+            <div className="flex items-center gap-1 bg-[#1f1f23] border border-white/10 rounded-lg p-1">
+              {["EN", "JP"].map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => toggleLanguage(lang)}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                    language === lang
+                      ? "bg-[#3F3F46] text-white font-semibold"
+                      : "text-gray-400 hover:text-white"
+                  }`}
+                >
+                  {lang}
+                </button>
+              ))}
+            </div>
+
+            {/* Profile / Auth Button - Desktop */}
+            <Link
+              to="/profile"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#1f1f23] hover:bg-zinc-800 border border-white/10 text-xs font-semibold text-zinc-200 hover:text-white transition-all group"
+              title="Profile & Watchlist"
+            >
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user.name || "User"}
+                  className="w-5 h-5 rounded-full object-cover border border-white/20"
+                />
+              ) : (
+                <FontAwesomeIcon icon={faUser} className="text-zinc-400 group-hover:text-white text-xs" />
+              )}
+              <span className="max-w-[100px] truncate">{user?.name || "Profile"}</span>
+            </Link>
           </div>
 
-          {/* Mobile Search Icon */}
-          <div className="md:hidden flex items-center">
+          {/* Mobile Right Controls */}
+          <div className="md:hidden flex items-center gap-2">
+            {/* Mobile Profile Icon */}
+            <Link
+              to="/profile"
+              className="p-[10px] aspect-square bg-[#2a2a2a]/75 text-white/70 hover:text-white rounded-lg transition-colors flex items-center justify-center w-[38px] h-[38px] overflow-hidden"
+              title="Profile"
+            >
+              {user?.avatar ? (
+                <img src={user.avatar} alt="Profile" className="w-full h-full object-cover rounded" />
+              ) : (
+                <FontAwesomeIcon icon={faUser} className="w-[16px] h-[16px]" />
+              )}
+            </Link>
+
+            {/* Mobile Search Icon */}
             <button
               onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
               className="p-[10px] aspect-square bg-[#2a2a2a]/75 text-white/50 hover:text-white rounded-lg transition-colors flex items-center justify-center w-[38px] h-[38px]"
