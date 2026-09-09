@@ -2,7 +2,7 @@ import axios from "axios";
 import { getConsumetAnimeUrl } from "../config/api.config";
 import { mapConsumetAnimeList } from "../helper/animeMapper";
 
-const CACHE_KEY_PREFIX = "homeInfoCache_v7";
+const CACHE_KEY_PREFIX = "homeInfoCache_v8";
 const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours
 
 export default async function getHomeInfo() {
@@ -18,7 +18,10 @@ export default async function getHomeInfo() {
     Array.isArray(cachedData.data?.trending) &&
     cachedData.data.trending.length >= 12 &&
     Array.isArray(cachedData.data?.latest_completed) &&
-    cachedData.data.latest_completed.length > 0
+    cachedData.data.latest_completed.length > 0 &&
+    cachedData.data?.topten &&
+    Array.isArray(cachedData.data.topten.today) &&
+    cachedData.data.topten.today.length > 0
   ) {
     return cachedData.data;
   }
@@ -109,6 +112,21 @@ export default async function getHomeInfo() {
         : [];
     }
 
+    const topten = {
+      today:
+        featured?.top10?.today && featured.top10.today.length > 0
+          ? mapConsumetAnimeList(featured.top10.today)
+          : most_popular.slice(0, 10),
+      week:
+        featured?.top10?.week && featured.top10.week.length > 0
+          ? mapConsumetAnimeList(featured.top10.week)
+          : most_popular.slice(0, 10),
+      month:
+        featured?.top10?.month && featured.top10.month.length > 0
+          ? mapConsumetAnimeList(featured.top10.month)
+          : most_popular.slice(0, 10),
+    };
+
     // If at least spotlights or top_airing or most_popular returned data:
     if (
       spotlights.length > 0 ||
@@ -120,7 +138,7 @@ export default async function getHomeInfo() {
       const formattedData = {
         spotlights,
         trending: trending.length > 0 ? trending.slice(0, 12) : top_airing.slice(0, 12),
-        topten: most_popular.slice(0, 10),
+        topten,
         todaySchedule: [],
         top_airing,
         most_popular,
