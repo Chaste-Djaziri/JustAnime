@@ -203,6 +203,10 @@ export enum StreamingServers {
   MegaUp = 'megaup',
   MegaCloud = 'megacloud',
   Luffy = 'luffy',
+  MegaPlay = 'megaplay',
+  ZokoAnime = 'zokoanime',
+  AniNeko = 'anineko',
+  AnimeGG = 'animegg',
 }
 
 export enum MediaStatus {
