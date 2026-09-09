@@ -35,8 +35,8 @@ function App() {
 
   return (
     <HomeInfoProvider>
-      <div className={`app-container ${isWatchPage ? "px-0" : "px-4 lg:px-10"}`}>
-        <main className="content max-w-[2048px] mx-auto w-full">
+      <div className={`app-container ${isWatchPage ? "p-0 m-0 w-full" : "px-4 lg:px-10"}`}>
+        <main className={`content w-full ${isWatchPage ? "max-w-none m-0 p-0" : "max-w-[2048px] mx-auto"}`}>
           {!isSplashScreen && <Navbar />}
           <Routes>
             <Route path="/" element={<SplashScreen />} />
