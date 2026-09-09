@@ -89,15 +89,54 @@ function Navbar() {
             </div>
           </div>
 
-          {/* Language Toggle - Desktop */}
-            <div className="hidden md:flex items-center gap-2 bg-[#27272A] rounded-md p-1">
+          {/* Source & Language Toggles - Desktop */}
+          <div className="hidden md:flex items-center gap-3">
+            {/* Source Switcher */}
+            <div className="flex items-center bg-[#1f1f23] border border-white/10 rounded-lg p-1 gap-1">
+              <span className="text-[11px] font-semibold text-gray-400 px-1.5 uppercase tracking-wider">
+                Source
+              </span>
+              {[
+                { id: "hianime", label: "HiAnime" },
+                { id: "justanime", label: "JustAnime" },
+              ].map((src) => {
+                const isActive = (localStorage.getItem("justanime_preferred_source") || "hianime") === src.id;
+                return (
+                  <button
+                    key={src.id}
+                    onClick={() => {
+                      if (!isActive) {
+                        localStorage.setItem("justanime_preferred_source", src.id);
+                        // Clear home and other caches
+                        Object.keys(localStorage).forEach((key) => {
+                          if (key.startsWith("homeInfoCache") || key.startsWith("schedule_")) {
+                            localStorage.removeItem(key);
+                          }
+                        });
+                        window.location.reload();
+                      }
+                    }}
+                    className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
+                      isActive
+                        ? "bg-amber-500 text-black font-semibold shadow"
+                        : "text-gray-400 hover:text-white"
+                    }`}
+                  >
+                    {src.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Language Switcher */}
+            <div className="flex items-center gap-1 bg-[#1f1f23] border border-white/10 rounded-lg p-1">
               {["EN", "JP"].map((lang) => (
                 <button
                   key={lang}
                   onClick={() => toggleLanguage(lang)}
-                  className={`px-3 py-1 text-sm font-medium rounded ${
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
                     language === lang
-                      ? "bg-[#3F3F46] text-white"
+                      ? "bg-[#3F3F46] text-white font-semibold"
                       : "text-gray-400 hover:text-white"
                   }`}
                 >
@@ -105,6 +144,7 @@ function Navbar() {
                 </button>
               ))}
             </div>
+          </div>
 
           {/* Mobile Search Icon */}
           <div className="md:hidden flex items-center">
