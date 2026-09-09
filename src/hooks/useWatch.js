@@ -5,6 +5,10 @@ import getEpisodes from "@/src/utils/getEpisodes.utils";
 import getNextEpisodeSchedule from "../utils/getNextEpisodeSchedule.utils";
 import getServers from "../utils/getServers.utils";
 import getStreamInfo from "../utils/getStreamInfo.utils";
+import {
+  getCleanEpisodeId,
+  isEpisodeMatch,
+} from "@/src/helper/episodeHelper";
 
 export const useWatch = (animeId, initialEpisodeId) => {
   const [error, setError] = useState(null);
@@ -65,13 +69,13 @@ export const useWatch = (animeId, initialEpisodeId) => {
         ]);
         setAnimeInfo(animeData?.data);
         setSeasons(animeData?.seasons);
-        setEpisodes(episodesData?.episodes);
-        setTotalEpisodes(episodesData?.totalEpisodes);
+        const epList = episodesData?.episodes || [];
+        setEpisodes(epList);
+        setTotalEpisodes(episodesData?.totalEpisodes || epList.length);
+
+        const firstEp = epList.length > 0 ? epList[0] : null;
         const newEpisodeId =
-          initialEpisodeId ||
-          (episodesData?.episodes?.length > 0
-            ? episodesData.episodes[0].id.match(/ep=(\d+)/)?.[1]
-            : null);
+          initialEpisodeId || (firstEp ? getCleanEpisodeId(firstEp) : null);
         setEpisodeId(newEpisodeId);
       } catch (err) {
         console.error("Error fetching initial data:", err);
@@ -100,11 +104,10 @@ export const useWatch = (animeId, initialEpisodeId) => {
       setActiveEpisodeNum(null);
       return;
     }
-    const activeEpisode = episodes.find((episode) => {
-      const match = episode.id.match(/ep=(\d+)/);
-      return match && match[1] === episodeId;
-    });
-    const newActiveEpisodeNum = activeEpisode ? activeEpisode.episode_no : null;
+    const activeEpisode = episodes.find((ep) => isEpisodeMatch(ep, episodeId));
+    const newActiveEpisodeNum = activeEpisode
+      ? activeEpisode.episode_no ?? activeEpisode.number ?? 1
+      : null;
     if (activeEpisodeNum !== newActiveEpisodeNum) {
       setActiveEpisodeNum(newActiveEpisodeNum);
     }
@@ -117,43 +120,62 @@ export const useWatch = (animeId, initialEpisodeId) => {
       isServerFetchInProgress.current = true;
       setServerLoading(true);
       try {
-        const data = await getServers(animeId, episodeId);
-        console.log(data);
-        
-        const filteredServers = data?.filter(
-          (server) =>
-            server.serverName === "HD-1" ||
-            server.serverName === "HD-2" ||
-            server.serverName === "HD-3"
-        );
-        if (filteredServers.some((s) => s.type === "sub")) {
-          filteredServers.push({
-            type: "sub",
-            data_id: "69696969",
-            server_id: "41",
-            serverName: "HD-4",
-          });
+        const epObj = episodes.find((ep) => isEpisodeMatch(ep, episodeId));
+        const targetId = epObj?.id || episodeId;
+        const data = await getServers(animeId, targetId);
+
+        let serverList = Array.isArray(data) ? [...data] : [];
+
+        // Extract MAL ID from server URLs or anime info
+        let discoveredMalId = animeInfo?.malId || animeInfo?.malID || animeInfo?.animeInfo?.malId || 0;
+        for (const s of serverList) {
+          const m = s.url?.match(/\/stream\/mal\/(\d+)/);
+          if (m && m[1]) {
+            discoveredMalId = Number(m[1]);
+            break;
+          }
         }
-        if (filteredServers.some((s) => s.type === "dub")) {
-          filteredServers.push({
-            type: "dub",
-            data_id: "96969696",
-            server_id: "42",
-            serverName: "HD-4",
-          });
+
+        // If ZokoAnime is not explicitly listed, but we have a MAL ID, ensure ZokoAnime is available!
+        const currentEpNum = epObj?.episode_no ?? epObj?.number ?? 1;
+        if (discoveredMalId > 0) {
+          const hasZokoSub = serverList.some((s) => s.serverName === "ZokoAnime" && s.type === "sub");
+          const hasZokoDub = serverList.some((s) => s.serverName === "ZokoAnime" && s.type === "dub");
+
+          if (!hasZokoSub) {
+            serverList.unshift({
+              serverName: "ZokoAnime",
+              type: "sub",
+              data_id: "zokoanime-sub",
+              server_id: "zoko-sub",
+              url: `https://zokoanime.video/stream/mal/${discoveredMalId}/${currentEpNum}/sub?color=35d5bf`,
+            });
+          }
+          if (!hasZokoDub) {
+            serverList.push({
+              serverName: "ZokoAnime",
+              type: "dub",
+              data_id: "zokoanime-dub",
+              server_id: "zoko-dub",
+              url: `https://zokoanime.video/stream/mal/${discoveredMalId}/${currentEpNum}/dub?color=35d5bf`,
+            });
+          }
         }
+
+        // Choose initial server
         const savedServerName = localStorage.getItem("server_name");
         const savedServerType = localStorage.getItem("server_type");
         const initialServer =
-          filteredServers.find(s => s.serverName === savedServerName && s.type === savedServerType) ||
-          filteredServers.find(s => s.serverName === savedServerName) ||
-          filteredServers.find(s => s.type === savedServerType && ["HD-1", "HD-2", "HD-3", "HD-4"].includes(s.serverName)) ||
-          filteredServers[0];
+          serverList.find((s) => s.serverName === savedServerName && s.type === savedServerType) ||
+          serverList.find((s) => s.serverName === savedServerName) ||
+          serverList.find((s) => s.serverName === "ZokoAnime" && s.type === (savedServerType || "sub")) ||
+          serverList.find((s) => s.serverName === "HD-1" && s.type === (savedServerType || "sub")) ||
+          serverList[0];
 
-        setServers(filteredServers);
-        setActiveServerType(initialServer?.type);
-        setActiveServerName(initialServer?.serverName);
-        setActiveServerId(initialServer?.data_id);
+        setServers(serverList);
+        setActiveServerType(initialServer?.type || "sub");
+        setActiveServerName(initialServer?.serverName || "ZokoAnime");
+        setActiveServerId(initialServer?.data_id || null);
       } catch (error) {
         console.error("Error fetching servers:", error);
         setError(error.message || "An error occurred.");
@@ -164,7 +186,8 @@ export const useWatch = (animeId, initialEpisodeId) => {
     };
     fetchServers();
   }, [episodeId, episodes]);
-  // Fetch stream info only when episodeId, activeServerId, and servers are ready
+
+  // Fetch stream info only when needed (non-iframe servers)
   useEffect(() => {
     if (
       !episodeId ||
@@ -174,52 +197,69 @@ export const useWatch = (animeId, initialEpisodeId) => {
       isStreamFetchInProgress.current
     )
       return;
+
+    const server = servers.find((srv) => srv.data_id === activeServerId);
+
+    // If the active server has a direct embed URL (like ZokoAnime or any iframe url), no need to fetch HLS stream
     if (
-      (activeServerName?.toLowerCase() === "hd-1" || activeServerName?.toLowerCase() === "hd-4") 
-        &&
-      !serverLoading
+      server?.url?.startsWith("http") ||
+      server?.serverName?.toLowerCase().includes("zoko") ||
+      server?.serverName?.toLowerCase() === "hd-1" ||
+      server?.serverName?.toLowerCase() === "hd-4" ||
+      server?.serverName?.toLowerCase().includes("vidstream") ||
+      server?.serverName?.toLowerCase().includes("vidplay")
     ) {
       setBuffering(false);
       return;
     }
+
     const fetchStreamInfo = async () => {
       isStreamFetchInProgress.current = true;
       setBuffering(true);
       try {
-        const server = servers.find((srv) => srv.data_id === activeServerId);
-        if (server) {
-          const data = await getStreamInfo(
-            animeId,
-            episodeId,
-            server.serverName.toLowerCase()==="hd-3"?"hd-1":server.serverName.toLowerCase(),
-            server.type.toLowerCase()
-          );
-          setStreamInfo(data);
-          setStreamUrl(data?.streamingLink?.link?.file || null);
-          setIntro(data?.streamingLink?.intro || null);
-          setOutro(data?.streamingLink?.outro || null);
-          const subtitles =
-            data?.streamingLink?.tracks
-              ?.filter((track) => track.kind === "captions")
-              .map(({ file, label }) => ({ file, label })) || [];
-          setSubtitles(subtitles);
-          const thumbnailTrack = data?.streamingLink?.tracks?.find(
-            (track) => track.kind === "thumbnails" && track.file
-          );
-          if (thumbnailTrack) setThumbnail(thumbnailTrack.file);
-        } else {
-          setError("No server found with the activeServerId.");
-        }
+        const epObj = episodes?.find((ep) => isEpisodeMatch(ep, episodeId));
+        const targetId = epObj?.id || episodeId;
+        const data = await getStreamInfo(
+          animeId,
+          targetId,
+          server?.serverName ? server.serverName.toLowerCase() : "hd-1",
+          server?.type ? server.type.toLowerCase() : "sub"
+        );
+        setStreamInfo(data);
+        setStreamUrl(data?.streamingLink?.link?.file || null);
+        setIntro(data?.streamingLink?.intro || null);
+        setOutro(data?.streamingLink?.outro || null);
+        const subList =
+          data?.streamingLink?.tracks
+            ?.filter((track) => track.kind === "captions")
+            .map(({ file, label }) => ({ file, label })) || [];
+        setSubtitles(subList);
+        const thumbnailTrack = data?.streamingLink?.tracks?.find(
+          (track) => track.kind === "thumbnails" && track.file
+        );
+        if (thumbnailTrack) setThumbnail(thumbnailTrack.file);
       } catch (err) {
-        console.error("Error fetching stream info:", err);
-        setError(err.message || "An error occurred.");
+        console.warn("Error fetching stream info, falling back to ZokoAnime:", err);
+        // Fallback to ZokoAnime if stream info fails
+        const zokoServer =
+          servers.find((s) => s.serverName === "ZokoAnime" && s.type === activeServerType) ||
+          servers.find((s) => s.serverName === "ZokoAnime");
+        if (zokoServer) {
+          setActiveServerId(zokoServer.data_id);
+          setActiveServerName(zokoServer.serverName);
+          setActiveServerType(zokoServer.type);
+        } else {
+          setError(err.message || "An error occurred.");
+        }
       } finally {
         setBuffering(false);
         isStreamFetchInProgress.current = false;
       }
     };
     fetchStreamInfo();
-  }, [episodeId, activeServerId, servers]);
+  }, [episodeId, activeServerId, servers, activeServerType]);
+
+  const activeServer = servers?.find((srv) => srv.data_id === activeServerId) || null;
 
   return {
     error,
@@ -233,6 +273,7 @@ export const useWatch = (animeId, initialEpisodeId) => {
     totalEpisodes,
     seasons,
     servers,
+    activeServer,
     streamUrl,
     isFullOverview,
     setIsFullOverview,
@@ -252,3 +293,4 @@ export const useWatch = (animeId, initialEpisodeId) => {
     setActiveServerName,
   };
 };
+
