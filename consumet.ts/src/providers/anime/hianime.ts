@@ -207,7 +207,7 @@ class Hianime extends AnimeParser {
     if (0 >= page) {
       page = 1;
     }
-    return this.scrapeCardPage(`${this.baseUrl}/recently-added?page=${page}`);
+    return this.scrapeCardPage(`${this.baseUrl}/new-anime?page=${page}`);
   }
   /**
    * @param page number
