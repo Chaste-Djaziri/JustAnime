@@ -117,6 +117,33 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     },
   );
 
+  fastify.get(
+    '/servers/:episodeId',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const episodeId = (request.params as { episodeId: string }).episodeId;
+
+      if (typeof episodeId === 'undefined')
+        return reply.status(400).send({ message: 'episodeId is required' });
+
+      try {
+        let res = redis
+          ? await cache.fetch(
+              redis as Redis,
+              `hianime:servers:${episodeId}`,
+              async () => await hianime.fetchEpisodeServers(episodeId),
+              REDIS_TTL,
+            )
+          : await hianime.fetchEpisodeServers(episodeId);
+
+        reply.status(200).send(res);
+      } catch (err) {
+        reply
+          .status(500)
+          .send({ message: 'Something went wrong. Contact developer for help.' });
+      }
+    },
+  );
+
   fastify.get('/genres', async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       let res = redis
