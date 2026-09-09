@@ -5,6 +5,7 @@ export const PROVIDERS_LIST = {
   ANIME: [
     new ANIME.AnimePahe(),
     new ANIME.Hianime(),
+    new ANIME.JustAnime(),
     new ANIME.AnimeKai(),
     new ANIME.AnimeUnity(),
     new ANIME.KickAssAnime(),
