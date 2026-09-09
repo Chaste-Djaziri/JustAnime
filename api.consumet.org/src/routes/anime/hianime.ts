@@ -243,6 +243,28 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     }
   });
 
+  const getTop10Handler = async (_request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      let res = redis
+        ? await cache.fetch(
+            redis as Redis,
+            `hianime:top10`,
+            async () => await (hianime as any).fetchTop10(),
+            REDIS_TTL,
+          )
+        : await (hianime as any).fetchTop10();
+
+      reply.status(200).send(res);
+    } catch (err) {
+      reply
+        .status(500)
+        .send({ message: 'Something went wrong. Contact developer for help.' });
+    }
+  };
+
+  fastify.get('/top10', getTop10Handler);
+  fastify.get('/top-10', getTop10Handler);
+
   fastify.get(
     '/search-suggestions/:query',
     async (request: FastifyRequest, reply: FastifyReply) => {
