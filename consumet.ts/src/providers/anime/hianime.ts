@@ -59,97 +59,75 @@ class Hianime extends AnimeParser {
     type?: string,
     status?: string,
     rated?: string,
-    score?: number,
+    score?: number | string,
     season?: string,
     language?: string,
-    startDate?: { year: number; month: number; day: number },
-    endDate?: { year: number; month: number; day: number },
+    startDate?: { year?: number; month?: number; day?: number },
+    endDate?: { year?: number; month?: number; day?: number },
     sort?: string,
     genres?: string[]
   ): Promise<ISearch<IAnimeResult>> {
     if (page <= 0) page = 1;
 
-    const mappings: Record<string, Record<string, number>> = {
-      type: { movie: 1, tv: 2, ova: 3, ona: 4, special: 5, music: 6 },
-      status: { finished_airing: 1, currently_airing: 2, not_yet_aired: 3 },
-      rated: { g: 1, pg: 2, pg_13: 3, r: 4, r_plus: 5, rx: 6 },
-      season: { spring: 1, summer: 2, fall: 3, winter: 4 },
-      language: { sub: 1, dub: 2, sub_dub: 3 },
-      genre: {
-        action: 1,
-        adventure: 2,
-        cars: 3,
-        comedy: 4,
-        dementia: 5,
-        demons: 6,
-        mystery: 7,
-        drama: 8,
-        ecchi: 9,
-        fantasy: 10,
-        game: 11,
-        historical: 13,
-        horror: 14,
-        kids: 15,
-        magic: 16,
-        martial_arts: 17,
-        mecha: 18,
-        music: 19,
-        parody: 20,
-        samurai: 21,
-        romance: 22,
-        school: 23,
-        sci_fi: 24,
-        shoujo: 25,
-        shoujo_ai: 26,
-        shounen: 27,
-        shounen_ai: 28,
-        space: 29,
-        sports: 30,
-        super_power: 31,
-        vampire: 32,
-        harem: 35,
-        military: 38,
-        slice_of_life: 36,
-        supernatural: 37,
-        police: 39,
-        psychological: 40,
-        thriller: 41,
-        seinen: 42,
-        isekai: 44,
-        josei: 43,
-      },
-    };
-
     const params = new URLSearchParams({ page: page.toString() });
 
-    const addParam = (key: string, value?: string) => {
-      if (value) params.append(key, (mappings[key]?.[value] || value).toString());
-    };
-
-    addParam('type', type);
-    addParam('status', status);
-    addParam('rated', rated);
-    if (score) params.append('score', score.toString());
-    addParam('season', season);
-    addParam('language', language);
-
-    if (startDate) {
-      params.append('sy', startDate.year.toString());
-      params.append('sm', startDate.month.toString());
-      params.append('sd', startDate.day.toString());
+    if (type && type !== 'all') {
+      params.append('type', type.toLowerCase());
     }
 
-    if (endDate) {
-      params.append('ey', endDate.year.toString());
-      params.append('em', endDate.month.toString());
-      params.append('ed', endDate.day.toString());
+    if (status && status !== 'all') {
+      let s = status.toLowerCase();
+      if (s === 'finished_airing' || s === 'completed') s = 'completed';
+      else if (s === 'currently_airing' || s === 'releasing') s = 'releasing';
+      else if (s === 'not_yet_aired') s = 'not_yet_aired';
+      params.append('status', s);
     }
 
-    if (sort) params.append('sort', sort);
+    if (rated && rated !== 'all') {
+      let r = rated.toLowerCase();
+      if (r === 'r' || r === 'r_17') r = 'r_17';
+      else if (r === 'r+' || r === 'r_plus') r = 'r_plus';
+      params.append('rating', r);
+    }
 
-    if (genres?.length) {
-      const genreIds = genres.map(genre => (mappings.genre[genre] || genre).toString()).join('%2C');
-      params.append('genres', genreIds);
+    if (score && score !== 'all') {
+      params.append('score', score.toString());
+    }
+
+    if (season && season !== 'all') {
+      params.append('season', season.toLowerCase());
+    }
+
+    if (language && language !== 'all') {
+      params.append('language', language.toLowerCase());
+    }
+
+    if (startDate?.year) params.append('sy', startDate.year.toString());
+    if (startDate?.month) params.append('sm', startDate.month.toString());
+    if (startDate?.day) params.append('sd', startDate.day.toString());
+
+    if (endDate?.year) params.append('ey', endDate.year.toString());
+    if (endDate?.month) params.append('em', endDate.month.toString());
+    if (endDate?.day) params.append('ed', endDate.day.toString());
+
+    if (sort && sort !== 'default') {
+      let s = sort.toLowerCase();
+      if (s === 'recently_updated') s = 'updated_date';
+      else if (s === 'recently_added') s = 'added_date';
+      else if (s === 'released_date') s = 'release_date';
+      else if (s === 'score') s = 'avg_score';
+      else if (s === 'name_az') s = 'title_az';
+      else if (s === 'most_watched') s = 'most_viewed';
+      params.append('sort', s);
+    }
+
+    if (genres && genres.length > 0) {
+      genres.forEach((g) => {
+        if (g && g.trim()) {
+          const cleanG = g.trim().toLowerCase().replace(/[\s_]+/g, '-');
+          params.append('genre[]', cleanG);
+        }
+      });
     }
 
     return this.scrapeCardPage(`${this.baseUrl}/filter?${params.toString()}`);
