@@ -1,6 +1,6 @@
 import axios from "axios";
-import { getConsumetAnimeUrl } from "../config/api.config";
-import { mapConsumetAnimeList } from "../helper/animeMapper";
+import { getConsumetAnimeUrl } from "../config/api.config.js";
+import { mapConsumetAnimeList } from "../helper/animeMapper.js";
 
 const getFilter = async (filterParams = {}) => {
   try {
