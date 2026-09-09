@@ -223,6 +223,25 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     }
   });
 
+  fastify.get('/trending', async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      let res = redis
+        ? await cache.fetch(
+            redis as Redis,
+            `justanime:trending`,
+            async () => await justanime.fetchTrending(),
+            REDIS_TTL,
+          )
+        : await justanime.fetchTrending();
+
+      reply.status(200).send(res);
+    } catch (err) {
+      reply
+        .status(500)
+        .send({ message: 'Something went wrong. Contact developer for help.' });
+    }
+  });
+
   fastify.get('/top-airing', async (request: FastifyRequest, reply: FastifyReply) => {
     const page = (request.query as { page: number }).page;
 
