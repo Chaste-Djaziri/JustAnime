@@ -820,10 +820,51 @@ class Hianime extends AnimeParser {
         info.subOrDub = SubOrSub.BOTH;
       }
 
+      // Scraping seasons from "Watch more seasons of this anime"
+      (info as any).seasons = [];
+      const parseSeasons = (cheerioInstance: any) => {
+        cheerioInstance('div.other-season div.os-list a.os-item, div.os-list a.os-item').each((i: number, el: any) => {
+          const item = cheerioInstance(el);
+          const href = item.attr('href') || '';
+          const seasonId = href.split('/').filter(Boolean).pop()?.split('?')[0] || '';
+          const title = item.find('.title').text().trim() || item.attr('title')?.trim() || `Season ${i + 1}`;
+          const posterStyle = item.find('.season-poster').attr('style') || '';
+          const posterMatch = posterStyle.match(/url\(['"]?(.*?)['"]?\)/);
+          const poster = posterMatch ? posterMatch[1] : (item.find('img').attr('src') || item.find('img').attr('data-src') || '');
+          const isCurrent = item.hasClass('active');
+
+          if (seasonId && !(info as any).seasons.some((s: any) => s.id === seasonId)) {
+            (info as any).seasons.push({
+              id: seasonId,
+              season: title,
+              title: item.attr('title')?.trim() || title,
+              season_poster: poster,
+              image: poster,
+              isCurrent,
+            });
+          }
+        });
+      };
+
+      parseSeasons($);
+
       // hianime - PAGE INFO
       try {
         const zInfo = await this.client.get(info.url);
         const $$$ = load(zInfo.data);
+
+        if ((info as any).seasons.length === 0) {
+          parseSeasons($$$);
+        }
+
+        if ((info as any).seasons?.length > 0) {
+          info.relations = (info as any).seasons.map((s: any) => ({
+            id: s.id,
+            title: s.title,
+            relationType: s.season,
+            image: s.season_poster,
+          }));
+        }
 
         info.genres = [];
         $$$('.item.item-list')
