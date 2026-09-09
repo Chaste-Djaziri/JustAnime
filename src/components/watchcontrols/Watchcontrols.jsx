@@ -25,22 +25,23 @@ export default function WatchControls({
   lightsOff,
   onToggleLightsOff,
 }) {
+  const episodeList = episodes || [];
   const [currentEpisodeIndex, setCurrentEpisodeIndex] = useState(
-    findEpisodeIndex(episodes, episodeId)
+    findEpisodeIndex(episodeList, episodeId)
   );
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
 
   useEffect(() => {
-    if (episodes?.length > 0) {
-      const newIndex = findEpisodeIndex(episodes, episodeId);
+    if (episodeList.length > 0) {
+      const newIndex = findEpisodeIndex(episodeList, episodeId);
       setCurrentEpisodeIndex(newIndex);
     }
   }, [episodeId, episodes]);
 
-  const prevEp = currentEpisodeIndex > 0 ? episodes[currentEpisodeIndex - 1] : null;
+  const prevEp = currentEpisodeIndex > 0 ? episodeList[currentEpisodeIndex - 1] : null;
   const nextEp =
-    currentEpisodeIndex >= 0 && currentEpisodeIndex < episodes.length - 1
-      ? episodes[currentEpisodeIndex + 1]
+    currentEpisodeIndex >= 0 && currentEpisodeIndex < episodeList.length - 1
+      ? episodeList[currentEpisodeIndex + 1]
       : null;
 
   const prevEpNum = prevEp?.episode_no ?? prevEp?.number ?? (currentEpisodeIndex > 0 ? currentEpisodeIndex : null);
