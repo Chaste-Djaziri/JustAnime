@@ -69,7 +69,7 @@ function Navbar() {
                 onClick={handleHamburgerClick}
               />
               <Link to="/home" className="flex items-center">
-                <img src="/logo.png" alt="JustAnime Logo" className="h-9 w-auto" />
+                <img src="/kizora.png" alt="Kizora Logo" className="h-9 w-auto" />
               </Link>
             </div>
           </div>
