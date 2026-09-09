@@ -4,8 +4,11 @@ import { Routes, Route } from "react-router-dom";
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { HomeInfoProvider } from "./context/HomeInfoContext";
+import { AuthProvider } from "./context/AuthContext";
 import Home from "./pages/Home/Home";
 import AnimeInfo from "./pages/animeInfo/AnimeInfo";
+import Profile from "./pages/profile/Profile";
+import AuthCallback from "./pages/auth/AuthCallback";
 import Navbar from "./components/navbar/Navbar";
 import Footer from "./components/footer/Footer";
 import Error from "./components/error/Error";
@@ -34,14 +37,17 @@ function App() {
   const isWatchPage = location.pathname.startsWith("/watch");
 
   return (
-    <HomeInfoProvider>
-      <div className={`app-container ${isWatchPage ? "p-0 m-0 w-full" : "px-4 lg:px-10"}`}>
-        <main className={`content w-full ${isWatchPage ? "max-w-none m-0 p-0" : "max-w-[2048px] mx-auto"}`}>
-          {!isSplashScreen && <Navbar />}
-          <Routes>
-            <Route path="/" element={<SplashScreen />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/:id" element={<AnimeInfo />} />
+    <AuthProvider>
+      <HomeInfoProvider>
+        <div className={`app-container ${isWatchPage ? "p-0 m-0 w-full" : "px-4 lg:px-10"}`}>
+          <main className={`content w-full ${isWatchPage ? "max-w-none m-0 p-0" : "max-w-[2048px] mx-auto"}`}>
+            {!isSplashScreen && <Navbar />}
+            <Routes>
+              <Route path="/" element={<SplashScreen />} />
+              <Route path="/home" element={<Home />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/:id" element={<AnimeInfo />} />
             <Route path="/watch/:id" element={<Watch />} />
             <Route path="/random" element={<AnimeInfo random={true} />} />
             <Route path="/404-not-found-page" element={<Error error="404" />} />
@@ -76,8 +82,9 @@ function App() {
         </main>
         <Analytics />
         <SpeedInsights />
-      </div>
-    </HomeInfoProvider>
+        </div>
+      </HomeInfoProvider>
+    </AuthProvider>
   );
 }
 
