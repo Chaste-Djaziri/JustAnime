@@ -2,34 +2,153 @@ import CategoryCard from "@/src/components/categorycard/CategoryCard";
 import CategoryCardLoader from "@/src/components/Loader/CategoryCard.loader";
 import PageSlider from "@/src/components/pageslider/PageSlider";
 import getSearch from "@/src/utils/getSearch.utils";
-import { useEffect, useState, useMemo } from "react";
-import { useSearchParams, Link, useNavigate } from "react-router-dom";
+import getFilter from "@/src/utils/getFilter.utils";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { useSearchParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faMagnifyingGlass,
   faXmark,
   faSliders,
-  faTv,
-  faFilm,
-  faLayerGroup,
+  faChevronDown,
+  faChevronUp,
+  faRotateLeft,
+  faCheck,
   faArrowLeft,
   faCompass,
   faFire,
   faCircleExclamation,
+  faFilter,
 } from "@fortawesome/free-solid-svg-icons";
 
-const POPULAR_GENRES = [
-  { name: "Action", path: "/genre/action" },
-  { name: "Isekai", path: "/genre/isekai" },
-  { name: "Shounen", path: "/genre/shounen" },
-  { name: "Comedy", path: "/genre/comedy" },
-  { name: "Fantasy", path: "/genre/fantasy" },
-  { name: "Romance", path: "/genre/romance" },
-  { name: "Sci-Fi", path: "/genre/sci-fi" },
-  { name: "Supernatural", path: "/genre/supernatural" },
-  { name: "Mystery", path: "/genre/mystery" },
-  { name: "Slice of Life", path: "/genre/slice-of-life" },
+const ALL_GENRES = [
+  { id: "action", name: "Action" },
+  { id: "adventure", name: "Adventure" },
+  { id: "cars", name: "Cars" },
+  { id: "comedy", name: "Comedy" },
+  { id: "dementia", name: "Dementia" },
+  { id: "demons", name: "Demons" },
+  { id: "drama", name: "Drama" },
+  { id: "ecchi", name: "Ecchi" },
+  { id: "fantasy", name: "Fantasy" },
+  { id: "game", name: "Game" },
+  { id: "historical", name: "Historical" },
+  { id: "horror", name: "Horror" },
+  { id: "isekai", name: "Isekai" },
+  { id: "josei", name: "Josei" },
+  { id: "kids", name: "Kids" },
+  { id: "magic", name: "Magic" },
+  { id: "martial-arts", name: "Martial Arts" },
+  { id: "mecha", name: "Mecha" },
+  { id: "military", name: "Military" },
+  { id: "music", name: "Music" },
+  { id: "mystery", name: "Mystery" },
+  { id: "parody", name: "Parody" },
+  { id: "police", name: "Police" },
+  { id: "psychological", name: "Psychological" },
+  { id: "romance", name: "Romance" },
+  { id: "samurai", name: "Samurai" },
+  { id: "school", name: "School" },
+  { id: "sci-fi", name: "Sci-Fi" },
+  { id: "seinen", name: "Seinen" },
+  { id: "shoujo", name: "Shoujo" },
+  { id: "shounen", name: "Shounen" },
+  { id: "slice-of-life", name: "Slice of Life" },
+  { id: "space", name: "Space" },
+  { id: "sports", name: "Sports" },
+  { id: "super-power", name: "Super Power" },
+  { id: "supernatural", name: "Supernatural" },
+  { id: "thriller", name: "Thriller" },
+  { id: "vampire", name: "Vampire" },
+  { id: "harem", name: "Harem" },
 ];
+
+const TYPE_OPTIONS = [
+  { val: "", label: "All Types" },
+  { val: "tv", label: "TV" },
+  { val: "movie", label: "Movie" },
+  { val: "ova", label: "OVA" },
+  { val: "ona", label: "ONA" },
+  { val: "special", label: "Special" },
+  { val: "music", label: "Music" },
+];
+
+const STATUS_OPTIONS = [
+  { val: "", label: "All Status" },
+  { val: "completed", label: "Finished Airing" },
+  { val: "releasing", label: "Currently Airing" },
+  { val: "not_yet_aired", label: "Not yet aired" },
+];
+
+const RATED_OPTIONS = [
+  { val: "", label: "All Rated" },
+  { val: "g", label: "G - All Ages" },
+  { val: "pg", label: "PG - Children" },
+  { val: "pg_13", label: "PG-13 - Teens 13+" },
+  { val: "r_17", label: "R - 17+ (violence)" },
+  { val: "r_plus", label: "R+ - Mild Nudity" },
+  { val: "rx", label: "Rx - Hentai" },
+];
+
+const SCORE_OPTIONS = [
+  { val: "", label: "All Scores" },
+  { val: "10", label: "(10) Masterpiece" },
+  { val: "9", label: "(9) Great" },
+  { val: "8", label: "(8) Very Good" },
+  { val: "7", label: "(7) Good" },
+  { val: "6", label: "(6) Fine" },
+  { val: "5", label: "(5) Average" },
+  { val: "4", label: "(4) Bad" },
+  { val: "3", label: "(3) Very Bad" },
+  { val: "2", label: "(2) Horrible" },
+  { val: "1", label: "(1) Appalling" },
+];
+
+const SEASON_OPTIONS = [
+  { val: "", label: "All Seasons" },
+  { val: "spring", label: "Spring" },
+  { val: "summer", label: "Summer" },
+  { val: "fall", label: "Fall" },
+  { val: "winter", label: "Winter" },
+];
+
+const LANGUAGE_OPTIONS = [
+  { val: "", label: "All Languages" },
+  { val: "sub", label: "SUB" },
+  { val: "dub", label: "DUB" },
+];
+
+const SORT_OPTIONS = [
+  { val: "default", label: "Default" },
+  { val: "updated_date", label: "Recently Updated" },
+  { val: "added_date", label: "Recently Added" },
+  { val: "release_date", label: "Released Date" },
+  { val: "trending", label: "Trending" },
+  { val: "title_az", label: "Name A-Z" },
+  { val: "avg_score", label: "Score" },
+  { val: "mal_score", label: "MAL Score" },
+  { val: "most_viewed", label: "Most Watched" },
+  { val: "most_followed", label: "Most Followed" },
+];
+
+const MONTHS = [
+  { val: "", label: "Month" },
+  { val: "1", label: "Jan" },
+  { val: "2", label: "Feb" },
+  { val: "3", label: "Mar" },
+  { val: "4", label: "Apr" },
+  { val: "5", label: "May" },
+  { val: "6", label: "Jun" },
+  { val: "7", label: "Jul" },
+  { val: "8", label: "Aug" },
+  { val: "9", label: "Sep" },
+  { val: "10", label: "Oct" },
+  { val: "11", label: "Nov" },
+  { val: "12", label: "Dec" },
+];
+
+const YEARS = ["", ...Array.from({ length: 38 }, (_, i) => String(2027 - i))];
+const DAYS = ["", ...Array.from({ length: 31 }, (_, i) => String(i + 1))];
 
 const POPULAR_SEARCHES = [
   "Solo Leveling",
@@ -44,7 +163,12 @@ const POPULAR_SEARCHES = [
 
 function Search() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const navigate = useNavigate();
+
+  const isFilterPath =
+    location.pathname.startsWith("/filter") ||
+    location.pathname.startsWith("/filtter");
 
   const keyword =
     searchParams.get("keyword") ||
@@ -53,24 +177,170 @@ function Search() {
     "";
   const page = parseInt(searchParams.get("page"), 10) || 1;
 
+  // URL Filter Parameters
+  const paramType = searchParams.get("type") || "";
+  const paramStatus = searchParams.get("status") || "";
+  const paramRated = searchParams.get("rated") || searchParams.get("rating") || "";
+  const paramScore = searchParams.get("score") || "";
+  const paramSeason = searchParams.get("season") || "";
+  const paramLanguage = searchParams.get("language") || "";
+  const paramSort = searchParams.get("sort") || "default";
+  const paramSy = searchParams.get("sy") || "";
+  const paramSm = searchParams.get("sm") || "";
+  const paramSd = searchParams.get("sd") || "";
+  const paramEy = searchParams.get("ey") || "";
+  const paramEm = searchParams.get("em") || "";
+  const paramEd = searchParams.get("ed") || "";
+
+  // Parse genres from URL (handles genre[], genres=a,b, genre=a)
+  const paramGenres = useMemo(() => {
+    const fromArray = searchParams.getAll("genre[]");
+    if (fromArray.length > 0) return fromArray;
+    const fromString = searchParams.get("genres") || searchParams.get("genre");
+    if (fromString) {
+      return fromString
+        .split(",")
+        .map((g) => g.trim().toLowerCase())
+        .filter(Boolean);
+    }
+    return [];
+  }, [searchParams]);
+
+  // Are any advanced filters active in the URL?
+  const hasActiveFiltersInUrl = useMemo(() => {
+    return Boolean(
+      paramType ||
+        paramStatus ||
+        paramRated ||
+        paramScore ||
+        paramSeason ||
+        paramLanguage ||
+        paramSy ||
+        paramSm ||
+        paramSd ||
+        paramEy ||
+        paramEm ||
+        paramEd ||
+        (paramSort && paramSort !== "default") ||
+        paramGenres.length > 0
+    );
+  }, [
+    paramType,
+    paramStatus,
+    paramRated,
+    paramScore,
+    paramSeason,
+    paramLanguage,
+    paramSy,
+    paramSm,
+    paramSd,
+    paramEy,
+    paramEm,
+    paramEd,
+    paramSort,
+    paramGenres,
+  ]);
+
+  // Local state for the filter panel form
+  const [filterType, setFilterType] = useState(paramType);
+  const [filterStatus, setFilterStatus] = useState(paramStatus);
+  const [filterRated, setFilterRated] = useState(paramRated);
+  const [filterScore, setFilterScore] = useState(paramScore);
+  const [filterSeason, setFilterSeason] = useState(paramSeason);
+  const [filterLanguage, setFilterLanguage] = useState(paramLanguage);
+  const [filterSort, setFilterSort] = useState(paramSort);
+  const [filterSy, setFilterSy] = useState(paramSy);
+  const [filterSm, setFilterSm] = useState(paramSm);
+  const [filterSd, setFilterSd] = useState(paramSd);
+  const [filterEy, setFilterEy] = useState(paramEy);
+  const [filterEm, setFilterEm] = useState(paramEm);
+  const [filterEd, setFilterEd] = useState(paramEd);
+  const [selectedGenres, setSelectedGenres] = useState(paramGenres);
+
+  // Synchronize local filter state when URL searchParams changes
+  useEffect(() => {
+    setFilterType(paramType);
+    setFilterStatus(paramStatus);
+    setFilterRated(paramRated);
+    setFilterScore(paramScore);
+    setFilterSeason(paramSeason);
+    setFilterLanguage(paramLanguage);
+    setFilterSort(paramSort);
+    setFilterSy(paramSy);
+    setFilterSm(paramSm);
+    setFilterSd(paramSd);
+    setFilterEy(paramEy);
+    setFilterEm(paramEm);
+    setFilterEd(paramEd);
+    setSelectedGenres(paramGenres);
+  }, [
+    paramType,
+    paramStatus,
+    paramRated,
+    paramScore,
+    paramSeason,
+    paramLanguage,
+    paramSort,
+    paramSy,
+    paramSm,
+    paramSd,
+    paramEy,
+    paramEm,
+    paramEd,
+    paramGenres,
+  ]);
+
+  // Toggle filter drawer open/closed (open by default on /filter or if filters are active)
+  const [isFilterOpen, setIsFilterOpen] = useState(
+    isFilterPath || hasActiveFiltersInUrl
+  );
+
   const [inputQuery, setInputQuery] = useState(keyword);
   const [searchData, setSearchData] = useState(null);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Filters & Sorting
-  const [selectedFormat, setSelectedFormat] = useState("all");
-  const [sortBy, setSortBy] = useState("default");
-
-  // Synchronize local input state whenever URL keyword changes
   useEffect(() => {
     setInputQuery(keyword);
   }, [keyword]);
 
+  // Active filters count
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (paramType) count++;
+    if (paramStatus) count++;
+    if (paramRated) count++;
+    if (paramScore) count++;
+    if (paramSeason) count++;
+    if (paramLanguage) count++;
+    if (paramSy || paramSm || paramSd) count++;
+    if (paramEy || paramEm || paramEd) count++;
+    if (paramSort && paramSort !== "default") count++;
+    count += paramGenres.length;
+    return count;
+  }, [
+    paramType,
+    paramStatus,
+    paramRated,
+    paramScore,
+    paramSeason,
+    paramLanguage,
+    paramSy,
+    paramSm,
+    paramSd,
+    paramEy,
+    paramEm,
+    paramEd,
+    paramSort,
+    paramGenres,
+  ]);
+
+  // Main Data Fetch
   useEffect(() => {
-    const fetchSearch = async () => {
-      if (!keyword.trim()) {
+    const fetchData = async () => {
+      // If no keyword and not on filter page and no filters active:
+      if (!keyword.trim() && !isFilterPath && !hasActiveFiltersInUrl) {
         setSearchData([]);
         setTotalPages(0);
         setLoading(false);
@@ -81,30 +351,83 @@ function Search() {
       setError(null);
 
       try {
-        const data = await getSearch(keyword, page);
-        setSearchData(data.data || []);
-        setTotalPages(data.totalPage || 1);
+        if (hasActiveFiltersInUrl || isFilterPath) {
+          // Use Advanced Filter API
+          const filterPayload = {
+            page,
+            type: paramType,
+            status: paramStatus,
+            rating: paramRated,
+            score: paramScore,
+            season: paramSeason,
+            language: paramLanguage,
+            sort: paramSort,
+            sy: paramSy,
+            sm: paramSm,
+            sd: paramSd,
+            ey: paramEy,
+            em: paramEm,
+            ed: paramEd,
+            genres: paramGenres,
+          };
+
+          const data = await getFilter(filterPayload);
+          setSearchData(data.data || []);
+          setTotalPages(data.totalPage || 1);
+        } else {
+          // Standard Keyword Search
+          const data = await getSearch(keyword, page);
+          setSearchData(data.data || []);
+          setTotalPages(data.totalPage || 1);
+        }
       } catch (err) {
-        console.error("Error fetching anime search:", err);
+        console.error("Error fetching search/filter data:", err);
         setError(err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSearch();
+    fetchData();
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [keyword, page]);
+  }, [
+    keyword,
+    page,
+    isFilterPath,
+    hasActiveFiltersInUrl,
+    paramType,
+    paramStatus,
+    paramRated,
+    paramScore,
+    paramSeason,
+    paramLanguage,
+    paramSort,
+    paramSy,
+    paramSm,
+    paramSd,
+    paramEy,
+    paramEm,
+    paramEd,
+    paramGenres,
+  ]);
 
+  // Page change
   const handlePageChange = (newPage) => {
-    setSearchParams({ keyword, page: newPage });
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("page", String(newPage));
+    setSearchParams(newParams);
   };
 
+  // Search input submission
   const handleSearchSubmit = (e) => {
     e?.preventDefault();
     const trimmed = inputQuery.trim();
     if (trimmed) {
-      setSearchParams({ keyword: trimmed, page: 1 });
+      navigate(`/search?keyword=${encodeURIComponent(trimmed)}`);
+    } else {
+      // If submitted empty, navigate to filter!
+      navigate("/filter");
+      setIsFilterOpen(true);
     }
   };
 
@@ -114,67 +437,102 @@ function Search() {
 
   const handlePopularSearchClick = (term) => {
     setInputQuery(term);
-    setSearchParams({ keyword: term, page: 1 });
+    navigate(`/search?keyword=${encodeURIComponent(term)}`);
   };
 
-  // Format counts
-  const counts = useMemo(() => {
-    if (!searchData || !Array.isArray(searchData)) {
-      return { all: 0, tv: 0, movie: 0, other: 0 };
-    }
-    let tv = 0;
-    let movie = 0;
-    let other = 0;
+  // Genre selection toggle
+  const toggleGenre = useCallback((genreId) => {
+    setSelectedGenres((prev) =>
+      prev.includes(genreId)
+        ? prev.filter((g) => g !== genreId)
+        : [...prev, genreId]
+    );
+  }, []);
 
-    searchData.forEach((item) => {
-      const type = (item.type || item.tvInfo?.showType || "").toUpperCase();
-      if (type === "TV") tv++;
-      else if (type === "MOVIE") movie++;
-      else if (type) other++;
+  // Apply all filter choices to URL
+  const handleApplyFilter = (e) => {
+    e?.preventDefault();
+    const newParams = new URLSearchParams();
+
+    if (keyword.trim() && !isFilterPath) {
+      newParams.set("keyword", keyword.trim());
+    }
+    newParams.set("page", "1");
+
+    if (filterType) newParams.set("type", filterType);
+    if (filterStatus) newParams.set("status", filterStatus);
+    if (filterRated) newParams.set("rating", filterRated);
+    if (filterScore) newParams.set("score", filterScore);
+    if (filterSeason) newParams.set("season", filterSeason);
+    if (filterLanguage) newParams.set("language", filterLanguage);
+    if (filterSort && filterSort !== "default") newParams.set("sort", filterSort);
+
+    if (filterSy) newParams.set("sy", filterSy);
+    if (filterSm) newParams.set("sm", filterSm);
+    if (filterSd) newParams.set("sd", filterSd);
+
+    if (filterEy) newParams.set("ey", filterEy);
+    if (filterEm) newParams.set("em", filterEm);
+    if (filterEd) newParams.set("ed", filterEd);
+
+    selectedGenres.forEach((g) => {
+      newParams.append("genre[]", g);
     });
 
-    return { all: searchData.length, tv, movie, other };
-  }, [searchData]);
+    const targetBase = isFilterPath ? "/filter" : "/search";
+    navigate(`${targetBase}?${newParams.toString()}`);
+  };
 
-  // Filtered & Sorted items
-  const processedData = useMemo(() => {
-    if (!searchData || !Array.isArray(searchData)) return [];
+  // Reset all filters back to default
+  const handleResetFilters = () => {
+    setFilterType("");
+    setFilterStatus("");
+    setFilterRated("");
+    setFilterScore("");
+    setFilterSeason("");
+    setFilterLanguage("");
+    setFilterSort("default");
+    setFilterSy("");
+    setFilterSm("");
+    setFilterSd("");
+    setFilterEy("");
+    setFilterEm("");
+    setFilterEd("");
+    setSelectedGenres([]);
 
-    let list = [...searchData];
-
-    // Filter by format
-    if (selectedFormat === "tv") {
-      list = list.filter((item) => {
-        const type = (item.type || item.tvInfo?.showType || "").toUpperCase();
-        return type === "TV";
-      });
-    } else if (selectedFormat === "movie") {
-      list = list.filter((item) => {
-        const type = (item.type || item.tvInfo?.showType || "").toUpperCase();
-        return type === "MOVIE";
-      });
-    } else if (selectedFormat === "other") {
-      list = list.filter((item) => {
-        const type = (item.type || item.tvInfo?.showType || "").toUpperCase();
-        return type && type !== "TV" && type !== "MOVIE";
-      });
+    if (isFilterPath) {
+      navigate("/filter");
+    } else if (keyword.trim()) {
+      navigate(`/search?keyword=${encodeURIComponent(keyword)}`);
+    } else {
+      navigate("/search");
     }
+  };
 
-    // Sort
-    if (sortBy === "title-asc") {
-      list.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
-    } else if (sortBy === "title-desc") {
-      list.sort((a, b) => (b.title || "").localeCompare(a.title || ""));
-    } else if (sortBy === "episodes") {
-      list.sort((a, b) => {
-        const epA = Number(a.episodes || a.sub || a.tvInfo?.sub || 0);
-        const epB = Number(b.episodes || b.sub || b.tvInfo?.sub || 0);
-        return epB - epA;
-      });
+  // Remove a single active filter badge
+  const removeFilterParam = (key, value) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (key === "genre") {
+      const remaining = paramGenres.filter((g) => g !== value);
+      newParams.delete("genre[]");
+      newParams.delete("genres");
+      newParams.delete("genre");
+      remaining.forEach((g) => newParams.append("genre[]", g));
+    } else if (key === "date_start") {
+      newParams.delete("sy");
+      newParams.delete("sm");
+      newParams.delete("sd");
+    } else if (key === "date_end") {
+      newParams.delete("ey");
+      newParams.delete("em");
+      newParams.delete("ed");
+    } else {
+      newParams.delete(key);
+      if (key === "rating") newParams.delete("rated");
     }
-
-    return list;
-  }, [searchData, selectedFormat, sortBy]);
+    newParams.set("page", "1");
+    setSearchParams(newParams);
+  };
 
   const searchGridClass =
     "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 max-[478px]:gap-2.5";
@@ -182,9 +540,8 @@ function Search() {
   return (
     <div className="w-full min-h-screen bg-black text-white pt-[76px] pb-16">
       <div className="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-y-8">
-        {/* Top Header Card */}
+        {/* Top Hero / Search & Filter Header */}
         <div className="relative overflow-hidden rounded-2xl bg-zinc-900/60 border border-zinc-800/80 p-6 sm:p-8 backdrop-blur-xl shadow-2xl">
-          {/* Subtle ambient lighting */}
           <div className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 bg-white/[0.03] rounded-full blur-3xl" />
           <div className="pointer-events-none absolute -bottom-24 -right-24 w-96 h-96 bg-zinc-800/20 rounded-full blur-3xl" />
 
@@ -194,11 +551,24 @@ function Search() {
               Home
             </Link>
             <span className="text-zinc-600">/</span>
-            <span className="text-zinc-200">Search</span>
+            <Link
+              to={isFilterPath ? "/filter" : "/search"}
+              className="hover:text-white transition-colors text-zinc-200"
+            >
+              {isFilterPath ? "Filter" : "Search"}
+            </Link>
             {keyword && (
               <>
                 <span className="text-zinc-600">/</span>
-                <span className="text-white truncate max-w-[200px]">"{keyword}"</span>
+                <span className="text-white truncate max-w-[200px]">
+                  "{keyword}"
+                </span>
+              </>
+            )}
+            {hasActiveFiltersInUrl && !keyword && (
+              <>
+                <span className="text-zinc-600">/</span>
+                <span className="text-zinc-300">Filtered Catalog</span>
               </>
             )}
           </div>
@@ -208,7 +578,9 @@ function Search() {
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2.5 flex-wrap">
                 <h1 className="font-bold text-2xl sm:text-3xl text-white tracking-tight">
-                  {keyword ? (
+                  {isFilterPath ? (
+                    "Filter Anime"
+                  ) : keyword ? (
                     <>
                       Results for{" "}
                       <span className="text-zinc-100 bg-zinc-800/80 px-2.5 py-0.5 rounded-lg border border-zinc-700/60 font-semibold inline-block">
@@ -216,17 +588,18 @@ function Search() {
                       </span>
                     </>
                   ) : (
-                    "Explore & Search Anime"
+                    "Explore & Filter Anime"
                   )}
                 </h1>
 
-                {keyword && !loading && searchData && (
+                {!loading && searchData && (
                   <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-zinc-800 border border-zinc-700/60 text-zinc-300">
-                    {searchData.length} {searchData.length === 1 ? "anime" : "anime found"}
+                    {searchData.length}{" "}
+                    {searchData.length === 1 ? "anime" : "anime found"}
                   </span>
                 )}
 
-                {keyword && totalPages > 1 && (
+                {totalPages > 1 && (
                   <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-zinc-800/50 border border-zinc-800 text-zinc-400">
                     Page {page} of {totalPages}
                   </span>
@@ -234,72 +607,533 @@ function Search() {
               </div>
 
               <p className="text-sm text-zinc-400 max-w-xl">
-                {keyword
-                  ? "Browse matching series, movies, and specials. Use the quick filters to narrow down your results."
-                  : "Discover series, movies, and episodes across the catalog. Type a query below or pick a popular genre."}
+                {isFilterPath
+                  ? "Customize your search with granular filters: type, status, ratings, score, season, language, dates, and genres."
+                  : keyword
+                  ? "Browse matching series, movies, and specials. Click the Filter button to refine your search."
+                  : "Discover series, movies, and episodes across the catalog. Type a query or open filters below."}
               </p>
             </div>
 
-            {/* Inline Search Input Form */}
-            <form
-              onSubmit={handleSearchSubmit}
-              className="flex items-center w-full lg:w-[460px] relative group"
-            >
-              <div className="relative w-full">
-                <input
-                  type="text"
-                  value={inputQuery}
-                  onChange={(e) => setInputQuery(e.target.value)}
-                  placeholder="Refine or enter new search..."
-                  className="w-full bg-zinc-950/80 hover:bg-zinc-950 text-white placeholder-zinc-500 pl-11 pr-24 py-3 rounded-xl border border-zinc-700/70 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 transition-all text-sm shadow-inner"
-                />
-                <FontAwesomeIcon
-                  icon={faMagnifyingGlass}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-white transition-colors text-sm pointer-events-none"
-                />
+            {/* Controls: Search Box & Filter Toggle */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+              <form
+                onSubmit={handleSearchSubmit}
+                className="flex items-center w-full lg:w-[380px] relative group"
+              >
+                <div className="relative w-full">
+                  <input
+                    type="text"
+                    value={inputQuery}
+                    onChange={(e) => setInputQuery(e.target.value)}
+                    placeholder="Search or enter empty for filter..."
+                    className="w-full bg-zinc-950/80 hover:bg-zinc-950 text-white placeholder-zinc-500 pl-10 pr-20 py-2.5 rounded-xl border border-zinc-700/70 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 transition-all text-sm shadow-inner"
+                  />
+                  <FontAwesomeIcon
+                    icon={faMagnifyingGlass}
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-white transition-colors text-sm pointer-events-none"
+                  />
 
-                {inputQuery && (
+                  {inputQuery && (
+                    <button
+                      type="button"
+                      onClick={handleClearSearch}
+                      className="absolute right-14 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white p-1 transition-colors"
+                      title="Clear input"
+                    >
+                      <FontAwesomeIcon icon={faXmark} className="text-xs" />
+                    </button>
+                  )}
+
                   <button
-                    type="button"
-                    onClick={handleClearSearch}
-                    className="absolute right-16 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white p-1 transition-colors"
-                    title="Clear input"
+                    type="submit"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1 rounded-lg bg-zinc-200 hover:bg-white text-zinc-900 font-semibold text-xs transition-all shadow-sm"
                   >
-                    <FontAwesomeIcon icon={faXmark} className="text-xs" />
+                    Search
                   </button>
-                )}
+                </div>
+              </form>
 
-                <button
-                  type="submit"
-                  disabled={!inputQuery.trim()}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 px-3.5 py-1.5 rounded-lg bg-zinc-200 hover:bg-white text-zinc-900 font-semibold text-xs transition-all disabled:opacity-40 disabled:hover:bg-zinc-200"
+              {/* Filter Toggle Button */}
+              <button
+                type="button"
+                onClick={() => setIsFilterOpen((prev) => !prev)}
+                className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-semibold transition-all shrink-0 ${
+                  isFilterOpen || activeFiltersCount > 0
+                    ? "bg-zinc-100 text-zinc-900 border-white shadow-lg"
+                    : "bg-zinc-800/80 hover:bg-zinc-700 border-zinc-700/70 text-zinc-200 hover:text-white"
+                }`}
+              >
+                <FontAwesomeIcon icon={faSliders} className="text-xs" />
+                <span>Filter</span>
+                {activeFiltersCount > 0 && (
+                  <span
+                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                      isFilterOpen
+                        ? "bg-zinc-900 text-white"
+                        : "bg-zinc-100 text-zinc-900"
+                    }`}
+                  >
+                    {activeFiltersCount}
+                  </span>
+                )}
+                <FontAwesomeIcon
+                  icon={isFilterOpen ? faChevronUp : faChevronDown}
+                  className="text-[10px] ml-0.5 opacity-70"
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Active Filter Badges */}
+          {activeFiltersCount > 0 && (
+            <div className="mt-5 pt-4 border-t border-zinc-800/80 flex items-center gap-2 flex-wrap text-xs">
+              <span className="text-zinc-500 font-medium mr-1 flex items-center gap-1">
+                <FontAwesomeIcon icon={faFilter} className="text-[10px]" />
+                Active filters:
+              </span>
+
+              {paramType && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200">
+                  Type: <strong className="text-white uppercase">{paramType}</strong>
+                  <button
+                    onClick={() => removeFilterParam("type")}
+                    className="hover:text-red-400 ml-1"
+                  >
+                    <FontAwesomeIcon icon={faXmark} className="text-[10px]" />
+                  </button>
+                </span>
+              )}
+
+              {paramStatus && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200">
+                  Status: <strong className="text-white">{paramStatus}</strong>
+                  <button
+                    onClick={() => removeFilterParam("status")}
+                    className="hover:text-red-400 ml-1"
+                  >
+                    <FontAwesomeIcon icon={faXmark} className="text-[10px]" />
+                  </button>
+                </span>
+              )}
+
+              {paramRated && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200">
+                  Rated: <strong className="text-white uppercase">{paramRated}</strong>
+                  <button
+                    onClick={() => removeFilterParam("rating")}
+                    className="hover:text-red-400 ml-1"
+                  >
+                    <FontAwesomeIcon icon={faXmark} className="text-[10px]" />
+                  </button>
+                </span>
+              )}
+
+              {paramScore && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200">
+                  Score: <strong className="text-white">{paramScore}+</strong>
+                  <button
+                    onClick={() => removeFilterParam("score")}
+                    className="hover:text-red-400 ml-1"
+                  >
+                    <FontAwesomeIcon icon={faXmark} className="text-[10px]" />
+                  </button>
+                </span>
+              )}
+
+              {paramSeason && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 capitalize">
+                  Season: <strong className="text-white">{paramSeason}</strong>
+                  <button
+                    onClick={() => removeFilterParam("season")}
+                    className="hover:text-red-400 ml-1"
+                  >
+                    <FontAwesomeIcon icon={faXmark} className="text-[10px]" />
+                  </button>
+                </span>
+              )}
+
+              {paramLanguage && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 uppercase">
+                  Language: <strong className="text-white">{paramLanguage}</strong>
+                  <button
+                    onClick={() => removeFilterParam("language")}
+                    className="hover:text-red-400 ml-1"
+                  >
+                    <FontAwesomeIcon icon={faXmark} className="text-[10px]" />
+                  </button>
+                </span>
+              )}
+
+              {(paramSy || paramSm || paramSd) && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200">
+                  From:{" "}
+                  <strong className="text-white">
+                    {[paramSy, paramSm, paramSd].filter(Boolean).join("-")}
+                  </strong>
+                  <button
+                    onClick={() => removeFilterParam("date_start")}
+                    className="hover:text-red-400 ml-1"
+                  >
+                    <FontAwesomeIcon icon={faXmark} className="text-[10px]" />
+                  </button>
+                </span>
+              )}
+
+              {(paramEy || paramEm || paramEd) && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200">
+                  To:{" "}
+                  <strong className="text-white">
+                    {[paramEy, paramEm, paramEd].filter(Boolean).join("-")}
+                  </strong>
+                  <button
+                    onClick={() => removeFilterParam("date_end")}
+                    className="hover:text-red-400 ml-1"
+                  >
+                    <FontAwesomeIcon icon={faXmark} className="text-[10px]" />
+                  </button>
+                </span>
+              )}
+
+              {paramSort && paramSort !== "default" && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200">
+                  Sort:{" "}
+                  <strong className="text-white">
+                    {SORT_OPTIONS.find((s) => s.val === paramSort)?.label || paramSort}
+                  </strong>
+                  <button
+                    onClick={() => removeFilterParam("sort")}
+                    className="hover:text-red-400 ml-1"
+                  >
+                    <FontAwesomeIcon icon={faXmark} className="text-[10px]" />
+                  </button>
+                </span>
+              )}
+
+              {paramGenres.map((g) => (
+                <span
+                  key={g}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 capitalize"
                 >
-                  Search
+                  Genre: <strong className="text-white">{g}</strong>
+                  <button
+                    onClick={() => removeFilterParam("genre", g)}
+                    className="hover:text-red-400 ml-1"
+                  >
+                    <FontAwesomeIcon icon={faXmark} className="text-[10px]" />
+                  </button>
+                </span>
+              ))}
+
+              <button
+                onClick={handleResetFilters}
+                className="text-xs text-zinc-400 hover:text-white underline ml-2"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Expandable Advanced Filter Panel */}
+        {isFilterOpen && (
+          <form
+            onSubmit={handleApplyFilter}
+            className="flex flex-col gap-6 p-6 sm:p-8 rounded-2xl bg-zinc-900/70 border border-zinc-800 backdrop-blur-xl shadow-2xl transition-all"
+          >
+            <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
+              <div className="flex items-center gap-2">
+                <FontAwesomeIcon icon={faSliders} className="text-zinc-400 text-sm" />
+                <h2 className="text-lg font-bold text-white tracking-wide">
+                  Filter Options
+                </h2>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors"
+                >
+                  <FontAwesomeIcon icon={faRotateLeft} className="text-[10px]" />
+                  <span>Reset</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsFilterOpen(false)}
+                  className="text-xs text-zinc-400 hover:text-white p-1"
+                  title="Close filter panel"
+                >
+                  <FontAwesomeIcon icon={faXmark} className="text-sm" />
                 </button>
               </div>
-            </form>
-          </div>
-
-          {/* Quick Trending Genres */}
-          <div className="mt-6 pt-5 border-t border-zinc-800/80 flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-400 shrink-0">
-              <FontAwesomeIcon icon={faFire} className="text-amber-400 text-xs" />
-              <span>Trending Genres:</span>
             </div>
 
-            <div className="flex items-center gap-1.5 flex-wrap overflow-x-auto pb-1 scrollbar-none">
-              {POPULAR_GENRES.map((genre) => (
-                <Link
-                  key={genre.name}
-                  to={genre.path}
-                  className="px-2.5 py-1 rounded-lg bg-zinc-800/60 hover:bg-zinc-700/80 border border-zinc-700/40 text-xs text-zinc-300 hover:text-white transition-all hover:scale-105 active:scale-95"
+            {/* Select Dropdowns Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {/* Type */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-zinc-400">Type</label>
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-3 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer transition-colors"
                 >
-                  {genre.name}
-                </Link>
-              ))}
+                  {TYPE_OPTIONS.map((opt) => (
+                    <option key={opt.val} value={opt.val}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Status */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-zinc-400">Status</label>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-3 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer transition-colors"
+                >
+                  {STATUS_OPTIONS.map((opt) => (
+                    <option key={opt.val} value={opt.val}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Rated */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-zinc-400">Rated</label>
+                <select
+                  value={filterRated}
+                  onChange={(e) => setFilterRated(e.target.value)}
+                  className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-3 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer transition-colors"
+                >
+                  {RATED_OPTIONS.map((opt) => (
+                    <option key={opt.val} value={opt.val}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Score */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-zinc-400">Score</label>
+                <select
+                  value={filterScore}
+                  onChange={(e) => setFilterScore(e.target.value)}
+                  className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-3 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer transition-colors"
+                >
+                  {SCORE_OPTIONS.map((opt) => (
+                    <option key={opt.val} value={opt.val}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Season */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-zinc-400">Season</label>
+                <select
+                  value={filterSeason}
+                  onChange={(e) => setFilterSeason(e.target.value)}
+                  className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-3 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer transition-colors"
+                >
+                  {SEASON_OPTIONS.map((opt) => (
+                    <option key={opt.val} value={opt.val}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Language */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-zinc-400">Language</label>
+                <select
+                  value={filterLanguage}
+                  onChange={(e) => setFilterLanguage(e.target.value)}
+                  className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-3 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer transition-colors"
+                >
+                  {LANGUAGE_OPTIONS.map((opt) => (
+                    <option key={opt.val} value={opt.val}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
-        </div>
+
+            {/* Date Pickers & Sort */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+              {/* Start Date */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-zinc-400">
+                  Start Date
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <select
+                    value={filterSy}
+                    onChange={(e) => setFilterSy(e.target.value)}
+                    className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-2 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer"
+                  >
+                    <option value="">Year</option>
+                    {YEARS.filter(Boolean).map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={filterSm}
+                    onChange={(e) => setFilterSm(e.target.value)}
+                    className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-2 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer"
+                  >
+                    {MONTHS.map((m) => (
+                      <option key={m.val} value={m.val}>
+                        {m.label}
+                      </option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={filterSd}
+                    onChange={(e) => setFilterSd(e.target.value)}
+                    className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-2 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer"
+                  >
+                    <option value="">Day</option>
+                    {DAYS.filter(Boolean).map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* End Date */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-zinc-400">End Date</label>
+                <div className="grid grid-cols-3 gap-2">
+                  <select
+                    value={filterEy}
+                    onChange={(e) => setFilterEy(e.target.value)}
+                    className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-2 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer"
+                  >
+                    <option value="">Year</option>
+                    {YEARS.filter(Boolean).map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={filterEm}
+                    onChange={(e) => setFilterEm(e.target.value)}
+                    className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-2 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer"
+                  >
+                    {MONTHS.map((m) => (
+                      <option key={m.val} value={m.val}>
+                        {m.label}
+                      </option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={filterEd}
+                    onChange={(e) => setFilterEd(e.target.value)}
+                    className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-2 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer"
+                  >
+                    <option value="">Day</option>
+                    {DAYS.filter(Boolean).map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Sort By */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-zinc-400">Sort</label>
+                <select
+                  value={filterSort}
+                  onChange={(e) => setFilterSort(e.target.value)}
+                  className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-3 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer transition-colors"
+                >
+                  {SORT_OPTIONS.map((s) => (
+                    <option key={s.val} value={s.val}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Genre Multi-Select Section */}
+            <div className="flex flex-col gap-2.5 pt-2 border-t border-zinc-800/80">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-zinc-400">
+                  Genres ({selectedGenres.length} selected)
+                </label>
+                {selectedGenres.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedGenres([])}
+                    className="text-xs text-zinc-500 hover:text-white transition-colors"
+                  >
+                    Clear genres
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap max-h-48 overflow-y-auto pr-1 scrollbar-thin">
+                {ALL_GENRES.map((genre) => {
+                  const isSelected = selectedGenres.includes(genre.id);
+                  return (
+                    <button
+                      type="button"
+                      key={genre.id}
+                      onClick={() => toggleGenre(genre.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        isSelected
+                          ? "bg-zinc-100 text-zinc-950 border border-white font-semibold shadow-md scale-105"
+                          : "bg-zinc-950 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800/90"
+                      }`}
+                    >
+                      {isSelected && <FontAwesomeIcon icon={faCheck} className="text-[10px]" />}
+                      <span>{genre.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Submit & Reset Bar */}
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800">
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="px-5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs font-semibold transition-all"
+              >
+                Reset All
+              </button>
+              <button
+                type="submit"
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-zinc-100 hover:bg-white text-zinc-900 text-xs font-bold transition-all shadow-lg hover:shadow-xl active:scale-95"
+              >
+                <FontAwesomeIcon icon={faFilter} className="text-xs" />
+                <span>Apply Filter</span>
+              </button>
+            </div>
+          </form>
+        )}
 
         {/* Content Section */}
         {loading ? (
@@ -314,27 +1148,44 @@ function Search() {
               showLabelSkeleton={false}
             />
           </div>
-        ) : !keyword.trim() ? (
+        ) : !keyword.trim() && !isFilterPath && !hasActiveFiltersInUrl ? (
           /* Landing state when user navigates directly to /search */
           <div className="flex flex-col items-center justify-center py-16 px-4 bg-zinc-900/30 border border-zinc-800/60 rounded-2xl text-center">
             <div className="w-16 h-16 rounded-2xl bg-zinc-800/80 border border-zinc-700 flex items-center justify-center text-zinc-300 text-2xl mb-4 shadow-xl">
               <FontAwesomeIcon icon={faCompass} />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">What would you like to watch?</h2>
+            <h2 className="text-xl font-bold text-white mb-2">
+              What would you like to watch?
+            </h2>
             <p className="text-sm text-zinc-400 max-w-md mb-6">
-              Search by anime title, alternative names, or choose from trending titles below.
+              Search by anime title, or explore our full catalog using the Filter button above.
             </p>
 
-            <div className="flex items-center gap-2 flex-wrap justify-center max-w-xl">
-              {POPULAR_SEARCHES.map((term) => (
-                <button
-                  key={term}
-                  onClick={() => handlePopularSearchClick(term)}
-                  className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/50 text-xs font-medium text-zinc-200 hover:text-white transition-all shadow-sm"
-                >
-                  {term}
-                </button>
-              ))}
+            <div className="flex items-center gap-3 mb-6">
+              <button
+                onClick={() => setIsFilterOpen(true)}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-100 hover:bg-white text-zinc-900 text-xs font-bold transition-all shadow"
+              >
+                <FontAwesomeIcon icon={faSliders} className="text-xs" />
+                <span>Open Advanced Filter</span>
+              </button>
+            </div>
+
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">
+                Or search trending anime:
+              </p>
+              <div className="flex items-center gap-2 flex-wrap justify-center max-w-xl">
+                {POPULAR_SEARCHES.map((term) => (
+                  <button
+                    key={term}
+                    onClick={() => handlePopularSearchClick(term)}
+                    className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/50 text-xs font-medium text-zinc-200 hover:text-white transition-all shadow-sm"
+                  >
+                    {term}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         ) : page > totalPages && totalPages > 0 ? (
@@ -343,9 +1194,12 @@ function Search() {
             <div className="w-14 h-14 rounded-2xl bg-zinc-800 flex items-center justify-center text-zinc-400 text-xl mb-4">
               <FontAwesomeIcon icon={faCircleExclamation} />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">End of Search Results</h2>
+            <h2 className="text-xl font-bold text-white mb-2">
+              End of Results
+            </h2>
             <p className="text-sm text-zinc-400 max-w-md mb-6">
-              You've navigated to page {page}, but this search only has {totalPages} {totalPages === 1 ? "page" : "pages"}.
+              You've navigated to page {page}, but only {totalPages}{" "}
+              {totalPages === 1 ? "page exists" : "pages exist"} for this query.
             </p>
             <button
               onClick={() => handlePageChange(1)}
@@ -361,148 +1215,29 @@ function Search() {
             <div className="w-14 h-14 rounded-2xl bg-red-950/40 border border-red-800/50 flex items-center justify-center text-red-400 text-xl mb-4">
               <FontAwesomeIcon icon={faCircleExclamation} />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">Could Not Fetch Results</h2>
+            <h2 className="text-xl font-bold text-white mb-2">
+              Could Not Fetch Results
+            </h2>
             <p className="text-sm text-zinc-400 max-w-md mb-6">
-              We encountered an issue connecting to the catalog. Please try refreshing the search.
+              We encountered an issue connecting to the catalog. Please try again.
             </p>
             <button
               onClick={() => handlePageChange(page)}
               className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-sm font-medium border border-zinc-700 transition-all"
             >
-              Retry Search
+              Retry
             </button>
           </div>
         ) : searchData && searchData.length > 0 ? (
           /* Active Results State */
           <div className="flex flex-col gap-y-6">
-            {/* Control Bar: Format Filters & Sort */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2 border-b border-zinc-800/80">
-              {/* Format pills */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-                <button
-                  onClick={() => setSelectedFormat("all")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    selectedFormat === "all"
-                      ? "bg-zinc-100 text-zinc-950 shadow"
-                      : "bg-zinc-900/80 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800"
-                  }`}
-                >
-                  <FontAwesomeIcon icon={faLayerGroup} className="text-[11px]" />
-                  <span>All</span>
-                  <span
-                    className={`ml-1 text-[10px] px-1.5 py-0.2 rounded-full ${
-                      selectedFormat === "all" ? "bg-zinc-300 text-zinc-900 font-bold" : "bg-zinc-800 text-zinc-400"
-                    }`}
-                  >
-                    {counts.all}
-                  </span>
-                </button>
-
-                {counts.tv > 0 && (
-                  <button
-                    onClick={() => setSelectedFormat("tv")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                      selectedFormat === "tv"
-                        ? "bg-zinc-100 text-zinc-950 shadow"
-                        : "bg-zinc-900/80 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800"
-                    }`}
-                  >
-                    <FontAwesomeIcon icon={faTv} className="text-[11px]" />
-                    <span>TV Series</span>
-                    <span
-                      className={`ml-1 text-[10px] px-1.5 py-0.2 rounded-full ${
-                        selectedFormat === "tv" ? "bg-zinc-300 text-zinc-900 font-bold" : "bg-zinc-800 text-zinc-400"
-                      }`}
-                    >
-                      {counts.tv}
-                    </span>
-                  </button>
-                )}
-
-                {counts.movie > 0 && (
-                  <button
-                    onClick={() => setSelectedFormat("movie")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                      selectedFormat === "movie"
-                        ? "bg-zinc-100 text-zinc-950 shadow"
-                        : "bg-zinc-900/80 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800"
-                    }`}
-                  >
-                    <FontAwesomeIcon icon={faFilm} className="text-[11px]" />
-                    <span>Movies</span>
-                    <span
-                      className={`ml-1 text-[10px] px-1.5 py-0.2 rounded-full ${
-                        selectedFormat === "movie" ? "bg-zinc-300 text-zinc-900 font-bold" : "bg-zinc-800 text-zinc-400"
-                      }`}
-                    >
-                      {counts.movie}
-                    </span>
-                  </button>
-                )}
-
-                {counts.other > 0 && (
-                  <button
-                    onClick={() => setSelectedFormat("other")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                      selectedFormat === "other"
-                        ? "bg-zinc-100 text-zinc-950 shadow"
-                        : "bg-zinc-900/80 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800"
-                    }`}
-                  >
-                    <span>OVAs & Specials</span>
-                    <span
-                      className={`ml-1 text-[10px] px-1.5 py-0.2 rounded-full ${
-                        selectedFormat === "other" ? "bg-zinc-300 text-zinc-900 font-bold" : "bg-zinc-800 text-zinc-400"
-                      }`}
-                    >
-                      {counts.other}
-                    </span>
-                  </button>
-                )}
-              </div>
-
-              {/* Sort Selector */}
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="text-xs text-zinc-400 font-medium flex items-center gap-1.5">
-                  <FontAwesomeIcon icon={faSliders} className="text-zinc-500 text-xs" />
-                  Sort:
-                </span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  aria-label="Sort anime results"
-                  className="bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-medium px-3 py-1.5 rounded-lg border border-zinc-800 focus:border-zinc-600 focus:outline-none cursor-pointer transition-colors"
-                >
-                  <option value="default">Relevance (Default)</option>
-                  <option value="title-asc">Title: A to Z</option>
-                  <option value="title-desc">Title: Z to A</option>
-                  <option value="episodes">Most Episodes</option>
-                </select>
-              </div>
-            </div>
-
-            {/* If format filter reduced results to 0 */}
-            {processedData.length === 0 ? (
-              <div className="py-16 text-center bg-zinc-900/30 rounded-2xl border border-zinc-800/50">
-                <p className="text-zinc-300 text-base font-medium mb-2">
-                  No {selectedFormat.toUpperCase()} results found for "{keyword}".
-                </p>
-                <button
-                  onClick={() => setSelectedFormat("all")}
-                  className="text-xs text-zinc-400 underline hover:text-white"
-                >
-                  View all formats ({counts.all} available)
-                </button>
-              </div>
-            ) : (
-              /* Anime Cards Grid */
-              <CategoryCard
-                data={processedData}
-                showViewMore={false}
-                className="mt-0"
-                gridClass={searchGridClass}
-              />
-            )}
+            {/* Anime Cards Grid */}
+            <CategoryCard
+              data={searchData}
+              showViewMore={false}
+              className="mt-0"
+              gridClass={searchGridClass}
+            />
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
@@ -531,12 +1266,21 @@ function Search() {
             </div>
 
             <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">
-              No results found for "{keyword}"
+              {keyword ? `No results found for "${keyword}"` : "No matching anime found"}
             </h2>
             <p className="text-sm text-zinc-400 max-w-md mb-8 leading-relaxed">
-              We couldn't find any anime matching your query. Check for typos, try fewer keywords,
+              We couldn't find any anime matching your criteria. Try adjusting your filters,
               or discover something new from trending titles below.
             </p>
+
+            <div className="flex items-center gap-3 mb-6">
+              <button
+                onClick={handleResetFilters}
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white rounded-lg text-xs font-semibold border border-zinc-700 transition-all"
+              >
+                Reset All Filters
+              </button>
+            </div>
 
             {/* Quick search suggestions */}
             <div className="flex flex-col items-center gap-3 w-full max-w-md">
