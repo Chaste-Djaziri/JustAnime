@@ -1,6 +1,7 @@
 import CategoryCard from "@/src/components/categorycard/CategoryCard";
 import CategoryCardLoader from "@/src/components/Loader/CategoryCard.loader";
 import PageSlider from "@/src/components/pageslider/PageSlider";
+import DatePickerPill from "@/src/components/filter/DatePickerPill";
 import getSearch from "@/src/utils/getSearch.utils";
 import getFilter from "@/src/utils/getFilter.utils";
 import { useEffect, useState, useMemo, useCallback } from "react";
@@ -12,11 +13,8 @@ import {
   faSliders,
   faChevronDown,
   faChevronUp,
-  faRotateLeft,
-  faCheck,
   faArrowLeft,
   faCompass,
-  faFire,
   faCircleExclamation,
   faFilter,
 } from "@fortawesome/free-solid-svg-icons";
@@ -64,7 +62,7 @@ const ALL_GENRES = [
 ];
 
 const TYPE_OPTIONS = [
-  { val: "", label: "All Types" },
+  { val: "", label: "All" },
   { val: "tv", label: "TV" },
   { val: "movie", label: "Movie" },
   { val: "ova", label: "OVA" },
@@ -74,14 +72,14 @@ const TYPE_OPTIONS = [
 ];
 
 const STATUS_OPTIONS = [
-  { val: "", label: "All Status" },
+  { val: "", label: "All" },
   { val: "completed", label: "Finished Airing" },
   { val: "releasing", label: "Currently Airing" },
   { val: "not_yet_aired", label: "Not yet aired" },
 ];
 
 const RATED_OPTIONS = [
-  { val: "", label: "All Rated" },
+  { val: "", label: "All" },
   { val: "g", label: "G - All Ages" },
   { val: "pg", label: "PG - Children" },
   { val: "pg_13", label: "PG-13 - Teens 13+" },
@@ -91,7 +89,7 @@ const RATED_OPTIONS = [
 ];
 
 const SCORE_OPTIONS = [
-  { val: "", label: "All Scores" },
+  { val: "", label: "All" },
   { val: "10", label: "(10) Masterpiece" },
   { val: "9", label: "(9) Great" },
   { val: "8", label: "(8) Very Good" },
@@ -105,7 +103,7 @@ const SCORE_OPTIONS = [
 ];
 
 const SEASON_OPTIONS = [
-  { val: "", label: "All Seasons" },
+  { val: "", label: "All" },
   { val: "spring", label: "Spring" },
   { val: "summer", label: "Summer" },
   { val: "fall", label: "Fall" },
@@ -113,9 +111,16 @@ const SEASON_OPTIONS = [
 ];
 
 const LANGUAGE_OPTIONS = [
-  { val: "", label: "All Languages" },
+  { val: "", label: "All" },
   { val: "sub", label: "SUB" },
   { val: "dub", label: "DUB" },
+];
+
+const COUNTRY_OPTIONS = [
+  { val: "", label: "All" },
+  { val: "japan", label: "Japan" },
+  { val: "china", label: "China (Donghua)" },
+  { val: "korea", label: "South Korea" },
 ];
 
 const SORT_OPTIONS = [
@@ -131,25 +136,6 @@ const SORT_OPTIONS = [
   { val: "most_followed", label: "Most Followed" },
 ];
 
-const MONTHS = [
-  { val: "", label: "Month" },
-  { val: "1", label: "Jan" },
-  { val: "2", label: "Feb" },
-  { val: "3", label: "Mar" },
-  { val: "4", label: "Apr" },
-  { val: "5", label: "May" },
-  { val: "6", label: "Jun" },
-  { val: "7", label: "Jul" },
-  { val: "8", label: "Aug" },
-  { val: "9", label: "Sep" },
-  { val: "10", label: "Oct" },
-  { val: "11", label: "Nov" },
-  { val: "12", label: "Dec" },
-];
-
-const YEARS = ["", ...Array.from({ length: 38 }, (_, i) => String(2027 - i))];
-const DAYS = ["", ...Array.from({ length: 31 }, (_, i) => String(i + 1))];
-
 const POPULAR_SEARCHES = [
   "Solo Leveling",
   "One Piece",
@@ -160,6 +146,31 @@ const POPULAR_SEARCHES = [
   "Naruto",
   "Chainsaw Man",
 ];
+
+function FilterPill({ label, value, options, onChange }) {
+  return (
+    <div className="flex items-center gap-1.5 sm:gap-2 bg-[#20202a] hover:bg-[#252532] border border-white/10 rounded-xl px-3.5 py-2 transition-all shrink-0">
+      <span className="text-xs font-bold text-white tracking-wide shrink-0 select-none">
+        {label}
+      </span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="bg-transparent text-xs font-medium text-pink-400 hover:text-pink-300 focus:outline-none cursor-pointer pr-1 capitalize"
+      >
+        {options.map((opt) => (
+          <option
+            key={opt.val}
+            value={opt.val}
+            className="bg-zinc-900 text-white"
+          >
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
 
 function Search() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -184,6 +195,7 @@ function Search() {
   const paramScore = searchParams.get("score") || "";
   const paramSeason = searchParams.get("season") || "";
   const paramLanguage = searchParams.get("language") || "";
+  const paramCountry = searchParams.get("country") || "";
   const paramSort = searchParams.get("sort") || "default";
   const paramSy = searchParams.get("sy") || "";
   const paramSm = searchParams.get("sm") || "";
@@ -215,6 +227,7 @@ function Search() {
         paramScore ||
         paramSeason ||
         paramLanguage ||
+        paramCountry ||
         paramSy ||
         paramSm ||
         paramSd ||
@@ -231,6 +244,7 @@ function Search() {
     paramScore,
     paramSeason,
     paramLanguage,
+    paramCountry,
     paramSy,
     paramSm,
     paramSd,
@@ -248,6 +262,7 @@ function Search() {
   const [filterScore, setFilterScore] = useState(paramScore);
   const [filterSeason, setFilterSeason] = useState(paramSeason);
   const [filterLanguage, setFilterLanguage] = useState(paramLanguage);
+  const [filterCountry, setFilterCountry] = useState(paramCountry);
   const [filterSort, setFilterSort] = useState(paramSort);
   const [filterSy, setFilterSy] = useState(paramSy);
   const [filterSm, setFilterSm] = useState(paramSm);
@@ -265,6 +280,7 @@ function Search() {
     setFilterScore(paramScore);
     setFilterSeason(paramSeason);
     setFilterLanguage(paramLanguage);
+    setFilterCountry(paramCountry);
     setFilterSort(paramSort);
     setFilterSy(paramSy);
     setFilterSm(paramSm);
@@ -280,6 +296,7 @@ function Search() {
     paramScore,
     paramSeason,
     paramLanguage,
+    paramCountry,
     paramSort,
     paramSy,
     paramSm,
@@ -314,6 +331,7 @@ function Search() {
     if (paramScore) count++;
     if (paramSeason) count++;
     if (paramLanguage) count++;
+    if (paramCountry) count++;
     if (paramSy || paramSm || paramSd) count++;
     if (paramEy || paramEm || paramEd) count++;
     if (paramSort && paramSort !== "default") count++;
@@ -326,6 +344,7 @@ function Search() {
     paramScore,
     paramSeason,
     paramLanguage,
+    paramCountry,
     paramSy,
     paramSm,
     paramSd,
@@ -361,6 +380,7 @@ function Search() {
             score: paramScore,
             season: paramSeason,
             language: paramLanguage,
+            country: paramCountry,
             sort: paramSort,
             sy: paramSy,
             sm: paramSm,
@@ -401,6 +421,7 @@ function Search() {
     paramScore,
     paramSeason,
     paramLanguage,
+    paramCountry,
     paramSort,
     paramSy,
     paramSm,
@@ -465,6 +486,7 @@ function Search() {
     if (filterScore) newParams.set("score", filterScore);
     if (filterSeason) newParams.set("season", filterSeason);
     if (filterLanguage) newParams.set("language", filterLanguage);
+    if (filterCountry) newParams.set("country", filterCountry);
     if (filterSort && filterSort !== "default") newParams.set("sort", filterSort);
 
     if (filterSy) newParams.set("sy", filterSy);
@@ -491,6 +513,7 @@ function Search() {
     setFilterScore("");
     setFilterSeason("");
     setFilterLanguage("");
+    setFilterCountry("");
     setFilterSort("default");
     setFilterSy("");
     setFilterSm("");
@@ -540,7 +563,7 @@ function Search() {
   return (
     <div className="w-full min-h-screen bg-black text-white pt-[76px] pb-16">
       <div className="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-y-8">
-        {/* Top Hero / Search & Filter Header */}
+        {/* Top Header Card */}
         <div className="relative overflow-hidden rounded-2xl bg-zinc-900/60 border border-zinc-800/80 p-6 sm:p-8 backdrop-blur-xl shadow-2xl">
           <div className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 bg-white/[0.03] rounded-full blur-3xl" />
           <div className="pointer-events-none absolute -bottom-24 -right-24 w-96 h-96 bg-zinc-800/20 rounded-full blur-3xl" />
@@ -608,7 +631,7 @@ function Search() {
 
               <p className="text-sm text-zinc-400 max-w-xl">
                 {isFilterPath
-                  ? "Customize your search with granular filters: type, status, ratings, score, season, language, dates, and genres."
+                  ? "Customize your search with granular filters: type, status, rated, score, season, language, country, dates, and genres."
                   : keyword
                   ? "Browse matching series, movies, and specials. Click the Filter button to refine your search."
                   : "Discover series, movies, and episodes across the catalog. Type a query or open filters below."}
@@ -765,6 +788,18 @@ function Search() {
                 </span>
               )}
 
+              {paramCountry && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 capitalize">
+                  Country: <strong className="text-white">{paramCountry}</strong>
+                  <button
+                    onClick={() => removeFilterParam("country")}
+                    className="hover:text-red-400 ml-1"
+                  >
+                    <FontAwesomeIcon icon={faXmark} className="text-[10px]" />
+                  </button>
+                </span>
+              )}
+
               {(paramSy || paramSm || paramSd) && (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200">
                   From:{" "}
@@ -835,253 +870,128 @@ function Search() {
           )}
         </div>
 
-        {/* Expandable Advanced Filter Panel */}
+        {/* Filter Panel (matches screenshot layout) */}
         {isFilterOpen && (
           <form
             onSubmit={handleApplyFilter}
-            className="flex flex-col gap-6 p-6 sm:p-8 rounded-2xl bg-zinc-900/70 border border-zinc-800 backdrop-blur-xl shadow-2xl transition-all"
+            className="p-6 sm:p-8 rounded-2xl bg-[#181822] border border-white/10 shadow-2xl backdrop-blur-xl flex flex-col gap-6"
           >
-            <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
-              <div className="flex items-center gap-2">
-                <FontAwesomeIcon icon={faSliders} className="text-zinc-400 text-sm" />
-                <h2 className="text-lg font-bold text-white tracking-wide">
-                  Filter Options
-                </h2>
+            {/* Filter Section */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-white font-bold text-base tracking-wide">
+                  Filter
+                </h3>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleResetFilters}
+                    className="text-xs text-zinc-400 hover:text-white transition-colors"
+                  >
+                    Reset
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsFilterOpen(false)}
+                    className="text-zinc-400 hover:text-white p-1 text-xs"
+                    title="Close"
+                  >
+                    <FontAwesomeIcon icon={faXmark} />
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleResetFilters}
-                  className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors"
-                >
-                  <FontAwesomeIcon icon={faRotateLeft} className="text-[10px]" />
-                  <span>Reset</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsFilterOpen(false)}
-                  className="text-xs text-zinc-400 hover:text-white p-1"
-                  title="Close filter panel"
-                >
-                  <FontAwesomeIcon icon={faXmark} className="text-sm" />
-                </button>
-              </div>
-            </div>
 
-            {/* Select Dropdowns Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {/* Type */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-zinc-400">Type</label>
-                <select
+              {/* Filter Pills Grid */}
+              <div className="flex flex-wrap gap-2.5 items-center">
+                <FilterPill
+                  label="Type"
                   value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                  className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-3 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer transition-colors"
-                >
-                  {TYPE_OPTIONS.map((opt) => (
-                    <option key={opt.val} value={opt.val}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Status */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-zinc-400">Status</label>
-                <select
+                  options={TYPE_OPTIONS}
+                  onChange={setFilterType}
+                />
+                <FilterPill
+                  label="Status"
                   value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-3 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer transition-colors"
-                >
-                  {STATUS_OPTIONS.map((opt) => (
-                    <option key={opt.val} value={opt.val}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Rated */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-zinc-400">Rated</label>
-                <select
+                  options={STATUS_OPTIONS}
+                  onChange={setFilterStatus}
+                />
+                <FilterPill
+                  label="Rated"
                   value={filterRated}
-                  onChange={(e) => setFilterRated(e.target.value)}
-                  className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-3 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer transition-colors"
-                >
-                  {RATED_OPTIONS.map((opt) => (
-                    <option key={opt.val} value={opt.val}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Score */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-zinc-400">Score</label>
-                <select
+                  options={RATED_OPTIONS}
+                  onChange={setFilterRated}
+                />
+                <FilterPill
+                  label="Score"
                   value={filterScore}
-                  onChange={(e) => setFilterScore(e.target.value)}
-                  className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-3 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer transition-colors"
-                >
-                  {SCORE_OPTIONS.map((opt) => (
-                    <option key={opt.val} value={opt.val}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Season */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-zinc-400">Season</label>
-                <select
+                  options={SCORE_OPTIONS}
+                  onChange={setFilterScore}
+                />
+                <FilterPill
+                  label="Season"
                   value={filterSeason}
-                  onChange={(e) => setFilterSeason(e.target.value)}
-                  className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-3 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer transition-colors"
-                >
-                  {SEASON_OPTIONS.map((opt) => (
-                    <option key={opt.val} value={opt.val}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Language */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-zinc-400">Language</label>
-                <select
+                  options={SEASON_OPTIONS}
+                  onChange={setFilterSeason}
+                />
+                <FilterPill
+                  label="Language"
                   value={filterLanguage}
-                  onChange={(e) => setFilterLanguage(e.target.value)}
-                  className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-3 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer transition-colors"
-                >
-                  {LANGUAGE_OPTIONS.map((opt) => (
-                    <option key={opt.val} value={opt.val}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Date Pickers & Sort */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-              {/* Start Date */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-zinc-400">
-                  Start Date
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  <select
-                    value={filterSy}
-                    onChange={(e) => setFilterSy(e.target.value)}
-                    className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-2 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer"
-                  >
-                    <option value="">Year</option>
-                    {YEARS.filter(Boolean).map((y) => (
-                      <option key={y} value={y}>
-                        {y}
-                      </option>
-                    ))}
-                  </select>
-
-                  <select
-                    value={filterSm}
-                    onChange={(e) => setFilterSm(e.target.value)}
-                    className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-2 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer"
-                  >
-                    {MONTHS.map((m) => (
-                      <option key={m.val} value={m.val}>
-                        {m.label}
-                      </option>
-                    ))}
-                  </select>
-
-                  <select
-                    value={filterSd}
-                    onChange={(e) => setFilterSd(e.target.value)}
-                    className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-2 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer"
-                  >
-                    <option value="">Day</option>
-                    {DAYS.filter(Boolean).map((d) => (
-                      <option key={d} value={d}>
-                        {d}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* End Date */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-zinc-400">End Date</label>
-                <div className="grid grid-cols-3 gap-2">
-                  <select
-                    value={filterEy}
-                    onChange={(e) => setFilterEy(e.target.value)}
-                    className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-2 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer"
-                  >
-                    <option value="">Year</option>
-                    {YEARS.filter(Boolean).map((y) => (
-                      <option key={y} value={y}>
-                        {y}
-                      </option>
-                    ))}
-                  </select>
-
-                  <select
-                    value={filterEm}
-                    onChange={(e) => setFilterEm(e.target.value)}
-                    className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-2 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer"
-                  >
-                    {MONTHS.map((m) => (
-                      <option key={m.val} value={m.val}>
-                        {m.label}
-                      </option>
-                    ))}
-                  </select>
-
-                  <select
-                    value={filterEd}
-                    onChange={(e) => setFilterEd(e.target.value)}
-                    className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-2 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer"
-                  >
-                    <option value="">Day</option>
-                    {DAYS.filter(Boolean).map((d) => (
-                      <option key={d} value={d}>
-                        {d}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Sort By */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-zinc-400">Sort</label>
-                <select
+                  options={LANGUAGE_OPTIONS}
+                  onChange={setFilterLanguage}
+                />
+                <FilterPill
+                  label="Country"
+                  value={filterCountry}
+                  options={COUNTRY_OPTIONS}
+                  onChange={setFilterCountry}
+                />
+                <DatePickerPill
+                  label="Start Date"
+                  year={filterSy}
+                  month={filterSm}
+                  day={filterSd}
+                  onDateChange={({ year, month, day }) => {
+                    setFilterSy(year);
+                    setFilterSm(month);
+                    setFilterSd(day);
+                  }}
+                  onClear={() => {
+                    setFilterSy("");
+                    setFilterSm("");
+                    setFilterSd("");
+                  }}
+                />
+                <DatePickerPill
+                  label="End Date"
+                  year={filterEy}
+                  month={filterEm}
+                  day={filterEd}
+                  onDateChange={({ year, month, day }) => {
+                    setFilterEy(year);
+                    setFilterEm(month);
+                    setFilterEd(day);
+                  }}
+                  onClear={() => {
+                    setFilterEy("");
+                    setFilterEm("");
+                    setFilterEd("");
+                  }}
+                />
+                <FilterPill
+                  label="Sort"
                   value={filterSort}
-                  onChange={(e) => setFilterSort(e.target.value)}
-                  className="bg-zinc-950 text-zinc-200 text-xs py-2.5 px-3 rounded-xl border border-zinc-800 focus:border-zinc-500 focus:outline-none cursor-pointer transition-colors"
-                >
-                  {SORT_OPTIONS.map((s) => (
-                    <option key={s.val} value={s.val}>
-                      {s.label}
-                    </option>
-                  ))}
-                </select>
+                  options={SORT_OPTIONS}
+                  onChange={setFilterSort}
+                />
               </div>
             </div>
 
-            {/* Genre Multi-Select Section */}
-            <div className="flex flex-col gap-2.5 pt-2 border-t border-zinc-800/80">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-zinc-400">
-                  Genres ({selectedGenres.length} selected)
-                </label>
+            {/* Genre Section */}
+            <div className="pt-2 border-t border-white/5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-white font-bold text-base tracking-wide">
+                  Genre
+                </h3>
                 {selectedGenres.length > 0 && (
                   <button
                     type="button"
@@ -1093,7 +1003,7 @@ function Search() {
                 )}
               </div>
 
-              <div className="flex items-center gap-2 flex-wrap max-h-48 overflow-y-auto pr-1 scrollbar-thin">
+              <div className="flex flex-wrap gap-2 items-center">
                 {ALL_GENRES.map((genre) => {
                   const isSelected = selectedGenres.includes(genre.id);
                   return (
@@ -1101,35 +1011,34 @@ function Search() {
                       type="button"
                       key={genre.id}
                       onClick={() => toggleGenre(genre.id)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                         isSelected
-                          ? "bg-zinc-100 text-zinc-950 border border-white font-semibold shadow-md scale-105"
-                          : "bg-zinc-950 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800/90"
+                          ? "bg-pink-500 text-white font-semibold shadow-md shadow-pink-500/20 scale-105"
+                          : "bg-[#20202a] hover:bg-[#282836] border border-white/10 text-zinc-300 hover:text-white"
                       }`}
                     >
-                      {isSelected && <FontAwesomeIcon icon={faCheck} className="text-[10px]" />}
-                      <span>{genre.name}</span>
+                      {genre.name}
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* Submit & Reset Bar */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800">
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/5">
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="px-5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs font-semibold transition-all"
+                className="px-5 py-2.5 rounded-xl bg-[#20202a] hover:bg-[#2a2a38] text-zinc-300 hover:text-white text-xs font-semibold border border-white/10 transition-all"
               >
-                Reset All
+                Reset
               </button>
               <button
                 type="submit"
-                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-zinc-100 hover:bg-white text-zinc-900 text-xs font-bold transition-all shadow-lg hover:shadow-xl active:scale-95"
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold transition-all shadow-lg hover:shadow-pink-500/30 active:scale-95"
               >
                 <FontAwesomeIcon icon={faFilter} className="text-xs" />
-                <span>Apply Filter</span>
+                <span>Filter</span>
               </button>
             </div>
           </form>
@@ -1164,7 +1073,7 @@ function Search() {
             <div className="flex items-center gap-3 mb-6">
               <button
                 onClick={() => setIsFilterOpen(true)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-100 hover:bg-white text-zinc-900 text-xs font-bold transition-all shadow"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold transition-all shadow"
               >
                 <FontAwesomeIcon icon={faSliders} className="text-xs" />
                 <span>Open Advanced Filter</span>
@@ -1180,7 +1089,7 @@ function Search() {
                   <button
                     key={term}
                     onClick={() => handlePopularSearchClick(term)}
-                    className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/50 text-xs font-medium text-zinc-200 hover:text-white transition-all shadow-sm"
+                    className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/50 text-xs font-medium text-zinc-200 hover:text-white transition-all hover:scale-105 active:scale-95 shadow-sm"
                   >
                     {term}
                   </button>
