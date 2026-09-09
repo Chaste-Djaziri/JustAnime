@@ -8,6 +8,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import { useState, useEffect, useRef } from "react";
+import { getCleanEpisodeId, isEpisodeMatch } from "@/src/helper/episodeHelper";
 import "./Episodelist.css";
 
 function Episodelist({
@@ -82,7 +83,7 @@ function Episodelist({
       setSearchedEpisode(null);
     } else if (!isNaN(value) && value.trim() !== "") {
       const num = parseInt(value, 10);
-      const foundEpisode = episodes.find((item) => item?.episode_no === num);
+      const foundEpisode = episodes?.find((item) => (item?.episode_no ?? item?.number) === num);
       if (foundEpisode) {
         const newRange = findRangeForEpisode(num);
         setSelectedRange(newRange);
@@ -101,26 +102,17 @@ function Episodelist({
     return [start, end];
   }
 
-  function generateRangeOptions(totalEpisodes) {
-    const ranges = [];
-    const step = 100;
-
-    for (let i = 0; i < totalEpisodes; i += step) {
-      const start = i + 1;
-      const end = Math.min(i + step, totalEpisodes);
-      ranges.push(`${start}-${end}`);
-    }
-    return ranges;
-  }
   useEffect(() => {
-    if (currentEpisode && episodeNum) {
-      if (episodeNum < selectedRange[0] || episodeNum > selectedRange[1]) {
-        const newRange = findRangeForEpisode(episodeNum);
+    if (currentEpisode && totalEpisodes) {
+      const activeEp = episodes?.find((ep) => isEpisodeMatch(ep, currentEpisode));
+      const epNum = activeEp?.episode_no ?? activeEp?.number ?? Number(currentEpisode);
+      if (!isNaN(epNum)) {
+        const newRange = findRangeForEpisode(epNum);
         setSelectedRange(newRange);
         setActiveRange(`${newRange[0]}-${newRange[1]}`);
       }
     }
-  }, [currentEpisode, totalEpisodes, episodeNum]);
+  }, [currentEpisode, totalEpisodes]);
 
   const handleRangeSelect = (range) => {
     const [start, end] = range.split("-").map(Number);
@@ -128,11 +120,11 @@ function Episodelist({
   };
 
   useEffect(() => {
-    const activeEpisode = episodes.find(
-      (item) => item?.id.match(/ep=(\d+)/)?.[1] === activeEpisodeId
+    const activeEpisode = episodes?.find((item) =>
+      isEpisodeMatch(item, activeEpisodeId)
     );
     if (activeEpisode) {
-      setEpisodeNum(activeEpisode?.episode_no);
+      setEpisodeNum(activeEpisode?.episode_no ?? activeEpisode?.number);
     }
   }, [activeEpisodeId, episodes]);
 
@@ -143,40 +135,49 @@ function Episodelist({
           <h1 className="text-[14px] font-semibold text-white max-[600px]:text-[13px]">Episodes</h1>
           {totalEpisodes > 100 && (
             <div className="flex items-center">
-              <div
-                onClick={() => setShowDropDown((prev) => !prev)}
-                className="text-gray-300 relative cursor-pointer flex items-center gap-2 hover:text-white transition-colors max-[600px]:gap-1"
-                ref={dropDownRef}
-              >
-                <FontAwesomeIcon icon={faList} className="text-gray-400" />
-                <p className="text-[12px] max-[600px]:text-[11px]">
-                  {selectedRange[0]}-{selectedRange[1]}
-                </p>
-                <FontAwesomeIcon
-                  icon={faAngleDown}
-                  className="text-[10px]"
-                />
+              <FontAwesomeIcon icon={faList} className="text-[#a0a0a0] text-xs mr-2" />
+              <div className="relative" ref={dropDownRef}>
+                <button
+                  className="bg-[#242424] hover:bg-[#2a2a2a] text-xs text-white px-3 py-1 rounded flex items-center gap-2 transition-colors border border-[#333]"
+                  onClick={() => setShowDropDown((prev) => !prev)}
+                >
+                  <span>EPS: {activeRange}</span>
+                  <FontAwesomeIcon
+                    icon={faAngleDown}
+                    className={`transition-transform duration-200 text-xs ${showDropDown ? "rotate-180" : ""}`}
+                  />
+                </button>
                 {showDropDown && (
-                  <div className="absolute top-full mt-2 left-0 z-30 bg-[#2a2a2a] w-[150px] max-h-[200px] overflow-y-auto rounded-lg border border-[#3a3a3a] shadow-lg">
-                    {generateRangeOptions(totalEpisodes).map((item, index) => (
-                      <div
-                        key={index}
-                        onClick={() => {
-                          handleRangeSelect(item);
-                          setActiveRange(item);
-                        }}
-                        className={`hover:bg-[#3a3a3a] cursor-pointer transition-colors ${
-                          item === activeRange ? "bg-[#404040]" : ""
-                        }`}
-                      >
-                        <p className="font-medium text-[12px] p-2.5 flex justify-between items-center text-gray-300 hover:text-white max-[600px]:text-[11px] max-[600px]:p-2">
-                          {item}
-                          {item === activeRange ? (
-                            <FontAwesomeIcon icon={faCheck} className="text-white" />
-                          ) : null}
-                        </p>
-                      </div>
-                    ))}
+                  <div className="absolute top-full left-0 mt-1 w-44 bg-[#1f1f1f] border border-[#333] rounded-md shadow-xl py-1 z-50 max-h-60 overflow-y-auto no-scrollbar">
+                    {Array.from(
+                      { length: Math.ceil(totalEpisodes / 100) },
+                      (_, i) => {
+                        const start = i * 100 + 1;
+                        const end = Math.min((i + 1) * 100, totalEpisodes);
+                        const range = `${start}-${end}`;
+                        const isSelected = activeRange === range;
+                        return (
+                          <div
+                            key={range}
+                            className={`px-3 py-1.5 text-xs cursor-pointer flex items-center justify-between transition-colors ${
+                              isSelected
+                                ? "bg-[#2a2a2a] text-white font-medium"
+                                : "text-gray-300 hover:bg-[#252525] hover:text-white"
+                            }`}
+                            onClick={() => {
+                              handleRangeSelect(range);
+                              setActiveRange(range);
+                              setShowDropDown(false);
+                            }}
+                          >
+                            <span>EPS: {range}</span>
+                            {isSelected && (
+                              <FontAwesomeIcon icon={faCheck} className="text-xs text-white" />
+                            )}
+                          </div>
+                        );
+                      }
+                    )}
                   </div>
                 )}
               </div>
@@ -184,18 +185,18 @@ function Episodelist({
           )}
         </div>
         
-        {totalEpisodes > 100 && (
-          <div className="flex items-center min-w-[180px] max-[600px]:min-w-[120px]">
-            <div className="w-full flex items-center gap-2 px-3 py-1.5 bg-[#2a2a2a] rounded-lg border border-[#3a3a3a] focus-within:border-gray-500 transition-colors max-[600px]:px-2 max-[600px]:py-1">
-              <FontAwesomeIcon
-                icon={faMagnifyingGlass}
-                className="text-[12px] text-gray-400"
-              />
+        {totalEpisodes > 20 && (
+          <div className="flex items-center">
+            <div className="relative">
               <input
                 type="text"
-                className="w-full bg-transparent focus:outline-none text-[13px] text-white placeholder:text-gray-500 max-[600px]:text-[12px]"
-                placeholder="Go to episode..."
+                placeholder="Find EP"
+                className="bg-[#242424] text-xs text-white placeholder-gray-500 px-2.5 py-1 pl-7 rounded w-28 focus:outline-none focus:ring-1 focus:ring-white border border-[#333] transition-all"
                 onChange={handleChange}
+              />
+              <FontAwesomeIcon
+                icon={faMagnifyingGlass}
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 text-xs"
               />
             </div>
           </div>
@@ -215,17 +216,17 @@ function Episodelist({
         >
           {totalEpisodes > 30
             ? episodes
-                .slice(selectedRange[0] - 1, selectedRange[1])
+                ?.slice(selectedRange[0] - 1, selectedRange[1])
                 .map((item, index) => {
-                  const episodeNumber = item?.id.match(/ep=(\d+)/)?.[1];
+                  const epCleanId = getCleanEpisodeId(item);
                   const isActive =
-                    activeEpisodeId === episodeNumber ||
-                    currentEpisode === episodeNumber;
+                    isEpisodeMatch(item, activeEpisodeId) ||
+                    isEpisodeMatch(item, currentEpisode);
                   const isSearched = searchedEpisode === item?.id;
 
                   return (
                     <div
-                      key={item?.id}
+                      key={item?.id || index}
                       ref={isActive ? activeEpisodeRef : null}
                       className={`flex items-center justify-center rounded-lg h-[35px] text-[13px] font-medium cursor-pointer transition-all max-[600px]:h-[30px] max-[600px]:text-[12px] ${
                         item?.filler
@@ -241,9 +242,9 @@ function Episodelist({
                            : "bg-[#2a2a2a] text-gray-400"
                        } ${isSearched ? "ring-2 ring-white" : ""}`}
                       onClick={() => {
-                        if (episodeNumber) {
-                          onEpisodeClick(episodeNumber);
-                          setActiveEpisodeId(episodeNumber);
+                        if (epCleanId) {
+                          onEpisodeClick(epCleanId);
+                          setActiveEpisodeId(epCleanId);
                           setSearchedEpisode(null);
                         }
                       }}
@@ -255,15 +256,15 @@ function Episodelist({
                   );
                 })
             : episodes?.map((item, index) => {
-                const episodeNumber = item?.id.match(/ep=(\d+)/)?.[1];
+                const epCleanId = getCleanEpisodeId(item);
                 const isActive =
-                  activeEpisodeId === episodeNumber ||
-                  currentEpisode === episodeNumber;
+                  isEpisodeMatch(item, activeEpisodeId) ||
+                  isEpisodeMatch(item, currentEpisode);
                 const isSearched = searchedEpisode === item?.id;
 
                 return (
                   <div
-                    key={item?.id}
+                    key={item?.id || index}
                     ref={isActive ? activeEpisodeRef : null}
                     className={`w-full px-4 py-2.5 flex items-center justify-start gap-x-4 cursor-pointer transition-all max-[600px]:px-3 max-[600px]:py-2 max-[600px]:gap-x-3 ${
                       (index + 1) % 2 && !isActive
@@ -273,9 +274,9 @@ function Episodelist({
                       isActive ? "bg-[#2a2a2a]" : ""
                     } ${isSearched ? "ring-1 ring-white" : ""}`}
                     onClick={() => {
-                      if (episodeNumber) {
-                        onEpisodeClick(episodeNumber);
-                        setActiveEpisodeId(episodeNumber);
+                      if (epCleanId) {
+                        onEpisodeClick(epCleanId);
+                        setActiveEpisodeId(epCleanId);
                         setSearchedEpisode(null);
                       }
                     }}
@@ -287,7 +288,7 @@ function Episodelist({
                       <h1 className={`line-clamp-1 text-[14px] transition-colors max-[600px]:text-[13px] ${
                         isActive ? "text-white font-medium" : "text-gray-400 font-normal"
                       }`}>
-                        {language === "EN" ? item?.title : item?.japanese_title}
+                        {language === "EN" ? item?.title : (item?.japanese_title || item?.title)}
                       </h1>
                       {isActive && (
                         <FontAwesomeIcon
