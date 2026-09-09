@@ -694,18 +694,6 @@ export default function Watch() {
               </div>
             )}
 
-            {/* Next Episode Schedule Notification */}
-            <div className="w-full bg-[#121214] border border-zinc-800 rounded-2xl p-3.5 flex items-center justify-between text-xs shadow-lg">
-              <div className="flex items-center gap-2.5 text-zinc-300">
-                <div className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0">
-                  <FontAwesomeIcon icon={faBell} className="text-white text-xs" />
-                </div>
-                <span className="font-semibold text-zinc-200">
-                  {nextEpisodeString}
-                </span>
-              </div>
-            </div>
-
             {/* RELATED Section */}
             {animeInfo?.related_data && animeInfo.related_data.length > 0 && (
               <div className="w-full bg-[#121214] border border-zinc-800 rounded-2xl p-4 shadow-xl">
