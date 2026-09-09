@@ -23,10 +23,17 @@ export default async function getSchedInfo(date) {
         : [];
       return results.map((item) => ({
         id: item.id,
-        name: item.title || item.name,
+        title: item.title || item.name,
+        name: item.name || item.title,
         jname: item.japaneseTitle || item.jname,
         time: item.airingTime || item.time,
-        episode: item.airingEpisode || item.episode,
+        episode_no:
+          item.episode_no ||
+          item.episode ||
+          (item.airingEpisode ? item.airingEpisode.replace(/[^\d]/g, "") : "") ||
+          "N/A",
+        airingEpisode: item.airingEpisode || item.episode_no,
+        episode: item.episode || item.episode_no,
       }));
     }
   } catch (consumetErr) {
