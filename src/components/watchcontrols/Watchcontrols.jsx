@@ -1,6 +1,7 @@
 import { faBackward, faForward } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
+import { getCleanEpisodeId, findEpisodeIndex } from "@/src/helper/episodeHelper";
 
 const ToggleButton = ({ label, isActive, onClick }) => (
   <button 
@@ -30,16 +31,12 @@ export default function WatchControls({
   onButtonClick,
 }) {
   const [currentEpisodeIndex, setCurrentEpisodeIndex] = useState(
-    episodes?.findIndex(
-      (episode) => episode.id.match(/ep=(\d+)/)?.[1] === episodeId
-    )
+    findEpisodeIndex(episodes, episodeId)
   );
 
   useEffect(() => {
     if (episodes?.length > 0) {
-      const newIndex = episodes.findIndex(
-        (episode) => episode.id.match(/ep=(\d+)/)?.[1] === episodeId
-      );
+      const newIndex = findEpisodeIndex(episodes, episodeId);
       setCurrentEpisodeIndex(newIndex);
     }
   }, [episodeId, episodes]);
@@ -67,9 +64,9 @@ export default function WatchControls({
         <button
           onClick={() => {
             if (currentEpisodeIndex > 0) {
-              onButtonClick(
-                episodes[currentEpisodeIndex - 1].id.match(/ep=(\d+)/)?.[1]
-              );
+              const prevEp = episodes[currentEpisodeIndex - 1];
+              const prevId = getCleanEpisodeId(prevEp);
+              if (prevId) onButtonClick(prevId);
             }
           }}
           disabled={currentEpisodeIndex <= 0}
@@ -78,23 +75,25 @@ export default function WatchControls({
               ? "text-gray-600 cursor-not-allowed" 
               : "text-gray-300 hover:text-white"
           }`}
+          title="Previous Episode"
         >
           <FontAwesomeIcon icon={faBackward} className="text-[14px]" />
         </button>
         <button
           onClick={() => {
             if (currentEpisodeIndex < episodes?.length - 1) {
-              onButtonClick(
-                episodes[currentEpisodeIndex + 1].id.match(/ep=(\d+)/)?.[1]
-              );
+              const nextEp = episodes[currentEpisodeIndex + 1];
+              const nextId = getCleanEpisodeId(nextEp);
+              if (nextId) onButtonClick(nextId);
             }
           }}
-          disabled={currentEpisodeIndex >= episodes?.length - 1}
+          disabled={currentEpisodeIndex < 0 || currentEpisodeIndex >= episodes?.length - 1}
           className={`w-7 h-7 flex items-center justify-center rounded transition-colors ${
-            currentEpisodeIndex >= episodes?.length - 1 
+            currentEpisodeIndex < 0 || currentEpisodeIndex >= episodes?.length - 1 
               ? "text-gray-600 cursor-not-allowed" 
               : "text-gray-300 hover:text-white"
           }`}
+          title="Next Episode"
         >
           <FontAwesomeIcon icon={faForward} className="text-[14px]" />
         </button>
