@@ -47,19 +47,19 @@ export default function WatchControls({
   const nextEpNum = nextEp?.episode_no ?? nextEp?.number ?? (currentEpisodeIndex >= 0 ? currentEpisodeIndex + 2 : null);
 
   return (
-    <div className="w-full flex flex-wrap items-center justify-between gap-y-2 px-3 py-2 bg-[#121215] border-t border-b border-zinc-800/80 text-xs select-none">
-      {/* Left toggles & utility buttons */}
+    <div className="w-full flex flex-wrap items-center justify-between gap-y-2 px-3 py-2 bg-[#141414] border-t border-b border-zinc-800 text-xs select-none">
+      {/* Left toggles & utility buttons - Black & White Theme */}
       <div className="flex items-center flex-wrap gap-x-3 gap-y-1.5 text-zinc-400">
         {/* Autoplay */}
         <button
           onClick={() => setAutoPlay?.((prev) => !prev)}
           className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${
-            autoPlay ? "text-zinc-100 font-medium" : "hover:text-zinc-200"
+            autoPlay ? "text-white font-semibold" : "hover:text-zinc-200"
           }`}
         >
           <FontAwesomeIcon
             icon={faCheck}
-            className={`text-[10px] ${autoPlay ? "text-purple-400" : "text-zinc-500"}`}
+            className={`text-[10px] ${autoPlay ? "text-white" : "text-zinc-600"}`}
           />
           <span>Autoplay</span>
         </button>
@@ -68,12 +68,12 @@ export default function WatchControls({
         <button
           onClick={() => setAutoSkipIntro?.((prev) => !prev)}
           className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${
-            autoSkipIntro ? "text-purple-300 font-medium" : "hover:text-zinc-200"
+            autoSkipIntro ? "text-white font-semibold" : "hover:text-zinc-200"
           }`}
         >
           <FontAwesomeIcon
             icon={faSquare}
-            className={`text-[9px] ${autoSkipIntro ? "text-purple-400" : "text-zinc-600"}`}
+            className={`text-[9px] ${autoSkipIntro ? "text-white" : "text-zinc-600"}`}
           />
           <span>Auto Skip</span>
         </button>
@@ -82,12 +82,12 @@ export default function WatchControls({
         <button
           onClick={() => setAutoNext?.((prev) => !prev)}
           className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${
-            autoNext ? "text-zinc-100 font-medium" : "hover:text-zinc-200"
+            autoNext ? "text-white font-semibold" : "hover:text-zinc-200"
           }`}
         >
           <FontAwesomeIcon
             icon={faCheck}
-            className={`text-[10px] ${autoNext ? "text-purple-400" : "text-zinc-500"}`}
+            className={`text-[10px] ${autoNext ? "text-white" : "text-zinc-600"}`}
           />
           <span>Auto Next</span>
         </button>
@@ -95,7 +95,7 @@ export default function WatchControls({
         {/* Shortcuts */}
         <button
           onClick={() => setShowShortcutsModal(true)}
-          className="flex items-center gap-1.5 px-2 py-1 rounded hover:text-zinc-200 transition-colors"
+          className="flex items-center gap-1.5 px-2 py-1 rounded hover:text-white transition-colors"
         >
           <FontAwesomeIcon icon={faKeyboard} className="text-[11px] text-zinc-500" />
           <span>Shortcuts</span>
@@ -105,19 +105,19 @@ export default function WatchControls({
         <button
           onClick={() => onToggleLightsOff?.()}
           className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${
-            lightsOff ? "text-amber-300 font-medium" : "hover:text-zinc-200"
+            lightsOff ? "text-white font-semibold" : "hover:text-zinc-200"
           }`}
         >
           <FontAwesomeIcon
             icon={faLightbulb}
-            className={`text-[11px] ${lightsOff ? "text-amber-400" : "text-zinc-500"}`}
+            className={`text-[11px] ${lightsOff ? "text-white" : "text-zinc-500"}`}
           />
           <span>Lights {lightsOff ? "On" : "Off"}</span>
         </button>
 
         {/* Player Badge */}
-        <div className="hidden sm:flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-zinc-800/80 text-zinc-400">
-          <FontAwesomeIcon icon={faPlay} className="text-[8px] text-purple-400" />
+        <div className="hidden sm:flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-zinc-800 text-zinc-300">
+          <FontAwesomeIcon icon={faPlay} className="text-[8px] text-white" />
           <span>Player</span>
         </div>
       </div>
@@ -132,10 +132,10 @@ export default function WatchControls({
             }
           }}
           disabled={!prevEp}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded border border-zinc-800 transition-all ${
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded border transition-all ${
             !prevEp
               ? "opacity-40 cursor-not-allowed text-zinc-600 border-zinc-800/40"
-              : "text-zinc-300 hover:text-white hover:bg-zinc-800 hover:border-zinc-700"
+              : "text-zinc-300 border-zinc-800 hover:text-white hover:bg-zinc-800 hover:border-zinc-700"
           }`}
         >
           <FontAwesomeIcon icon={faChevronLeft} className="text-[9px]" />
@@ -150,10 +150,10 @@ export default function WatchControls({
             }
           }}
           disabled={!nextEp}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded border border-zinc-800 transition-all ${
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded border transition-all ${
             !nextEp
               ? "opacity-40 cursor-not-allowed text-zinc-600 border-zinc-800/40"
-              : "text-zinc-300 hover:text-white hover:bg-zinc-800 hover:border-zinc-700"
+              : "text-zinc-300 border-zinc-800 hover:text-white hover:bg-zinc-800 hover:border-zinc-700"
           }`}
         >
           <span>Next {nextEpNum ? `${nextEpNum}` : ""}</span>
@@ -164,16 +164,16 @@ export default function WatchControls({
       {/* Keyboard Shortcuts Modal */}
       {showShortcutsModal && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4"
           onClick={() => setShowShortcutsModal(false)}
         >
           <div 
-            className="bg-[#18181f] border border-zinc-800 rounded-2xl p-5 max-w-sm w-full shadow-2xl space-y-4"
+            className="bg-[#181818] border border-zinc-800 rounded-2xl p-5 max-w-sm w-full shadow-2xl space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
               <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                <FontAwesomeIcon icon={faKeyboard} className="text-purple-400" />
+                <FontAwesomeIcon icon={faKeyboard} className="text-zinc-300" />
                 Keyboard Shortcuts
               </h3>
               <button
