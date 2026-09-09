@@ -428,6 +428,45 @@ class Hianime extends AnimeParser {
     }
   }
 
+  async fetchTrending(): Promise<ISearch<IAnimeResult>> {
+    try {
+      const res: ISearch<IAnimeResult> = { results: [] };
+      const { data } = await this.client.get(`${this.baseUrl}/home`);
+      const $ = load(data);
+
+      $('#anime-trending .item').each((i, el) => {
+        const item = $(el);
+        const rankStr = item.find('.number span').text().trim();
+        const rank = parseInt(rankStr.replace(/[^\d]/g, ''), 10) || i + 1;
+        const filmTitle = item.find('.film-title');
+        const title = filmTitle.text().trim();
+        const jname = filmTitle.attr('data-jname') || '';
+
+        const posterLink = item.find('a.film-poster');
+        const href = posterLink.attr('href') || '';
+        const id = href.replace(/^\//, '').split('/').pop()?.split('?')[0] || '';
+
+        const img = posterLink.find('img');
+        const rawImg = img.attr('src') || img.attr('data-src') || '';
+        const image = this.ensureAbsoluteUrl(rawImg);
+
+        res.results.push({
+          id: id || `${rank}`,
+          title,
+          japaneseTitle: jname,
+          image,
+          poster: image,
+          rank,
+          url: href.startsWith('http') ? href : `${this.baseUrl}/${id}`,
+        });
+      });
+
+      return res;
+    } catch (error) {
+      throw new Error('Something went wrong. Please try again later.');
+    }
+  }
+
   async fetchSearchSuggestions(query: string): Promise<ISearch<IAnimeResult>> {
     try {
       const encodedQuery = encodeURIComponent(query);

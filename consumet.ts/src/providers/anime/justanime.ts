@@ -336,6 +336,21 @@ class JustAnime extends AnimeParser {
   }
 
   /**
+   * Trending items (12 items)
+   */
+  async fetchTrending(): Promise<ISearch<IAnimeResult>> {
+    try {
+      const home = await this.fetchHome();
+      const list = (home.trending || []).slice(0, 12);
+      return {
+        results: list.map((item: any) => this.mapCard(item)),
+      };
+    } catch (err) {
+      return { results: [] };
+    }
+  }
+
+  /**
    * Top Airing
    */
   async fetchTopAiring(page: number = 1): Promise<ISearch<IAnimeResult>> {
