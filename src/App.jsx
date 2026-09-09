@@ -75,6 +75,8 @@ function App() {
             ))}
             <Route path="/producer/:id" element={<Producer />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/filter" element={<Search />} />
+            <Route path="/filtter" element={<Search />} />
             {/* Catch-all route for 404 */}
             <Route path="*" element={<Error error="404" />} />
           </Routes>
