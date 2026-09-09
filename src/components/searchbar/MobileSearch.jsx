@@ -1,6 +1,6 @@
 import Suggestion from '../suggestion/Suggestion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faRandom } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faRandom, faSliders } from '@fortawesome/free-solid-svg-icons';
 import useSearch from '@/src/hooks/useSearch';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
@@ -21,6 +21,9 @@ function MobileSearch({ onClose }) {
     const handleSearchClick = () => {
         if (searchValue.trim()) {
             navigate(`/search?keyword=${encodeURIComponent(searchValue)}`);
+            onClose?.();
+        } else {
+            navigate('/filter');
             onClose?.();
         }
     };
@@ -69,6 +72,14 @@ function MobileSearch({ onClose }) {
                         />
                     </button>
                 </div>
+                <Link
+                    to="/filter"
+                    onClick={() => onClose?.()}
+                    className="p-[10px] aspect-square bg-[#2a2a2a]/75 text-white/50 hover:text-white rounded-lg transition-colors flex items-center justify-center shrink-0"
+                    title="Filter Anime"
+                >
+                    <FontAwesomeIcon icon={faSliders} className="text-lg" />
+                </Link>
                 <Link
                     to={location.pathname === "/random" ? "#" : "/random"}
                     onClick={handleRandomClick}
