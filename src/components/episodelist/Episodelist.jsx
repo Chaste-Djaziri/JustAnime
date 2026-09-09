@@ -2,31 +2,37 @@ import { useLanguage } from "@/src/context/LanguageContext";
 import {
   faAngleDown,
   faCirclePlay,
-  faList,
   faCheck,
+  faMagnifyingGlass,
+  faImage,
+  faEye,
+  faClosedCaptioning,
+  faMicrophone,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { getCleanEpisodeId, isEpisodeMatch } from "@/src/helper/episodeHelper";
 import "./Episodelist.css";
 
 function Episodelist({
-  episodes,
+  episodes = [],
   onEpisodeClick,
   currentEpisode,
   totalEpisodes,
+  animePoster,
 }) {
   const [activeEpisodeId, setActiveEpisodeId] = useState(currentEpisode);
+  const [viewMode, setViewMode] = useState("thumbnail"); // "thumbnail" or "list"
   const { language } = useLanguage();
   const listContainerRef = useRef(null);
   const activeEpisodeRef = useRef(null);
   const [showDropDown, setShowDropDown] = useState(false);
   const [selectedRange, setSelectedRange] = useState([1, 100]);
   const [activeRange, setActiveRange] = useState("1-100");
-  const [episodeNum, setEpisodeNum] = useState(currentEpisode);
+  const [searchTerm, setSearchTerm] = useState("");
   const dropDownRef = useRef(null);
-  const [searchedEpisode, setSearchedEpisode] = useState(null);
+
+  const epTotal = totalEpisodes || episodes?.length || 0;
 
   const scrollToActiveEpisode = () => {
     if (activeEpisodeRef.current && listContainerRef.current) {
@@ -44,12 +50,17 @@ function Episodelist({
         activeEpisodeHeight / 2;
     }
   };
+
   useEffect(() => {
-    setActiveEpisodeId(episodeNum);
-  }, [episodeNum]);
+    setActiveEpisodeId(currentEpisode);
+  }, [currentEpisode]);
+
   useEffect(() => {
-    scrollToActiveEpisode();
-  }, [activeEpisodeId]);
+    const timer = setTimeout(() => {
+      scrollToActiveEpisode();
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [activeEpisodeId, viewMode]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -63,244 +74,278 @@ function Episodelist({
     };
   }, []);
 
-  function handleChange(e) {
-    const value = e.target.value;
-    if (value.trim() === "") {
-      const newRange = findRangeForEpisode(1);
-      setSelectedRange(newRange);
-      setActiveRange(`${newRange[0]}-${newRange[1]}`);
-      setSearchedEpisode(null);
-    } else if (!value || isNaN(value)) {
-      setSearchedEpisode(null);
-    } else if (
-      !isNaN(value) &&
-      parseInt(value, 10) > totalEpisodes &&
-      episodeNum !== null
-    ) {
-      const newRange = findRangeForEpisode(episodeNum);
-      setSelectedRange(newRange);
-      setActiveRange(`${newRange[0]}-${newRange[1]}`);
-      setSearchedEpisode(null);
-    } else if (!isNaN(value) && value.trim() !== "") {
-      const num = parseInt(value, 10);
-      const foundEpisode = episodes?.find((item) => (item?.episode_no ?? item?.number) === num);
-      if (foundEpisode) {
-        const newRange = findRangeForEpisode(num);
-        setSelectedRange(newRange);
-        setActiveRange(`${newRange[0]}-${newRange[1]}`);
-        setSearchedEpisode(foundEpisode?.id);
-      }
-    } else {
-      setSearchedEpisode(null);
-    }
-  }
-
   function findRangeForEpisode(episodeNumber) {
     const step = 100;
     const start = Math.floor((episodeNumber - 1) / step) * step + 1;
-    const end = Math.min(start + step - 1, totalEpisodes);
+    const end = Math.min(start + step - 1, epTotal || 100);
     return [start, end];
   }
 
   useEffect(() => {
-    if (currentEpisode && totalEpisodes) {
+    if (currentEpisode && epTotal) {
       const activeEp = episodes?.find((ep) => isEpisodeMatch(ep, currentEpisode));
       const epNum = activeEp?.episode_no ?? activeEp?.number ?? Number(currentEpisode);
-      if (!isNaN(epNum)) {
+      if (!isNaN(epNum) && epNum > 0) {
         const newRange = findRangeForEpisode(epNum);
         setSelectedRange(newRange);
         setActiveRange(`${newRange[0]}-${newRange[1]}`);
       }
     }
-  }, [currentEpisode, totalEpisodes]);
+  }, [currentEpisode, epTotal, episodes]);
 
   const handleRangeSelect = (range) => {
     const [start, end] = range.split("-").map(Number);
     setSelectedRange([start, end]);
+    setActiveRange(range);
   };
 
-  useEffect(() => {
-    const activeEpisode = episodes?.find((item) =>
-      isEpisodeMatch(item, activeEpisodeId)
-    );
-    if (activeEpisode) {
-      setEpisodeNum(activeEpisode?.episode_no ?? activeEpisode?.number);
+  const filteredEpisodes = useMemo(() => {
+    if (!episodes) return [];
+    let list = episodes;
+
+    // Filter by search query if provided
+    if (searchTerm.trim() !== "") {
+      const q = searchTerm.toLowerCase().trim();
+      list = list.filter((ep, idx) => {
+        const epNum = String(ep?.episode_no ?? ep?.number ?? idx + 1);
+        const title = (ep?.title || "").toLowerCase();
+        const jTitle = (ep?.japanese_title || "").toLowerCase();
+        return epNum === q || epNum.includes(q) || title.includes(q) || jTitle.includes(q);
+      });
+    } else if (epTotal > 100) {
+      list = list.slice(selectedRange[0] - 1, selectedRange[1]);
     }
-  }, [activeEpisodeId, episodes]);
+
+    return list;
+  }, [episodes, searchTerm, epTotal, selectedRange]);
+
+  const ranges = useMemo(() => {
+    if (!epTotal) return ["1-100"];
+    const count = Math.ceil(epTotal / 100);
+    return Array.from({ length: count }, (_, i) => {
+      const start = i * 100 + 1;
+      const end = Math.min((i + 1) * 100, epTotal);
+      return `${start}-${end}`;
+    });
+  }, [epTotal]);
 
   return (
-    <div className="flex flex-col w-full h-full">
-      <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2.5 bg-[#1a1a1a] border-b border-[#2a2a2a] max-[600px]:px-2">
-        <div className="flex items-center gap-4 max-[600px]:gap-2">
-          <h1 className="text-[14px] font-semibold text-white max-[600px]:text-[13px]">Episodes</h1>
-          {totalEpisodes > 100 && (
-            <div className="flex items-center">
-              <FontAwesomeIcon icon={faList} className="text-[#a0a0a0] text-xs mr-2" />
-              <div className="relative" ref={dropDownRef}>
-                <button
-                  className="bg-[#242424] hover:bg-[#2a2a2a] text-xs text-white px-3 py-1 rounded flex items-center gap-2 transition-colors border border-[#333]"
-                  onClick={() => setShowDropDown((prev) => !prev)}
-                >
-                  <span>EPS: {activeRange}</span>
-                  <FontAwesomeIcon
-                    icon={faAngleDown}
-                    className={`transition-transform duration-200 text-xs ${showDropDown ? "rotate-180" : ""}`}
-                  />
-                </button>
-                {showDropDown && (
-                  <div className="absolute top-full left-0 mt-1 w-44 bg-[#1f1f1f] border border-[#333] rounded-md shadow-xl py-1 z-50 max-h-60 overflow-y-auto no-scrollbar">
-                    {Array.from(
-                      { length: Math.ceil(totalEpisodes / 100) },
-                      (_, i) => {
-                        const start = i * 100 + 1;
-                        const end = Math.min((i + 1) * 100, totalEpisodes);
-                        const range = `${start}-${end}`;
-                        const isSelected = activeRange === range;
-                        return (
-                          <div
-                            key={range}
-                            className={`px-3 py-1.5 text-xs cursor-pointer flex items-center justify-between transition-colors ${
-                              isSelected
-                                ? "bg-[#2a2a2a] text-white font-medium"
-                                : "text-gray-300 hover:bg-[#252525] hover:text-white"
-                            }`}
-                            onClick={() => {
-                              handleRangeSelect(range);
-                              setActiveRange(range);
-                              setShowDropDown(false);
-                            }}
-                          >
-                            <span>EPS: {range}</span>
-                            {isSelected && (
-                              <FontAwesomeIcon icon={faCheck} className="text-xs text-white" />
-                            )}
-                          </div>
-                        );
-                      }
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {totalEpisodes > 20 && (
-          <div className="flex items-center">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Find EP"
-                className="bg-[#242424] text-xs text-white placeholder-gray-500 px-2.5 py-1 pl-7 rounded w-28 focus:outline-none focus:ring-1 focus:ring-white border border-[#333] transition-all"
-                onChange={handleChange}
-              />
-              <FontAwesomeIcon
-                icon={faMagnifyingGlass}
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 text-xs"
-              />
-            </div>
-          </div>
-        )}
-      </div>
-      
-      <div ref={listContainerRef} className="w-full flex-1 overflow-y-auto bg-[#1a1a1a] max-h-[calc(100vh-200px)] max-[1200px]:max-h-[400px]">
-        <div
-          className={`${
-            totalEpisodes > 30
-              ? "p-4 grid gap-2 max-[600px]:p-2 max-[600px]:gap-1.5" + 
-                (totalEpisodes > 100 
-                  ? " grid-cols-5" 
-                  : " grid-cols-5 max-[1200px]:grid-cols-12 max-[860px]:grid-cols-10 max-[575px]:grid-cols-8 max-[478px]:grid-cols-6 max-[350px]:grid-cols-5")
-              : ""
-          }`}
-        >
-          {totalEpisodes > 30
-            ? episodes
-                ?.slice(selectedRange[0] - 1, selectedRange[1])
-                .map((item, index) => {
-                  const epCleanId = getCleanEpisodeId(item);
-                  const isActive =
-                    isEpisodeMatch(item, activeEpisodeId) ||
-                    isEpisodeMatch(item, currentEpisode);
-                  const isSearched = searchedEpisode === item?.id;
-
-                  return (
-                    <div
-                      key={item?.id || index}
-                      ref={isActive ? activeEpisodeRef : null}
-                      className={`flex items-center justify-center rounded-lg h-[35px] text-[13px] font-medium cursor-pointer transition-all max-[600px]:h-[30px] max-[600px]:text-[12px] ${
-                        item?.filler
-                          ? isActive
-                            ? "bg-white text-black"
-                            : "bg-[#2a2a2a] text-gray-400"
-                          : ""
-                      } hover:bg-[#404040] 
-                          hover:text-white
-                       ${
-                         isActive
-                           ? "bg-white text-black ring-1 ring-white"
-                           : "bg-[#2a2a2a] text-gray-400"
-                       } ${isSearched ? "ring-2 ring-white" : ""}`}
-                      onClick={() => {
-                        if (epCleanId) {
-                          onEpisodeClick(epCleanId);
-                          setActiveEpisodeId(epCleanId);
-                          setSearchedEpisode(null);
-                        }
-                      }}
-                    >
-                      <span className="transition-colors">
-                        {index + selectedRange[0]}
-                      </span>
-                    </div>
-                  );
-                })
-            : episodes?.map((item, index) => {
-                const epCleanId = getCleanEpisodeId(item);
-                const isActive =
-                  isEpisodeMatch(item, activeEpisodeId) ||
-                  isEpisodeMatch(item, currentEpisode);
-                const isSearched = searchedEpisode === item?.id;
-
+    <div className="flex flex-col w-full h-full bg-[#111115] border border-zinc-800/80 rounded-2xl overflow-hidden shadow-xl">
+      {/* Top Header Controls */}
+      <div className="sticky top-0 z-10 flex items-center justify-between px-3 py-2.5 bg-[#14141a] border-b border-zinc-800/80 gap-2">
+        {/* Range Selector */}
+        <div className="relative" ref={dropDownRef}>
+          <button
+            className="bg-[#1c1c24] hover:bg-[#252530] text-xs text-zinc-200 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 border border-zinc-800 transition-colors font-medium"
+            onClick={() => setShowDropDown((prev) => !prev)}
+          >
+            <span>{activeRange}</span>
+            <FontAwesomeIcon
+              icon={faAngleDown}
+              className={`text-[10px] text-zinc-400 transition-transform duration-200 ${
+                showDropDown ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+          {showDropDown && (
+            <div className="absolute top-full left-0 mt-1 w-36 bg-[#181820] border border-zinc-800 rounded-xl shadow-2xl py-1 z-50 max-h-56 overflow-y-auto no-scrollbar">
+              {ranges.map((range) => {
+                const isSelected = activeRange === range;
                 return (
                   <div
-                    key={item?.id || index}
-                    ref={isActive ? activeEpisodeRef : null}
-                    className={`w-full px-4 py-2.5 flex items-center justify-start gap-x-4 cursor-pointer transition-all max-[600px]:px-3 max-[600px]:py-2 max-[600px]:gap-x-3 ${
-                      (index + 1) % 2 && !isActive
-                        ? "bg-[#202020]"
-                        : "bg-[#1a1a1a]"
-                    } hover:bg-[#2a2a2a] ${
-                      isActive ? "bg-[#2a2a2a]" : ""
-                    } ${isSearched ? "ring-1 ring-white" : ""}`}
+                    key={range}
+                    className={`px-3 py-1.5 text-xs cursor-pointer flex items-center justify-between transition-colors ${
+                      isSelected
+                        ? "bg-purple-900/40 text-purple-300 font-semibold"
+                        : "text-zinc-300 hover:bg-zinc-800/80 hover:text-white"
+                    }`}
                     onClick={() => {
-                      if (epCleanId) {
-                        onEpisodeClick(epCleanId);
-                        setActiveEpisodeId(epCleanId);
-                        setSearchedEpisode(null);
-                      }
+                      handleRangeSelect(range);
+                      setShowDropDown(false);
                     }}
                   >
-                    <p className={`text-[14px] font-medium max-[600px]:text-[13px] ${isActive ? "text-white" : "text-gray-400"}`}>
-                      {index + 1}
-                    </p>
-                    <div className="w-full flex items-center justify-between gap-x-[5px]">
-                      <h1 className={`line-clamp-1 text-[14px] transition-colors max-[600px]:text-[13px] ${
-                        isActive ? "text-white font-medium" : "text-gray-400 font-normal"
-                      }`}>
-                        {language === "EN" ? item?.title : (item?.japanese_title || item?.title)}
-                      </h1>
-                      {isActive && (
-                        <FontAwesomeIcon
-                          icon={faCirclePlay}
-                          className="w-[18px] h-[18px] text-white max-[600px]:w-[16px] max-[600px]:h-[16px]"
-                        />
-                      )}
-                    </div>
+                    <span>{range}</span>
+                    {isSelected && (
+                      <FontAwesomeIcon icon={faCheck} className="text-[10px] text-purple-400" />
+                    )}
                   </div>
                 );
               })}
+            </div>
+          )}
         </div>
+
+        {/* Filter Input */}
+        <div className="relative flex-1 max-w-[200px]">
+          <FontAwesomeIcon
+            icon={faMagnifyingGlass}
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs pointer-events-none"
+          />
+          <input
+            type="text"
+            placeholder="Filter episodes..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-[#1c1c24] text-xs text-zinc-200 placeholder-zinc-500 pl-7 pr-2 py-1.5 rounded-lg border border-zinc-800 focus:outline-none focus:border-purple-500 transition-colors"
+          />
+        </div>
+
+        {/* View Mode Toggles */}
+        <div className="flex items-center gap-1 bg-[#181820] p-0.5 rounded-lg border border-zinc-800">
+          <button
+            onClick={() => setViewMode("list")}
+            title="Compact View"
+            className={`p-1.5 rounded-md transition-colors ${
+              viewMode === "list"
+                ? "bg-purple-600 text-white shadow-xs"
+                : "text-zinc-400 hover:text-zinc-200"
+            }`}
+          >
+            <FontAwesomeIcon icon={faEye} className="text-[11px] block" />
+          </button>
+          <button
+            onClick={() => setViewMode("thumbnail")}
+            title="Thumbnail View"
+            className={`p-1.5 rounded-md transition-colors ${
+              viewMode === "thumbnail"
+                ? "bg-purple-600 text-white shadow-xs"
+                : "text-zinc-400 hover:text-zinc-200"
+            }`}
+          >
+            <FontAwesomeIcon icon={faImage} className="text-[11px] block" />
+          </button>
+        </div>
+      </div>
+
+      {/* Episode Container */}
+      <div
+        ref={listContainerRef}
+        className="w-full flex-1 overflow-y-auto p-2.5 space-y-2 max-h-[calc(100vh-230px)] max-[1200px]:max-h-[460px] custom-scrollbar"
+      >
+        {filteredEpisodes.length === 0 ? (
+          <div className="text-center py-10 text-xs text-zinc-500">
+            No episodes found.
+          </div>
+        ) : viewMode === "thumbnail" ? (
+          // Thumbnail View (Miruro Style)
+          filteredEpisodes.map((item, index) => {
+            const epCleanId = getCleanEpisodeId(item);
+            const isActive =
+              isEpisodeMatch(item, activeEpisodeId) ||
+              isEpisodeMatch(item, currentEpisode);
+            const epNum = item?.episode_no ?? item?.number ?? (index + 1);
+            const epTitle =
+              language === "EN"
+                ? item?.title || `Episode ${epNum}`
+                : item?.japanese_title || item?.title || `Episode ${epNum}`;
+            const epImage = item?.image || item?.thumbnail || animePoster;
+
+            return (
+              <div
+                key={item?.id || index}
+                ref={isActive ? activeEpisodeRef : null}
+                onClick={() => {
+                  if (epCleanId) {
+                    onEpisodeClick(epCleanId);
+                    setActiveEpisodeId(epCleanId);
+                  }
+                }}
+                className={`group flex items-start gap-3 p-2 rounded-xl transition-all cursor-pointer border ${
+                  isActive
+                    ? "bg-[#251538] border-purple-500/70 shadow-[0_0_15px_rgba(168,85,247,0.25)] ring-1 ring-purple-500/40"
+                    : "bg-[#16161d] border-zinc-800/80 hover:bg-[#1e1e27] hover:border-zinc-700"
+                }`}
+              >
+                {/* Thumbnail with EP Badge */}
+                <div className="relative w-28 sm:w-32 aspect-video rounded-lg overflow-hidden shrink-0 bg-zinc-900">
+                  {epImage ? (
+                    <img
+                      src={epImage}
+                      alt={`EP ${epNum}`}
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-600">
+                      <FontAwesomeIcon icon={faCirclePlay} className="text-lg" />
+                    </div>
+                  )}
+                  <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-black/80 text-white border border-white/10 tracking-tight">
+                    EP {epNum}
+                  </div>
+                </div>
+
+                {/* Right Info */}
+                <div className="flex-1 min-w-0 flex flex-col justify-between self-stretch py-0.5">
+                  <div>
+                    <h4
+                      className={`text-xs font-medium line-clamp-1 transition-colors ${
+                        isActive
+                          ? "text-purple-200 font-semibold"
+                          : "text-zinc-200 group-hover:text-purple-300"
+                      }`}
+                    >
+                      {epTitle}
+                    </h4>
+                    {item?.description && (
+                      <p className="text-[11px] text-zinc-400 line-clamp-2 mt-0.5 leading-snug">
+                        {item.description}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Badges & Date */}
+                  <div className="flex items-center justify-between text-[10px] text-zinc-400 mt-1.5 pt-1 border-t border-white/5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="flex items-center gap-1 bg-zinc-800/70 px-1 py-0.5 rounded text-zinc-400">
+                        <FontAwesomeIcon icon={faClosedCaptioning} className="text-[9px]" />
+                      </span>
+                      <span className="flex items-center gap-1 bg-zinc-800/70 px-1 py-0.5 rounded text-zinc-400">
+                        <FontAwesomeIcon icon={faMicrophone} className="text-[9px]" />
+                      </span>
+                    </div>
+                    {item?.airdate ? (
+                      <span className="text-zinc-500 font-medium">
+                        {item.airdate}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          // Compact / Grid View
+          <div className="grid grid-cols-5 gap-1.5 p-1">
+            {filteredEpisodes.map((item, index) => {
+              const epCleanId = getCleanEpisodeId(item);
+              const isActive =
+                isEpisodeMatch(item, activeEpisodeId) ||
+                isEpisodeMatch(item, currentEpisode);
+              const epNum = item?.episode_no ?? item?.number ?? (index + 1);
+
+              return (
+                <div
+                  key={item?.id || index}
+                  ref={isActive ? activeEpisodeRef : null}
+                  onClick={() => {
+                    if (epCleanId) {
+                      onEpisodeClick(epCleanId);
+                      setActiveEpisodeId(epCleanId);
+                    }
+                  }}
+                  className={`flex items-center justify-center rounded-lg h-9 text-xs font-semibold cursor-pointer transition-all border ${
+                    isActive
+                      ? "bg-purple-600 text-white border-purple-400 shadow-md ring-1 ring-purple-400"
+                      : "bg-[#181820] text-zinc-300 border-zinc-800 hover:bg-zinc-800 hover:text-white"
+                  }`}
+                >
+                  <span>{epNum}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
