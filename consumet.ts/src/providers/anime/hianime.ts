@@ -312,14 +312,19 @@ class Hianime extends AnimeParser {
   /**
    * @param page number
    */
-  genreSearch(genre: string, page: number = 1): Promise<ISearch<IAnimeResult>> {
+  async genreSearch(genre: string, page: number = 1): Promise<ISearch<IAnimeResult>> {
     if (genre == '') {
       throw new Error('genre is empty');
     }
     if (0 >= page) {
       page = 1;
     }
-    return this.scrapeCardPage(`${this.baseUrl}/genre/${genre}?page=${page}`);
+    const cleanGenre = genre.replace(/^genres?\//, '').trim();
+    try {
+      return await this.scrapeCardPage(`${this.baseUrl}/genres/${cleanGenre}?page=${page}`);
+    } catch (err) {
+      return await this.scrapeCardPage(`${this.baseUrl}/genre/${cleanGenre}?page=${page}`);
+    }
   }
 
   /**

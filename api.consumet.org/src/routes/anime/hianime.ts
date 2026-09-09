@@ -704,7 +704,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     }
   });
 
-  fastify.get('/genre/:genre', async (request: FastifyRequest, reply: FastifyReply) => {
+  const handleGenreSearch = async (request: FastifyRequest, reply: FastifyReply) => {
     const genre = (request.params as { genre: string }).genre;
     const page = (request.query as { page: number }).page;
 
@@ -724,7 +724,10 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
         .status(500)
         .send({ message: 'Something went wrong. Contact developer for help.' });
     }
-  });
+  };
+
+  fastify.get('/genre/:genre', handleGenreSearch);
+  fastify.get('/genres/:genre', handleGenreSearch);
 };
 
 export default routes;
