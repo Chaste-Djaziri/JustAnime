@@ -13,7 +13,6 @@ import {
   faCircleExclamation,
   faXmark,
   faFlag,
-  faDownload,
   faShareNodes,
   faPlay,
   faBell,
@@ -214,11 +213,11 @@ export default function Watch() {
         </div>
       )}
 
-      {/* Main Content Layout */}
-      <div className="w-full max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-8 py-5">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] xl:grid-cols-[1fr_410px] gap-6 items-start">
+      {/* Main Content Layout - Edge to Edge */}
+      <div className="w-full px-1 sm:px-2 py-2">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] xl:grid-cols-[1fr_400px] gap-2.5 items-start">
           {/* Left Column: Player, Controls, Original Servers, Info Bar, Anime Details */}
-          <div className="flex flex-col gap-5 w-full min-w-0">
+          <div className="flex flex-col gap-2.5 w-full min-w-0">
             {/* Player Container */}
             <div
               ref={playerSectionRef}
@@ -317,7 +316,7 @@ export default function Watch() {
             </div>
 
             {/* Episode Info & Action Bar */}
-            <div className="w-full bg-[#121214] border border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="w-full bg-[#121214] border border-zinc-800 rounded-2xl p-3 sm:p-4 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-3">
               {/* Left: Title, Badges, Overview */}
               <div className="flex-1 min-w-0">
                 <h1 className="text-base sm:text-lg font-bold text-white tracking-tight line-clamp-1">
@@ -344,13 +343,13 @@ export default function Watch() {
 
                 {/* Episode Synopsis */}
                 {currentEpObject?.description && (
-                  <p className="text-xs text-zinc-400 mt-2.5 line-clamp-2 leading-relaxed">
+                  <p className="text-xs text-zinc-400 mt-2 line-clamp-2 leading-relaxed">
                     {currentEpObject.description}
                   </p>
                 )}
               </div>
 
-              {/* Right: Action Buttons: Report, Download, Share */}
+              {/* Right: Action Buttons: Report, Share */}
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => setShowReportModal(true)}
@@ -359,16 +358,6 @@ export default function Watch() {
                   <FontAwesomeIcon icon={faFlag} className="text-[10px]" />
                   <span>Report</span>
                 </button>
-
-                <a
-                  href={streamUrl || "#"}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white border border-zinc-700 text-xs font-semibold transition-colors"
-                >
-                  <FontAwesomeIcon icon={faDownload} className="text-[10px]" />
-                  <span>Download</span>
-                </a>
 
                 <button
                   onClick={handleShare}
@@ -381,7 +370,7 @@ export default function Watch() {
             </div>
 
             {/* Anime Details Card (Black & White Theme) */}
-            <div className="w-full bg-[#121214] border border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-xl">
+            <div className="w-full bg-[#121214] border border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-xl">
               <div className="flex flex-col sm:flex-row gap-6">
                 {/* Poster & External Links */}
                 <div className="flex flex-col items-center sm:items-start shrink-0 gap-3">
@@ -584,7 +573,7 @@ export default function Watch() {
           </div>
 
           {/* Right Column: Episode Drawer, Next Episode Schedule, SEASONS, RELATED, RECOMMENDATIONS */}
-          <div className="flex flex-col gap-5 w-full min-w-0">
+          <div className="flex flex-col gap-2.5 w-full min-w-0">
             {/* Episode List Drawer */}
             <div className="w-full">
               {!episodes ? (
