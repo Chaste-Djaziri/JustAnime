@@ -11,7 +11,7 @@ import Banner from "../banner/Banner";
 const Spotlight = ({ spotlights }) => {
   return (
     <>
-      <div className="relative h-[740px] max-[1390px]:h-[650px] max-[1300px]:h-[560px] max-md:h-[470px]">
+      <div className="relative h-[420px] sm:h-[460px] md:h-[500px] lg:h-[540px] w-full overflow-hidden bg-[#0a0a0a]">
         {spotlights && spotlights.length > 0 ? (
           <>
             <Swiper
@@ -39,7 +39,7 @@ const Spotlight = ({ spotlights }) => {
               effect="fade"
               fadeEffect={{ crossFade: true }}
               modules={[Navigation, Autoplay, Pagination, EffectFade]}
-              className="h-[740px] max-[1390px]:h-full overflow-hidden relative"
+              className="h-full w-full overflow-hidden relative"
               style={{
                 "--swiper-pagination-bullet-inactive-color": "rgba(255, 255, 255, 0.5)",
                 "--swiper-pagination-bullet-inactive-opacity": "1",
