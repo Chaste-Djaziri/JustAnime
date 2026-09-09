@@ -26,6 +26,8 @@ class TMDB extends MovieParser {
 
   private provider: MovieParser;
 
+  private isBearerToken: boolean = false;
+
   constructor(
     private apiKey: string = '5201b54eb0968700e693a30576d7d4dc',
     provider?: MovieParser,
@@ -34,6 +36,17 @@ class TMDB extends MovieParser {
   ) {
     super(proxyConfig, adapter);
     this.provider = provider || new HiMovies();
+
+    if (
+      this.apiKey &&
+      (this.apiKey.startsWith('ey') ||
+        this.apiKey.length > 50 ||
+        this.apiKey.toLowerCase().startsWith('bearer '))
+    ) {
+      this.isBearerToken = true;
+      const cleanToken = this.apiKey.replace(/^bearer\s+/i, '').trim();
+      this.client.defaults.headers.common['Authorization'] = `Bearer ${cleanToken}`;
+    }
   }
 
   /**
@@ -46,6 +59,7 @@ class TMDB extends MovieParser {
     timePeriod: 'day' | 'week' = 'day',
     page: number = 1
   ): Promise<ISearch<IMovieResult | IAnimeResult | IPeopleResult>> => {
+    const authParam = this.isBearerToken ? '' : `&api_key=${this.apiKey}`;
     const trendingUrl = `${this.apiUrl}/trending/${
       type.toLowerCase() === TvType.MOVIE.toLowerCase()
         ? 'movie'
@@ -54,7 +68,7 @@ class TMDB extends MovieParser {
         : type.toLowerCase() === TvType.PEOPLE.toLowerCase()
         ? 'person'
         : 'all'
-    }/${timePeriod}?page=${page}&api_key=${this.apiKey}&language=en-US`;
+    }/${timePeriod}?page=${page}${authParam}&language=en-US`;
 
     const result: ISearch<IMovieResult | IAnimeResult | IPeopleResult> = {
       currentPage: page,
@@ -128,7 +142,8 @@ class TMDB extends MovieParser {
     query: string,
     page: number = 1
   ): Promise<ISearch<IMovieResult | IAnimeResult>> => {
-    const searchUrl = `${this.apiUrl}/search/multi?api_key=${this.apiKey}&language=en-US&page=${page}&include_adult=false&query=${query}`;
+    const authParam = this.isBearerToken ? '' : `&api_key=${this.apiKey}`;
+    const searchUrl = `${this.apiUrl}/search/multi?language=en-US&page=${page}&include_adult=false&query=${query}${authParam}`;
 
     const search: ISearch<IMovieResult | IAnimeResult> = {
       currentPage: page,
@@ -173,7 +188,8 @@ class TMDB extends MovieParser {
    */
   override fetchMediaInfo = async (mediaId: string, type: string): Promise<IMovieInfo | IAnimeInfo> => {
     type = type.toLowerCase() === 'movie' ? 'movie' : 'tv';
-    const infoUrl = `${this.apiUrl}/${type}/${mediaId}?api_key=${this.apiKey}&language=en-US&append_to_response=release_dates,watch/providers,alternative_titles,credits,external_ids,images,keywords,recommendations,reviews,similar,translations,videos&include_image_language=en`;
+    const authParam = this.isBearerToken ? '' : `&api_key=${this.apiKey}`;
+    const infoUrl = `${this.apiUrl}/${type}/${mediaId}?language=en-US&append_to_response=release_dates,watch/providers,alternative_titles,credits,external_ids,images,keywords,recommendations,reviews,similar,translations,videos&include_image_language=en${authParam}`;
 
     const info: IMovieInfo = {
       id: mediaId,
@@ -282,7 +298,7 @@ class TMDB extends MovieParser {
       const totalSeasons = (info?.totalSeasons as number) || 0;
       if (type === 'tv' && totalSeasons > 0) {
         const seasonUrl = (season: string) =>
-          `${this.apiUrl}/tv/${mediaId}/season/${season}?api_key=${this.apiKey}`;
+          `${this.apiUrl}/tv/${mediaId}/season/${season}${this.isBearerToken ? '' : `?api_key=${this.apiKey}`}`;
 
         info.seasons = [];
         const seasons = info.seasons as any[];
