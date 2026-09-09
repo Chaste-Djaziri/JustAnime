@@ -1,10 +1,10 @@
 export const CONSUMET_BASE_URL =
-  import.meta.env.VITE_CONSUMET_URL ||
-  import.meta.env.VITE_BASE_CONSUMET_URL ||
+  import.meta?.env?.VITE_CONSUMET_URL ||
+  import.meta?.env?.VITE_BASE_CONSUMET_URL ||
   "/consumet";
 
 export const CONSUMET_PROVIDER =
-  import.meta.env.VITE_CONSUMET_PROVIDER || "hianime";
+  import.meta?.env?.VITE_CONSUMET_PROVIDER || "hianime";
 
 /**
  * Returns the URL for the active consumet anime provider.
