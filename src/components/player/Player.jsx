@@ -5,6 +5,7 @@ import Artplayer from "artplayer";
 import artplayerPluginChapter from "./artPlayerPluinChaper";
 import autoSkip from "./autoSkip";
 import artplayerPluginVttThumbnail from "./artPlayerPluginVttThumbnail";
+import { getCleanEpisodeId, findEpisodeIndex } from "@/src/helper/episodeHelper";
 import {
   backward10Icon,
   backwardIcon,
@@ -59,22 +60,19 @@ export default function Player({
   animeInfo,
   episodeNum,
   streamInfo,
+  onPlaybackError,
 }) {
   const artRef = useRef(null);
   const leftAtRef = useRef(0); 
   const proxy = import.meta.env.VITE_PROXY_URL;
   const m3u8proxy = import.meta.env.VITE_M3U8_PROXY_URL?.split(",") || [];
   const [currentEpisodeIndex, setCurrentEpisodeIndex] = useState(
-    episodes?.findIndex(
-      (episode) => episode.id.match(/ep=(\d+)/)?.[1] === episodeId
-    )
+    findEpisodeIndex(episodes, episodeId)
   );
 
   useEffect(() => {
     if (episodes?.length > 0) {
-      const newIndex = episodes.findIndex(
-        (episode) => episode.id.match(/ep=(\d+)/)?.[1] === episodeId
-      );
+      const newIndex = findEpisodeIndex(episodes, episodeId);
       setCurrentEpisodeIndex(newIndex);
     }
   }, [episodeId, episodes]);
@@ -110,37 +108,45 @@ export default function Player({
 
       art.on("destroy", () => hls.destroy());
 
-      // hls.on(Hls.Events.ERROR, (event, data) => {
-      //   console.error("HLS.js error:", data);
-      // });
+      hls.on(Hls.Events.ERROR, (event, data) => {
+        if (data.fatal && onPlaybackError) {
+          console.warn("Fatal HLS error, switching to fallback:", data);
+          onPlaybackError(data);
+        }
+      });
+
       video.addEventListener("timeupdate", () => {
         const currentTime = Math.round(video.currentTime);
         const duration = Math.round(video.duration);
         if (duration > 0 && currentTime >= duration) {
-            art.pause();
-            if (currentEpisodeIndex < episodes?.length - 1 && autoNext) {
-              playNext(
-                episodes[currentEpisodeIndex + 1].id.match(/ep=(\d+)/)?.[1]
-              );
+          art.pause();
+          if (currentEpisodeIndex < episodes?.length - 1 && autoNext) {
+            const nextEp = episodes[currentEpisodeIndex + 1];
+            const nextId = getCleanEpisodeId(nextEp);
+            if (nextId) playNext(nextId);
           }
         }
       });
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = url;
+      video.addEventListener("error", (e) => {
+        if (onPlaybackError) onPlaybackError(e);
+      });
       video.addEventListener("timeupdate", () => {
         const currentTime = Math.round(video.currentTime);
         const duration = Math.round(video.duration);
         if (duration > 0 && currentTime >= duration) {
-            art.pause();
-            if (currentEpisodeIndex < episodes?.length - 1 && autoNext) {
-              playNext(
-                episodes[currentEpisodeIndex + 1].id.match(/ep=(\d+)/)?.[1]
-              );
+          art.pause();
+          if (currentEpisodeIndex < episodes?.length - 1 && autoNext) {
+            const nextEp = episodes[currentEpisodeIndex + 1];
+            const nextId = getCleanEpisodeId(nextEp);
+            if (nextId) playNext(nextId);
           }
         }
       });
     } else {
       console.log("Unsupported playback format: m3u8");
+      if (onPlaybackError) onPlaybackError(new Error("Unsupported format"));
     }
   };
 
