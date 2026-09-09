@@ -1,59 +1,160 @@
 import axios from "axios";
+import { getConsumetAnimeUrl } from "../config/api.config";
+import { mapConsumetAnimeList } from "../helper/animeMapper";
 
 const CACHE_KEY_PREFIX = "homeInfoCache";
-const CACHE_DURATION = 24 * 60 * 60 * 1000;
+const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours
 
 export default async function getHomeInfo() {
-  const api_url = import.meta.env.VITE_API_URL;
-
+  const consumetUrl = getConsumetAnimeUrl();
+  const legacyApiUrl = import.meta.env.VITE_API_URL;
+  const cacheKey = `${CACHE_KEY_PREFIX}:${consumetUrl || legacyApiUrl || "default"}`;
   const currentTime = Date.now();
-  const cacheKey = `${CACHE_KEY_PREFIX}:${api_url || "default"}`;
-  const cachedData = JSON.parse(localStorage.getItem(cacheKey));
 
+  const cachedData = JSON.parse(localStorage.getItem(cacheKey) || "null");
   if (cachedData && currentTime - cachedData.timestamp < CACHE_DURATION) {
     return cachedData.data;
   }
-  const response = await axios.get(`${api_url}`);
-  if (
-    !response.data.results ||
-    Object.keys(response.data.results).length === 0
-  ) {
-    return null;
+
+  // 1. Try Consumet provider routes
+  try {
+    const [
+      spotlightsRes,
+      topAiringRes,
+      mostPopularRes,
+      mostFavoriteRes,
+      latestCompletedRes,
+      latestEpisodeRes,
+      topUpcomingRes,
+      genresRes,
+    ] = await Promise.allSettled([
+      axios.get(getConsumetAnimeUrl("spotlight")),
+      axios.get(getConsumetAnimeUrl("top-airing")),
+      axios.get(getConsumetAnimeUrl("most-popular")),
+      axios.get(getConsumetAnimeUrl("most-favorite")),
+      axios.get(getConsumetAnimeUrl("latest-completed")),
+      axios.get(getConsumetAnimeUrl("recently-updated")),
+      axios.get(getConsumetAnimeUrl("top-upcoming")),
+      axios.get(getConsumetAnimeUrl("genres")),
+    ]);
+
+    const spotlights =
+      spotlightsRes.status === "fulfilled"
+        ? mapConsumetAnimeList(spotlightsRes.value.data)
+        : [];
+    const top_airing =
+      topAiringRes.status === "fulfilled"
+        ? mapConsumetAnimeList(topAiringRes.value.data)
+        : [];
+    const most_popular =
+      mostPopularRes.status === "fulfilled"
+        ? mapConsumetAnimeList(mostPopularRes.value.data)
+        : [];
+    const most_favorite =
+      mostFavoriteRes.status === "fulfilled"
+        ? mapConsumetAnimeList(mostFavoriteRes.value.data)
+        : [];
+    const latest_completed =
+      latestCompletedRes.status === "fulfilled"
+        ? mapConsumetAnimeList(latestCompletedRes.value.data)
+        : [];
+    const latest_episode =
+      latestEpisodeRes.status === "fulfilled"
+        ? mapConsumetAnimeList(latestEpisodeRes.value.data)
+        : [];
+    const top_upcoming =
+      topUpcomingRes.status === "fulfilled"
+        ? mapConsumetAnimeList(topUpcomingRes.value.data)
+        : [];
+
+    let genres = [];
+    if (genresRes.status === "fulfilled" && genresRes.value.data) {
+      const rawGenres = genresRes.value.data;
+      genres = Array.isArray(rawGenres)
+        ? rawGenres
+        : Array.isArray(rawGenres.results)
+        ? rawGenres.results
+        : [];
+    }
+
+    // If at least spotlights or top_airing or most_popular returned data:
+    if (
+      spotlights.length > 0 ||
+      top_airing.length > 0 ||
+      most_popular.length > 0 ||
+      latest_episode.length > 0
+    ) {
+      const formattedData = {
+        spotlights,
+        trending: top_airing.slice(0, 10),
+        topten: most_popular.slice(0, 10),
+        todaySchedule: [],
+        top_airing,
+        most_popular,
+        most_favorite,
+        latest_completed,
+        latest_episode,
+        top_upcoming,
+        recently_added: latest_episode,
+        genres,
+      };
+
+      localStorage.setItem(
+        cacheKey,
+        JSON.stringify({ data: formattedData, timestamp: currentTime })
+      );
+
+      return formattedData;
+    }
+  } catch (consumetErr) {
+    console.warn("Consumet home fetch failed, checking legacy API:", consumetErr);
   }
-  const {
-    spotlights,
-    trending,
-    topTen: topten,
-    today: todaySchedule,
-    topAiring: top_airing,
-    mostPopular: most_popular,
-    mostFavorite: most_favorite,
-    latestCompleted: latest_completed,
-    latestEpisode: latest_episode,
-    topUpcoming: top_upcoming,
-    recentlyAdded: recently_added,
-    genres,
-  } = response.data.results;
 
-  const dataToCache = {
-    data: {
-      spotlights,
-      trending,
-      topten,
-      todaySchedule,
-      top_airing,
-      most_popular,
-      most_favorite,
-      latest_completed,
-      latest_episode,
-      top_upcoming,
-      recently_added,
-      genres,
-    },
-    timestamp: currentTime,
-  };
+  // 2. Fallback to legacy API if configured
+  if (legacyApiUrl) {
+    try {
+      const response = await axios.get(`${legacyApiUrl}`);
+      if (response.data?.results) {
+        const {
+          spotlights,
+          trending,
+          topTen: topten,
+          today: todaySchedule,
+          topAiring: top_airing,
+          mostPopular: most_popular,
+          mostFavorite: most_favorite,
+          latestCompleted: latest_completed,
+          latestEpisode: latest_episode,
+          topUpcoming: top_upcoming,
+          recentlyAdded: recently_added,
+          genres,
+        } = response.data.results;
 
-  localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
+        const dataToCache = {
+          data: {
+            spotlights,
+            trending,
+            topten,
+            todaySchedule,
+            top_airing,
+            most_popular,
+            most_favorite,
+            latest_completed,
+            latest_episode,
+            top_upcoming,
+            recently_added,
+            genres,
+          },
+          timestamp: currentTime,
+        };
 
-  return dataToCache.data;
+        localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
+        return dataToCache.data;
+      }
+    } catch (legacyErr) {
+      console.error("Legacy API fetch failed:", legacyErr);
+    }
+  }
+
+  return null;
 }
