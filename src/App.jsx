@@ -29,12 +29,13 @@ function App() {
     window.scrollTo(0, 0);
   }, [location]);
 
-  // Check if the current route is for the splash screen
+  // Check if the current route is for the splash screen or watch page
   const isSplashScreen = location.pathname === "/";
+  const isWatchPage = location.pathname.startsWith("/watch");
 
   return (
     <HomeInfoProvider>
-      <div className="app-container px-4 lg:px-10">
+      <div className={`app-container ${isWatchPage ? "px-0" : "px-4 lg:px-10"}`}>
         <main className="content max-w-[2048px] mx-auto w-full">
           {!isSplashScreen && <Navbar />}
           <Routes>
