@@ -25,6 +25,7 @@ export default async function getHomeInfo() {
       mostFavoriteRes,
       latestCompletedRes,
       latestEpisodeRes,
+      recentlyAddedRes,
       topUpcomingRes,
       genresRes,
     ] = await Promise.allSettled([
@@ -34,6 +35,7 @@ export default async function getHomeInfo() {
       axios.get(getConsumetAnimeUrl("most-favorite")),
       axios.get(getConsumetAnimeUrl("latest-completed")),
       axios.get(getConsumetAnimeUrl("recently-updated")),
+      axios.get(getConsumetAnimeUrl("recently-added")),
       axios.get(getConsumetAnimeUrl("top-upcoming")),
       axios.get(getConsumetAnimeUrl("genres")),
     ]);
@@ -62,6 +64,10 @@ export default async function getHomeInfo() {
       latestEpisodeRes.status === "fulfilled"
         ? mapConsumetAnimeList(latestEpisodeRes.value.data)
         : [];
+    const recently_added =
+      recentlyAddedRes.status === "fulfilled"
+        ? mapConsumetAnimeList(recentlyAddedRes.value.data)
+        : latest_episode;
     const top_upcoming =
       topUpcomingRes.status === "fulfilled"
         ? mapConsumetAnimeList(topUpcomingRes.value.data)
@@ -94,8 +100,8 @@ export default async function getHomeInfo() {
         most_favorite,
         latest_completed,
         latest_episode,
+        recently_added,
         top_upcoming,
-        recently_added: latest_episode,
         genres,
       };
 
