@@ -63,10 +63,10 @@ function Home() {
                 limit={16}
               />
 
-              {/* New On JustAnime / HiAnime */}
+              {/* New On Kizora */}
               {homeInfo.recently_added && homeInfo.recently_added.length > 0 && (
                 <CategoryCard
-                  label="New On JustAnime"
+                  label="New On Kizora"
                   data={homeInfo.recently_added}
                   path="recently-added"
                   limit={16}
