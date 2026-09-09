@@ -44,6 +44,7 @@ export const categoryRoutes = [
   "most-popular",
   "most-favorite",
   "completed",
+  "latest-completed",
   "recently-updated",
   "recently-added",
   "top-upcoming",
