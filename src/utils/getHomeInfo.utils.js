@@ -2,7 +2,7 @@ import axios from "axios";
 import { getConsumetAnimeUrl } from "../config/api.config";
 import { mapConsumetAnimeList } from "../helper/animeMapper";
 
-const CACHE_KEY_PREFIX = "homeInfoCache";
+const CACHE_KEY_PREFIX = "homeInfoCache_v6";
 const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours
 
 export default async function getHomeInfo() {
@@ -12,7 +12,12 @@ export default async function getHomeInfo() {
   const currentTime = Date.now();
 
   const cachedData = JSON.parse(localStorage.getItem(cacheKey) || "null");
-  if (cachedData && currentTime - cachedData.timestamp < CACHE_DURATION) {
+  if (
+    cachedData &&
+    currentTime - cachedData.timestamp < CACHE_DURATION &&
+    Array.isArray(cachedData.data?.trending) &&
+    cachedData.data.trending.length >= 12
+  ) {
     return cachedData.data;
   }
 
