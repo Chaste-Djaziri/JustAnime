@@ -20,7 +20,7 @@ import { USER_AGENT } from '../../utils';
 
 class Hianime extends AnimeParser {
   override readonly name = 'hianime';
-  protected override baseUrl = 'https://hianime.to';
+  protected override baseUrl = process.env.HIANIME_URL || 'https://hianime.at';
   protected override logo =
     'https://is3-ssl.mzstatic.com/image/thumb/Purple112/v4/7e/91/00/7e9100ee-2b62-0942-4cdc-e9b93252ce1c/source/512x512bb.jpg';
   protected override classPath = 'ANIME.hianime';
@@ -35,7 +35,7 @@ class Hianime extends AnimeParser {
     if (0 >= page) {
       page = 1;
     }
-    const searchUrl = `${this.baseUrl}/search?keyword=${decodeURIComponent(query)}&page=${page}`;
+    const searchUrl = `${this.baseUrl}/search?keyword=${encodeURIComponent(query)}&page=${page}`;
     return this.scrapeCardPage(searchUrl);
   }
   /**
@@ -341,7 +341,7 @@ class Hianime extends AnimeParser {
         const card = $(ele);
         const title = card.find('.film-name');
 
-        const id = card.find('a.tsl-link').attr('href')?.split('/')[1].split('?')[0];
+        const id = card.find('a.tsl-link').attr('href')?.split('/').filter(Boolean).pop()?.split('?')[0];
         const airingTime = card.find('div.time').text().replace('\n', '').trim();
         const airingEpisode = card.find('div.film-detail div.fd-play button').text().replace('\n', '').trim();
         res.results.push({
@@ -356,7 +356,7 @@ class Hianime extends AnimeParser {
 
       return res;
     } catch (err) {
-      throw new Error('Something went wrong. Please try again later.');
+      return { results: [] };
     }
   }
 
@@ -403,38 +403,54 @@ class Hianime extends AnimeParser {
     try {
       const encodedQuery = encodeURIComponent(query);
       const { data } = await this.client.get(`${this.baseUrl}/ajax/search/suggest?keyword=${encodedQuery}`);
-      const $ = load(data.html);
-      const res: ISearch<IAnimeResult> = {
-        results: [],
-      };
+      if (data?.html) {
+        const $ = load(data.html);
+        const res: ISearch<IAnimeResult> = {
+          results: [],
+        };
 
-      $('.nav-item').each((i, el) => {
-        const card = $(el);
-        if (!card.hasClass('nav-bottom')) {
-          const image = card.find('.film-poster img').attr('data-src');
-          const title = card.find('.film-name');
-          const id = card.attr('href')?.split('/')[1].split('?')[0];
+        $('.nav-item').each((i, el) => {
+          const card = $(el);
+          if (!card.hasClass('nav-bottom')) {
+            const image = card.find('.film-poster img').attr('src') || card.find('.film-poster img').attr('data-src');
+            const title = card.find('.film-name');
+            const id = card.attr('href')?.split('/').filter(Boolean).pop()?.split('?')[0];
 
-          const duration = card.find('.film-infor span').last().text().trim();
-          const releaseDate = card.find('.film-infor span:nth-child(1)').text().trim();
-          const type = card.find('.film-infor').find('span, i').remove().end().text().trim();
-          res.results.push({
-            image: image,
-            id: id!,
-            title: title.text(),
-            japaneseTitle: title.attr('data-jname'),
-            aliasTitle: card.find('.alias-name').text(),
-            releaseDate: releaseDate,
-            type: type as MediaFormat,
-            duration: duration,
-            url: `${this.baseUrl}/${id}`,
-          });
+            const duration = card.find('.film-infor span').last().text().trim();
+            const releaseDate = card.find('.film-infor span:nth-child(1)').text().trim();
+            const type = card.find('.film-infor').find('span, i').remove().end().text().trim();
+            res.results.push({
+              image: image,
+              id: id!,
+              title: title.text().trim(),
+              japaneseTitle: title.attr('data-jname'),
+              aliasTitle: card.find('.alias-name').text(),
+              releaseDate: releaseDate,
+              type: type as MediaFormat,
+              duration: duration,
+              url: `${this.baseUrl}/${id}`,
+            });
+          }
+        });
+
+        if (res.results.length > 0) {
+          return res;
         }
-      });
+      }
 
-      return res;
+      const searchRes = await this.search(query, 1);
+      return {
+        results: searchRes.results.slice(0, 8),
+      };
     } catch (error) {
-      throw new Error('Something went wrong. Please try again later.');
+      try {
+        const searchRes = await this.search(query, 1);
+        return {
+          results: searchRes.results.slice(0, 8),
+        };
+      } catch (_) {
+        return { results: [] };
+      }
     }
   }
 
@@ -530,27 +546,44 @@ class Hianime extends AnimeParser {
       const { data } = await this.client.get(animeUrl);
       const $ = load(data);
 
-      const { mal_id, anilist_id } = JSON.parse($('#syncData').text());
+      let mal_id = 0;
+      let anilist_id = 0;
+      try {
+        const syncText = $('#syncData').text()?.trim();
+        if (syncText) {
+          const parsed = JSON.parse(syncText);
+          mal_id = Number(parsed.mal_id || 0);
+          anilist_id = Number(parsed.anilist_id || 0);
+        }
+      } catch (_) {}
+
       info.malID = Number(mal_id);
       info.alID = Number(anilist_id);
-      info.title = $('h2.film-name > a.text-white').text();
-      info.japaneseTitle = $('div.anisc-info div:nth-child(2) span.name').text();
-      info.image = $('img.film-poster-img').attr('src');
+      info.title =
+        $('h2.film-name > a.text-white').text()?.trim() ||
+        $('h2.film-name').text()?.trim() ||
+        '';
+      info.japaneseTitle =
+        $('div.anisc-info div:nth-child(2) span.name').text()?.trim() ||
+        $('h2.film-name a').attr('data-jname') ||
+        '';
+      info.image = $('img.film-poster-img').attr('src') || $('img.film-poster-img').attr('data-src');
       info.description = $('div.film-description').text().trim();
       // Movie, TV, OVA, ONA, Special, Music
-      info.type = $('span.item').last().prev().prev().text().toUpperCase() as MediaFormat;
+      info.type = ($('span.item').last().prev().prev().text().toUpperCase().trim() || 'TV') as MediaFormat;
       info.url = `${this.baseUrl}/${id}`;
       info.recommendations = await this.scrapeCard($);
       info.relatedAnime = [];
       $('#main-sidebar section:nth-child(1) div.anif-block-ul li').each((i, ele) => {
         const card = $(ele);
         const aTag = card.find('.film-name a');
-        const id = aTag.attr('href')?.split('/')[1].split('?')[0];
+        const epHref = aTag.attr('href') || '';
+        const relatedId = epHref.split('/').filter(Boolean).pop()?.split('?')[0];
         info.relatedAnime.push({
-          id: id!,
-          title: aTag.text(),
-          url: `${this.baseUrl}${aTag.attr('href')}`,
-          image: card.find('img')?.attr('data-src'),
+          id: relatedId!,
+          title: aTag.text().trim(),
+          url: epHref.startsWith('http') ? epHref : `${this.baseUrl}${epHref}`,
+          image: card.find('img')?.attr('src') || card.find('img')?.attr('data-src'),
           japaneseTitle: aTag.attr('data-jname'),
           type: card.find('.tick').contents().last()?.text()?.trim() as MediaFormat,
           sub: parseInt(card.find('.tick-item.tick-sub')?.text()) || 0,
@@ -574,83 +607,118 @@ class Hianime extends AnimeParser {
       }
 
       // hianime - PAGE INFO
-      const zInfo = await this.client.get(info.url);
-      const $$$ = load(zInfo.data);
+      try {
+        const zInfo = await this.client.get(info.url);
+        const $$$ = load(zInfo.data);
 
-      info.genres = [];
-      $$$('.item.item-list')
-        .find('a')
-        .each(function () {
-          const genre = $(this).text().trim();
-          if (genre != undefined) info.genres?.push(genre);
-        });
+        info.genres = [];
+        $$$('.item.item-list')
+          .find('a')
+          .each(function () {
+            const genre = $(this).text().trim();
+            if (genre != undefined) info.genres?.push(genre);
+          });
 
-      switch (
-        $$$('.item.item-title').find("span.item-head:contains('Status')").next('span.name').text().trim()
-      ) {
-        case 'Finished Airing':
-          info.status = MediaStatus.COMPLETED;
-          break;
-        case 'Currently Airing':
-          info.status = MediaStatus.ONGOING;
-          break;
-        case 'Not yet aired':
-          info.status = MediaStatus.NOT_YET_AIRED;
-          break;
-        default:
-          info.status = MediaStatus.UNKNOWN;
-          break;
-      }
+        switch (
+          $$$('.item.item-title').find("span.item-head:contains('Status')").next('span.name').text().trim()
+        ) {
+          case 'Finished Airing':
+            info.status = MediaStatus.COMPLETED;
+            break;
+          case 'Currently Airing':
+            info.status = MediaStatus.ONGOING;
+            break;
+          case 'Not yet aired':
+            info.status = MediaStatus.NOT_YET_AIRED;
+            break;
+          default:
+            info.status = MediaStatus.UNKNOWN;
+            break;
+        }
 
-      info.season = $$$('.item.item-title')
-        .find("span.item-head:contains('Premiered')")
-        .next('span.name')
-        .text()
-        .trim();
-
-      if (info.japaneseTitle == '' || info.japaneseTitle == undefined) {
-        info.japaneseTitle = $$$('.item.item-title')
-          .find("span.item-head:contains('Japanese')")
+        info.season = $$$('.item.item-title')
+          .find("span.item-head:contains('Premiered')")
           .next('span.name')
           .text()
           .trim();
-      }
 
-      const episodesAjax = await this.client.get(
-        `${this.baseUrl}/ajax/v2/episode/list/${id.split('-').pop()}`,
-        {
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            Referer: `${this.baseUrl}/watch/${id}`,
-          },
+        if (!info.japaneseTitle) {
+          info.japaneseTitle = $$$('.item.item-title')
+            .find("span.item-head:contains('Japanese')")
+            .next('span.name')
+            .text()
+            .trim();
         }
-      );
+      } catch (_) {}
 
-      const $$ = load(episodesAjax.data.html);
-
-      info.totalEpisodes = $$('div.detail-infor-content > div > a').length;
+      // Episode list fetching
       info.episodes = [];
-      $$('div.detail-infor-content > div > a').each((i, el) => {
-        const episodeId = $$(el).attr('href')?.split('/')[2]?.replace('?ep=', '$episode$')!;
-        const number = parseInt($$(el).attr('data-number')!);
-        const title = $$(el).attr('title');
-        const url = this.baseUrl + $$(el).attr('href');
-        const isFiller = $$(el).hasClass('ssl-item-filler');
-        const isSubbed =
-          number <= (parseInt($('div.film-stats div.tick div.tick-item.tick-sub').text().trim()) || 0);
-        const isDubbed =
-          number <= (parseInt($('div.film-stats div.tick div.tick-item.tick-dub').text().trim()) || 0);
+      const animeDbId = $('#ani_detail').attr('data-anime-id') || id.split('-').pop();
 
-        info.episodes?.push({
-          id: episodeId,
-          number: number,
-          title: title,
-          isFiller: isFiller,
-          isSubbed: isSubbed,
-          isDubbed: isDubbed,
-          url: url,
-        });
-      });
+      try {
+        // Try hianime.at API first
+        const episodesAjax = await this.client.get(
+          `${this.baseUrl}/api/theme/episode/list/${animeDbId}`
+        );
+        if (episodesAjax.data?.html) {
+          const $$ = load(episodesAjax.data.html);
+          info.totalEpisodes = $$('div.detail-infor-content > div > a, a[data-number]').length;
+          $$('div.detail-infor-content > div > a, a[data-number]').each((i, el) => {
+            const a = $$(el);
+            const href = a.attr('href') || '';
+            const epNumMatch = href.match(/ep=(\d+)/);
+            const epNum = epNumMatch ? epNumMatch[1] : String(i + 1);
+            const episodeId = `${id}$episode$${epNum}`;
+            const number = parseInt(a.attr('data-number')!) || i + 1;
+            const title = a.attr('title') || `Episode ${number}`;
+            const url = href.startsWith('http') ? href : `${this.baseUrl}${href}`;
+            const isFiller = a.hasClass('ssl-item-filler');
+
+            info.episodes?.push({
+              id: episodeId,
+              number: number,
+              title: title,
+              isFiller: isFiller,
+              isSubbed: true,
+              isDubbed: true,
+              url: url,
+            });
+          });
+        }
+      } catch (_) {
+        // Fallback to legacy endpoint
+        try {
+          const episodesAjax = await this.client.get(
+            `${this.baseUrl}/ajax/v2/episode/list/${id.split('-').pop()}`,
+            {
+              headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                Referer: `${this.baseUrl}/watch/${id}`,
+              },
+            }
+          );
+          const $$ = load(episodesAjax.data.html);
+          info.totalEpisodes = $$('div.detail-infor-content > div > a').length;
+          $$('div.detail-infor-content > div > a').each((i, el) => {
+            const episodeId = $$(el).attr('href')?.split('/')[2]?.replace('?ep=', '$episode$')!;
+            const number = parseInt($$(el).attr('data-number')!);
+            const title = $$(el).attr('title');
+            const url = this.baseUrl + $$(el).attr('href');
+            const isFiller = $$(el).hasClass('ssl-item-filler');
+            info.episodes?.push({
+              id: episodeId,
+              number: number,
+              title: title,
+              isFiller: isFiller,
+              isSubbed: true,
+              isDubbed: true,
+              url: url,
+            });
+          });
+        } catch (legacyErr) {
+          console.error('Episode list fetch error:', (legacyErr as Error).message);
+        }
+      }
 
       return info;
     } catch (err) {
@@ -708,6 +776,36 @@ class Hianime extends AnimeParser {
 
     // TODO: add both options later
     // subOrDub = episodeId.split('$')?.pop() === 'dub' ? 'dub' : 'sub';
+
+    const cleanEpId = episodeId.includes('$episode$')
+      ? episodeId.split('$episode$')[1].split('$')[0].split('?')[0]
+      : episodeId.includes('?ep=')
+      ? episodeId.split('?ep=')[1].split('&')[0]
+      : episodeId;
+
+    try {
+      // 1. Try hianime.at servers endpoint
+      const { data } = await this.client.get(
+        `${this.baseUrl}/api/theme/episode/servers?episodeId=${cleanEpId}`
+      );
+      if (data?.html) {
+        const $ = load(data.html);
+        const blockSelector = subOrDub === SubOrSub.DUB ? '.servers-dub' : '.servers-sub';
+        let serverItem = $(`${blockSelector} .server-item`).first();
+        if (!serverItem.length) {
+          serverItem = $('.server-item').first();
+        }
+        const dataHash = serverItem.attr('data-hash');
+        if (dataHash) {
+          const streamUrl = Buffer.from(dataHash, 'base64').toString('utf-8');
+          if (streamUrl.startsWith('http')) {
+            return await this.fetchEpisodeSources(streamUrl, server, subOrDub);
+          }
+        }
+      }
+    } catch (atErr) {
+      console.error('hianime.at episode sources error:', (atErr as Error).message);
+    }
 
     episodeId = `${this.baseUrl}/watch/${episodeId
       .replace('$episode$', '?ep=')
@@ -865,7 +963,7 @@ class Hianime extends AnimeParser {
             return;
           }
 
-          const id = href.split('/')[1]?.split('?')[0];
+          const id = href.split('/').filter(Boolean).pop()?.split('?')[0];
           if (!id) {
             return;
           }
@@ -880,9 +978,9 @@ class Hianime extends AnimeParser {
 
           results.push({
             id: id,
-            title: atag.text(),
-            url: `${this.baseUrl}${atag.attr('href')}`,
-            image: card.find('img')?.attr('data-src'),
+            title: atag.text().trim(),
+            url: href.startsWith('http') ? href : `${this.baseUrl}${href.startsWith('/') ? '' : '/'}${href}`,
+            image: card.find('img')?.attr('src') || card.find('img')?.attr('data-src'),
             duration: card.find('.fdi-duration')?.text(),
             watchList: watchList || WatchListType.NONE,
             japaneseTitle: atag.attr('data-jname'),
@@ -903,12 +1001,44 @@ class Hianime extends AnimeParser {
       throw new Error('Something went wrong. Please try again later.');
     }
   };
+
   /**
-   * @deprecated
+   * Fetches episode servers for a given episode.
    * @param episodeId Episode id
    */
-  override fetchEpisodeServers = (episodeId: string): Promise<IEpisodeServer[]> => {
-    throw new Error('Method not implemented.');
+  override fetchEpisodeServers = async (episodeId: string): Promise<IEpisodeServer[]> => {
+    try {
+      const cleanEpId = episodeId.includes('$episode$')
+        ? episodeId.split('$episode$')[1].split('$')[0].split('?')[0]
+        : episodeId.includes('?ep=')
+        ? episodeId.split('?ep=')[1].split('&')[0]
+        : episodeId;
+
+      const { data } = await this.client.get(
+        `${this.baseUrl}/api/theme/episode/servers?episodeId=${cleanEpId}`
+      );
+
+      const servers: IEpisodeServer[] = [];
+      if (data?.html) {
+        const $ = load(data.html);
+        $('.server-item').each((_, el) => {
+          const item = $(el);
+          const name = item.text().trim();
+          const rawHash = item.attr('data-hash');
+          const decodedUrl = rawHash ? Buffer.from(rawHash, 'base64').toString('utf-8') : '';
+          const type = item.closest('.ps_-block').hasClass('servers-sub') ? 'sub' : 'dub';
+          servers.push({
+            name,
+            url: decodedUrl || rawHash || '',
+            type,
+            dataHash: rawHash,
+          });
+        });
+      }
+      return servers;
+    } catch (err) {
+      throw new Error((err as Error).message);
+    }
   };
 }
 
