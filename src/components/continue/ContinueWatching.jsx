@@ -15,21 +15,38 @@ const ContinueWatching = () => {
   const { language } = useLanguage();
   const swiperRef = useRef(null);
 
-  useEffect(() => {
+  const reloadWatchList = () => {
     const data = JSON.parse(localStorage.getItem("continueWatching") || "[]");
     setWatchList(data);
+  };
+
+  useEffect(() => {
+    reloadWatchList();
+    window.addEventListener("storage", reloadWatchList);
+    return () => window.removeEventListener("storage", reloadWatchList);
   }, []);
 
   const memoizedWatchList = useMemo(() => watchList, [watchList]);
 
-  const removeFromWatchList = (episodeId) => {
+  const removeFromWatchList = (targetItem) => {
     setWatchList((prevList) => {
       const updatedList = prevList.filter(
-        (item) => item.episodeId !== episodeId
+        (item) =>
+          item !== targetItem &&
+          (item.id && targetItem.id
+            ? item.id !== targetItem.id
+            : item.title !== targetItem.title)
       );
       localStorage.setItem("continueWatching", JSON.stringify(updatedList));
       return updatedList;
     });
+  };
+
+  const getWatchLink = (item) => {
+    if (item?.id && !item.id.startsWith("al-") && !item.id.startsWith("mal-")) {
+      return `/watch/${item.id}${item.episodeId ? `?ep=${item.episodeId}` : ""}`;
+    }
+    return `/search?query=${encodeURIComponent(item?.title || "")}`;
   };
 
   if (memoizedWatchList.length === 0) return null;
@@ -58,36 +75,37 @@ const ContinueWatching = () => {
         <Swiper
           ref={swiperRef}
           className="w-full h-full"
-          slidesPerView={3}
-          spaceBetween={20}
-          breakpoints={{
-            640: { slidesPerView: 4, spaceBetween: 20 },
-            768: { slidesPerView: 4, spaceBetween: 20 },
-            1024: { slidesPerView: 5, spaceBetween: 24 },
-            1300: { slidesPerView: 6, spaceBetween: 24 },
-            1600: { slidesPerView: 7, spaceBetween: 28 },
-          }}
           modules={[Navigation]}
           navigation={{
             nextEl: ".continue-btn-next",
             prevEl: ".continue-btn-prev",
           }}
+          slidesPerView={6}
+          spaceBetween={14}
+          breakpoints={{
+            320: { slidesPerView: 2, spaceBetween: 8 },
+            480: { slidesPerView: 3, spaceBetween: 10 },
+            768: { slidesPerView: 4, spaceBetween: 12 },
+            1024: { slidesPerView: 5, spaceBetween: 14 },
+            1280: { slidesPerView: 6, spaceBetween: 14 },
+          }}
         >
           {memoizedWatchList.slice().reverse().map((item, index) => (
             <SwiperSlide
-              key={index}
+              key={item.id || index}
               className="text-center flex justify-center items-center"
             >
               <div className="w-full h-auto pb-[140%] relative inline-block overflow-hidden rounded-lg shadow-lg group">
                 <button
                   className="absolute top-3 right-3 bg-black/70 text-gray-300 w-8 h-8 flex items-center justify-center rounded-lg text-sm z-10 font-medium hover:bg-white hover:text-black transition-all duration-300"
-                  onClick={() => removeFromWatchList(item.episodeId)}
+                  onClick={() => removeFromWatchList(item)}
+                  title="Remove from continue watching"
                 >
                   ✖
                 </button>
 
                 <Link
-                  to={`/watch/${item?.id}?ep=${item.episodeId}`}
+                  to={getWatchLink(item)}
                   className="inline-block bg-gray-900 absolute left-0 top-0 w-full h-full group"
                 >
                   <img
