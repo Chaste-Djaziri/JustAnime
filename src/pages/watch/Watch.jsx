@@ -7,6 +7,7 @@ import IframePlayer from "@/src/components/player/IframePlayer";
 import Episodelist from "@/src/components/episodelist/Episodelist";
 import website_name from "@/src/config/website";
 import Servers from "@/src/components/servers/Servers";
+import CategoryCard from "@/src/components/categorycard/CategoryCard";
 import {
   faClosedCaptioning,
   faMicrophone,
@@ -599,6 +600,19 @@ export default function Watch() {
                 </div>
               </div>
             </div>
+
+            {/* Recommended For You Section (HiAnime Proper Anime Cards) */}
+            {((animeInfo?.recommended_data && animeInfo.recommended_data.length > 0) ||
+              (animeInfo?.recommendations && animeInfo.recommendations.length > 0)) && (
+              <div className="w-full bg-[#121214] border border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+                <CategoryCard
+                  label="Recommended for you"
+                  data={animeInfo?.recommended_data || animeInfo?.recommendations || []}
+                  showViewMore={false}
+                  cardStyle="grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6"
+                />
+              </div>
+            )}
           </div>
 
           {/* Right Column: Episode Drawer (Height equal to player), More Seasons (HiAnime), Next Episode, RELATED, RECOMMENDATIONS */}
@@ -714,49 +728,6 @@ export default function Watch() {
                 </div>
                 <div className="space-y-2">
                   {animeInfo.related_data.slice(0, 5).map((item, idx) => (
-                    <Link
-                      key={item.id || idx}
-                      to={`/${item.id}`}
-                      className="flex items-center gap-3 p-1.5 rounded-xl hover:bg-[#1a1a1c] border border-transparent hover:border-zinc-800 transition-all group"
-                    >
-                      <img
-                        src={item.poster}
-                        alt={item.title}
-                        className="w-11 h-14 object-cover rounded-lg bg-zinc-800 shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-xs font-semibold text-zinc-200 group-hover:text-white line-clamp-1 transition-colors">
-                          {language === "EN" ? item.title : (item.japanese_title || item.title)}
-                        </h4>
-                        <div className="flex items-center gap-2 mt-1 text-[11px] text-zinc-500 font-medium">
-                          <span className="flex items-center gap-1 text-zinc-400">
-                            <FontAwesomeIcon icon={faPlay} className="text-[8px]" />
-                            {item.tvInfo?.showType || "TV"}
-                          </span>
-                          {item.tvInfo?.sub && <span>• {item.tvInfo.sub} eps</span>}
-                          {item.tvInfo?.rating && (
-                            <span className="flex items-center gap-0.5 text-yellow-500">
-                              <FontAwesomeIcon icon={faStar} className="text-[9px]" />
-                              {item.tvInfo.rating}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* RECOMMENDATIONS Section */}
-            {animeInfo?.recommended_data && animeInfo.recommended_data.length > 0 && (
-              <div className="w-full bg-[#121214] border border-zinc-800 rounded-2xl p-4 shadow-xl">
-                <div className="flex items-center gap-1.5 mb-3 text-white font-bold text-sm tracking-wide">
-                  <FontAwesomeIcon icon={faChevronRight} className="text-zinc-400 text-xs" />
-                  <span>RECOMMENDATIONS</span>
-                </div>
-                <div className="space-y-2">
-                  {animeInfo.recommended_data.slice(0, 6).map((item, idx) => (
                     <Link
                       key={item.id || idx}
                       to={`/${item.id}`}
