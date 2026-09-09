@@ -600,19 +600,6 @@ export default function Watch() {
                 </div>
               </div>
             </div>
-
-            {/* Recommended For You Section (HiAnime Proper Anime Cards) */}
-            {((animeInfo?.recommended_data && animeInfo.recommended_data.length > 0) ||
-              (animeInfo?.recommendations && animeInfo.recommendations.length > 0)) && (
-              <div className="w-full bg-[#121214] border border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-xl">
-                <CategoryCard
-                  label="Recommended for you"
-                  data={animeInfo?.recommended_data || animeInfo?.recommendations || []}
-                  showViewMore={false}
-                  cardStyle="grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6"
-                />
-              </div>
-            )}
           </div>
 
           {/* Right Column: Episode Drawer (Height equal to player), More Seasons (HiAnime), Next Episode, RELATED, RECOMMENDATIONS */}
@@ -763,6 +750,19 @@ export default function Watch() {
             )}
           </div>
         </div>
+
+        {/* Full Screen Width Recommendations Section */}
+        {((animeInfo?.recommended_data && animeInfo.recommended_data.length > 0) ||
+          (animeInfo?.recommendations && animeInfo.recommendations.length > 0)) && (
+          <div className="w-full mt-3 bg-[#121214] border border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+            <CategoryCard
+              label="Recommended for you"
+              data={animeInfo?.recommended_data || animeInfo?.recommendations || []}
+              showViewMore={false}
+              cardStyle="grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6 2xl:grid-cols-8"
+            />
+          </div>
+        )}
       </div>
 
       {/* Report Modal */}
