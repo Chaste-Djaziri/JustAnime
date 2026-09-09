@@ -8,7 +8,10 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "host": "vite --host"
+    "host": "vite --host",
+    "api:dev": "npm --prefix api.consumet.org run dev",
+    "api:start": "npm --prefix api.consumet.org run start",
+    "api:build": "npm --prefix api.consumet.org run build"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.6.0",
