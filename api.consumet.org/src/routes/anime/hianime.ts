@@ -44,6 +44,99 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     });
   });
 
+  const handleAdvancedSearch = async (request: FastifyRequest, reply: FastifyReply) => {
+    const queryParams = request.query as Record<string, any>;
+
+    const page = Number(queryParams.page) || 1;
+    const type = queryParams.type;
+    const status = queryParams.status;
+    const rated = queryParams.rated || queryParams.rating;
+    const score = queryParams.score;
+    const season = queryParams.season;
+    const language = queryParams.language;
+    const sort = queryParams.sort;
+
+    let parsedStartDate: { year?: number; month?: number; day?: number } | undefined;
+    let parsedEndDate: { year?: number; month?: number; day?: number } | undefined;
+
+    if (queryParams.sy || queryParams.sm || queryParams.sd) {
+      parsedStartDate = {
+        year: queryParams.sy ? Number(queryParams.sy) : undefined,
+        month: queryParams.sm ? Number(queryParams.sm) : undefined,
+        day: queryParams.sd ? Number(queryParams.sd) : undefined,
+      };
+    } else if (queryParams.startDate) {
+      const [year, month, day] = queryParams.startDate.split('-').map(Number);
+      parsedStartDate = { year, month, day };
+    }
+
+    if (queryParams.ey || queryParams.em || queryParams.ed) {
+      parsedEndDate = {
+        year: queryParams.ey ? Number(queryParams.ey) : undefined,
+        month: queryParams.em ? Number(queryParams.em) : undefined,
+        day: queryParams.ed ? Number(queryParams.ed) : undefined,
+      };
+    } else if (queryParams.endDate) {
+      const [year, month, day] = queryParams.endDate.split('-').map(Number);
+      parsedEndDate = { year, month, day };
+    }
+
+    let rawGenres = queryParams.genres || queryParams.genre || queryParams['genre[]'];
+    let genresArray: string[] | undefined;
+    if (Array.isArray(rawGenres)) {
+      genresArray = rawGenres.map(String);
+    } else if (typeof rawGenres === 'string') {
+      genresArray = rawGenres.split(',').map((s) => s.trim()).filter(Boolean);
+    }
+
+    try {
+      const cacheKey = `hianime:filter:${JSON.stringify(queryParams)}`;
+
+      let res = redis
+        ? await cache.fetch(
+            redis as Redis,
+            cacheKey,
+            async () =>
+              await hianime.fetchAdvancedSearch(
+                page,
+                type,
+                status,
+                rated,
+                score,
+                season,
+                language,
+                parsedStartDate,
+                parsedEndDate,
+                sort,
+                genresArray,
+              ),
+            REDIS_TTL,
+          )
+        : await hianime.fetchAdvancedSearch(
+            page,
+            type,
+            status,
+            rated,
+            score,
+            season,
+            language,
+            parsedStartDate,
+            parsedEndDate,
+            sort,
+            genresArray,
+          );
+
+      reply.status(200).send(res);
+    } catch (err) {
+      reply
+        .status(500)
+        .send({ message: 'Something went wrong. Contact developer for help.' });
+    }
+  };
+
+  fastify.get('/filter', handleAdvancedSearch);
+  fastify.get('/advanced-search', handleAdvancedSearch);
+
   fastify.get('/:query', async (request: FastifyRequest, reply: FastifyReply) => {
     const query = (request.params as { query: string }).query;
     const page = (request.query as { page: number }).page;
@@ -289,98 +382,6 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     },
   );
 
-  fastify.get(
-    '/advanced-search',
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      const queryParams = request.query as {
-        page?: number;
-        type?: string;
-        status?: string;
-        rated?: string;
-        score?: number;
-        season?: string;
-        language?: string;
-        startDate?: string;
-        endDate?: string;
-        sort?: string;
-        genres?: string;
-      };
-
-      const {
-        page = 1,
-        type,
-        status,
-        rated,
-        score,
-        season,
-        language,
-        startDate,
-        endDate,
-        sort,
-        genres,
-      } = queryParams;
-
-      try {
-        // Explicitly typed to avoid implicit any errors
-        let parsedStartDate: { year: number; month: number; day: number } | undefined;
-        let parsedEndDate: { year: number; month: number; day: number } | undefined;
-
-        if (startDate) {
-          const [year, month, day] = startDate.split('-').map(Number);
-          parsedStartDate = { year, month, day };
-        }
-        if (endDate) {
-          const [year, month, day] = endDate.split('-').map(Number);
-          parsedEndDate = { year, month, day };
-        }
-
-        const genresArray = genres ? genres.split(',') : undefined;
-
-        // Create a unique key based on all parameters
-        const cacheKey = `hianime:advanced-search:${JSON.stringify(queryParams)}`;
-
-        let res = redis
-          ? await cache.fetch(
-              redis as Redis,
-              cacheKey,
-              async () =>
-                await hianime.fetchAdvancedSearch(
-                  page,
-                  type,
-                  status,
-                  rated,
-                  score,
-                  season,
-                  language,
-                  parsedStartDate,
-                  parsedEndDate,
-                  sort,
-                  genresArray,
-                ),
-              REDIS_TTL,
-            )
-          : await hianime.fetchAdvancedSearch(
-              page,
-              type,
-              status,
-              rated,
-              score,
-              season,
-              language,
-              parsedStartDate,
-              parsedEndDate,
-              sort,
-              genresArray,
-            );
-
-        reply.status(200).send(res);
-      } catch (err) {
-        reply
-          .status(500)
-          .send({ message: 'Something went wrong. Contact developer for help.' });
-      }
-    },
-  );
 
   fastify.get('/top-airing', async (request: FastifyRequest, reply: FastifyReply) => {
     const page = (request.query as { page: number }).page;
