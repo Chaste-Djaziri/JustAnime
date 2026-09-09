@@ -36,6 +36,8 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
         '/genre/:genre',
         '/schedule',
         '/spotlight',
+        '/trending',
+        '/featured',
         '/search-suggestions/:query',
       ],
       documentation: 'https://docs.consumet.org/#tag/hianime',
@@ -213,6 +215,25 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
             REDIS_TTL,
           )
         : await (hianime as any).fetchTrending();
+
+      reply.status(200).send(res);
+    } catch (err) {
+      reply
+        .status(500)
+        .send({ message: 'Something went wrong. Contact developer for help.' });
+    }
+  });
+
+  fastify.get('/featured', async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      let res = redis
+        ? await cache.fetch(
+            redis as Redis,
+            `hianime:featured`,
+            async () => await (hianime as any).fetchFeaturedBlocks(),
+            REDIS_TTL,
+          )
+        : await (hianime as any).fetchFeaturedBlocks();
 
       reply.status(200).send(res);
     } catch (err) {
