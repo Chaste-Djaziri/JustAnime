@@ -25,12 +25,18 @@ function Topten({ data, className }) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const currentData =
-    activePeriod === "today"
-      ? data.today
-      : activePeriod === "week"
-      ? data.week
-      : data.month;
+  const safeData =
+    data && typeof data === "object"
+      ? Array.isArray(data)
+        ? { today: data, week: data, month: data }
+        : {
+            today: Array.isArray(data.today) ? data.today : [],
+            week: Array.isArray(data.week) ? data.week : [],
+            month: Array.isArray(data.month) ? data.month : [],
+          }
+      : { today: [], week: [], month: [] };
+
+  const currentData = safeData[activePeriod] || safeData.today || [];
 
   const { tooltipPosition, tooltipHorizontalPosition, cardRefs } =
     useToolTipPosition(hoveredItem, currentData);
@@ -96,8 +102,8 @@ function Topten({ data, className }) {
                 className="flex pb-3 relative container items-center group-hover:bg-[#2a2a2a] transition-colors duration-200 rounded-lg p-1.5"
               >
                 <img
-                  src={`${item.poster}`}
-                  alt={item.title}
+                  src={`${item.poster || item.image || ""}`}
+                  alt={item.title || item.name}
                   className="w-[55px] h-[70px] rounded-lg object-cover flex-shrink-0 cursor-pointer shadow-md transition-transform duration-200 group-hover:scale-[1.02]"
                   onClick={() => navigate(`/watch/${item.id}`)}
                   onMouseEnter={() => handleMouseEnter(item, index)}
@@ -135,7 +141,7 @@ function Topten({ data, className }) {
                     className="text-[0.95em] font-medium text-gray-200 hover:text-white transform transition-all ease-out line-clamp-1 max-[478px]:line-clamp-2 max-[478px]:text-[14px]"
                     onClick={() => handleNavigate(item.id)}
                   >
-                    {language === "EN" ? item.title : item.japanese_title}
+                    {language === "EN" ? (item.title || item.name) : (item.japanese_title || item.japaneseTitle || item.title || item.name)}
                   </Link>
                   <div className="flex flex-wrap items-center w-fit space-x-2 max-[350px]:gap-y-[3px]">
                     {item.tvInfo?.sub && (
