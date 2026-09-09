@@ -71,10 +71,11 @@ export function normalizeAnimeInfo(raw) {
         filler: Boolean(ep.isFiller),
       })),
     },
-    seasons: (info.relations || []).map((rel) => ({
-      id: rel.id,
-      season: rel.title || rel.relationType,
-      season_poster: rel.image || "",
+    seasons: (info.seasons || info.relations || []).map((rel) => ({
+      id: String(rel.id || ""),
+      season: rel.season || rel.title || rel.relationType || "Season",
+      season_poster: rel.season_poster || rel.image || rel.poster || "",
+      isCurrent: Boolean(rel.isCurrent),
     })),
   };
 }
