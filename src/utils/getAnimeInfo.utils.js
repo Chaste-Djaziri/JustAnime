@@ -63,6 +63,9 @@ export function normalizeAnimeInfo(raw) {
       recommended_data: (info.recommendations || [])
         .map(mapConsumetAnimeItem)
         .filter(Boolean),
+      recommendations: (info.recommendations || [])
+        .map(mapConsumetAnimeItem)
+        .filter(Boolean),
       charactersVoiceActors: info.charactersVoiceActors || [],
       episodes: (info.episodes || []).map((ep) => ({
         id: ep.id,
@@ -71,6 +74,12 @@ export function normalizeAnimeInfo(raw) {
         filler: Boolean(ep.isFiller),
       })),
     },
+    recommendations: (info.recommendations || [])
+      .map(mapConsumetAnimeItem)
+      .filter(Boolean),
+    recommended_data: (info.recommendations || [])
+      .map(mapConsumetAnimeItem)
+      .filter(Boolean),
     seasons: (info.seasons || info.relations || []).map((rel) => ({
       id: String(rel.id || ""),
       season: rel.season || rel.title || rel.relationType || "Season",
