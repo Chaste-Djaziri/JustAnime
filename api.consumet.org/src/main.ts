@@ -1,4 +1,10 @@
 require('dotenv').config();
+try {
+  const path = require('path');
+  require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+  require('dotenv').config({ path: path.resolve(process.cwd(), '.env') });
+} catch (_) {}
+
 import Redis from 'ioredis';
 import Fastify from 'fastify';
 import FastifyCors from '@fastify/cors';
@@ -30,7 +36,11 @@ const fastify = Fastify({
   maxParamLength: 1000,
   logger: true,
 });
-export const tmdbApi = process.env.TMDB_KEY && process.env.TMDB_KEY;
+export const tmdbApi =
+  process.env.TMDB_KEY ||
+  process.env.TMDB_API_KEY ||
+  process.env.TMDB_READ_ACCESS_TOKEN ||
+  process.env.TMDB_ACCESS_TOKEN;
 (async () => {
   const PORT = Number(process.env.PORT) || 3000;
 
@@ -133,9 +143,9 @@ export const tmdbApi = process.env.TMDB_KEY && process.env.TMDB_KEY;
     console.log(chalk.green(`Redis connected. Default Cache TTL: ${REDIS_TTL} seconds`));
   }
 
-  if (!process.env.TMDB_KEY)
+  if (!tmdbApi)
     console.warn(
-      chalk.yellowBright('TMDB api key not found. the TMDB meta route may not work.'),
+      chalk.yellowBright('TMDB api key/token not found. The TMDB meta route may not work.'),
     );
 
   await fastify.register(books, { prefix: '/books' });
