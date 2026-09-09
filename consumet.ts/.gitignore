@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.tgz
+yarn-error.log
+.vscode
+.idea
+.DS_Store
+.env
+package-lock.json
+test.*
+bun.lock
