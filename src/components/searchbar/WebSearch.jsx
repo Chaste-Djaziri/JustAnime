@@ -23,6 +23,8 @@ function WebSearch() {
         }
         if (searchValue.trim() && window.innerWidth > 600) {
             navigate(`/search?keyword=${encodeURIComponent(searchValue)}`);
+        } else if (!searchValue.trim() && window.innerWidth > 600) {
+            navigate('/filter');
         }
     };
 
@@ -49,6 +51,8 @@ function WebSearch() {
                     if (e.key === 'Enter') {
                         if (searchValue.trim()) {
                             navigate(`/search?keyword=${encodeURIComponent(searchValue)}`);
+                        } else {
+                            navigate('/filter');
                         }
                     }
                 }}
