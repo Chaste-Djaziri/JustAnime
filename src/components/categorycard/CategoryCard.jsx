@@ -18,6 +18,7 @@ const CategoryCard = React.memo(
     className,
     categoryPage = false,
     cardStyle,
+    gridClass,
     path,
     limit,
   }) => {
@@ -70,23 +71,25 @@ const CategoryCard = React.memo(
 
     return (
       <div className={`w-full ${className}`}>
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="font-semibold text-2xl text-white max-[478px]:text-[18px] capitalize tracking-wide">
-            {label}
-          </h1>
-          {showViewMore && (
-            <Link
-              to={`/${path}`}
-              className="flex items-center gap-x-1 py-1 px-2 -mr-2 rounded-md
-                text-[13px] font-medium text-[#ffffff80] hover:text-white
-                transition-all duration-300 group"
-            >
-              View all
-              <FaChevronRight className="text-[10px] transform transition-transform duration-300 
-                group-hover:translate-x-0.5" />
-            </Link>
-          )}
-        </div>
+        {(label || showViewMore) && (
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="font-semibold text-2xl text-white max-[478px]:text-[18px] capitalize tracking-wide">
+              {label}
+            </h1>
+            {showViewMore && (
+              <Link
+                to={`/${path}`}
+                className="flex items-center gap-x-1 py-1 px-2 -mr-2 rounded-md
+                  text-[13px] font-medium text-[#ffffff80] hover:text-white
+                  transition-all duration-300 group"
+              >
+                View all
+                <FaChevronRight className="text-[10px] transform transition-transform duration-300 
+                  group-hover:translate-x-0.5" />
+              </Link>
+            )}
+          </div>
+        )}
         <>
           {categoryPage && (
             <div
@@ -202,7 +205,7 @@ const CategoryCard = React.memo(
               ))}
             </div>
           )}
-          <div className={`grid ${cardStyle || 'grid-cols-6 max-[1400px]:grid-cols-4 max-[758px]:grid-cols-3 max-[478px]:grid-cols-3'} gap-x-3 gap-y-8 mt-6 transition-all duration-300 ease-in-out max-[478px]:gap-x-2`}>
+          <div className={`grid ${cardStyle || gridClass || 'grid-cols-6 max-[1400px]:grid-cols-4 max-[758px]:grid-cols-3 max-[478px]:grid-cols-3'} gap-x-3 gap-y-8 ${label || showViewMore ? 'mt-6' : 'mt-0'} transition-all duration-300 ease-in-out max-[478px]:gap-x-2`}>
             {itemsToRender.remainingItems.map((item, index) => (
               <div
                 key={index}
