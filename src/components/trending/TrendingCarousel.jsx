@@ -40,8 +40,8 @@ export default function TrendingCarousel({ trending }) {
           }}
           className="w-full overflow-hidden"
         >
-          {trending.slice(0, 10).map((item, index) => {
-            const rank = index + 1;
+          {trending.slice(0, 12).map((item, index) => {
+            const rank = item.rank || index + 1;
             const displayRank = rank < 10 ? `0${rank}` : `${rank}`;
             const title =
               language === "EN"
