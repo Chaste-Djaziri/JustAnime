@@ -769,13 +769,9 @@ class Hianime extends AnimeParser {
           };
       }
     }
-    if (!episodeId.includes('$episode$')) throw new Error('Invalid episode id');
-
-    // keeping this for future use
-    // Fallback to using sub if no info found in case of compatibility
-
-    // TODO: add both options later
-    // subOrDub = episodeId.split('$')?.pop() === 'dub' ? 'dub' : 'sub';
+    if (!episodeId.includes('$episode$') && !episodeId.includes('?ep=') && !/^\d+$/.test(episodeId)) {
+      throw new Error('Invalid episode id');
+    }
 
     const cleanEpId = episodeId.includes('$episode$')
       ? episodeId.split('$episode$')[1].split('$')[0].split('?')[0]
@@ -791,15 +787,33 @@ class Hianime extends AnimeParser {
       if (data?.html) {
         const $ = load(data.html);
         const blockSelector = subOrDub === SubOrSub.DUB ? '.servers-dub' : '.servers-sub';
-        let serverItem = $(`${blockSelector} .server-item`).first();
-        if (!serverItem.length) {
-          serverItem = $('.server-item').first();
+        let serverItems = $(`${blockSelector} .server-item`).toArray();
+        if (serverItems.length === 0) {
+          serverItems = $('.server-item').toArray();
         }
-        const dataHash = serverItem.attr('data-hash');
-        if (dataHash) {
-          const streamUrl = Buffer.from(dataHash, 'base64').toString('utf-8');
-          if (streamUrl.startsWith('http')) {
-            return await this.fetchEpisodeSources(streamUrl, server, subOrDub);
+
+        // Sort items so megaplay.buzz items come first
+        serverItems.sort((a, b) => {
+          const hashA = $(a).attr('data-hash') || '';
+          const hashB = $(b).attr('data-hash') || '';
+          const urlA = Buffer.from(hashA, 'base64').toString('utf-8');
+          const urlB = Buffer.from(hashB, 'base64').toString('utf-8');
+          const aIsMega = urlA.includes('megaplay.buzz') ? 1 : 0;
+          const bIsMega = urlB.includes('megaplay.buzz') ? 1 : 0;
+          return bIsMega - aIsMega;
+        });
+
+        for (const item of serverItems) {
+          const dataHash = $(item).attr('data-hash');
+          if (dataHash) {
+            const streamUrl = Buffer.from(dataHash, 'base64').toString('utf-8');
+            if (streamUrl.startsWith('http')) {
+              try {
+                return await this.fetchEpisodeSources(streamUrl, server, subOrDub);
+              } catch (candidateErr) {
+                // Continue to next candidate server
+              }
+            }
           }
         }
       }
