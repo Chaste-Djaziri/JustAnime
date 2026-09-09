@@ -23,7 +23,15 @@ export function normalizeAnimeInfo(raw) {
       poster: info.image || info.poster || info.banner || "",
       description: info.description || "",
       adultContent: Boolean(info.isAdult),
+      malId: Number(info.malID || info.malId || info.mal_id || 0),
+      alId: Number(info.alID || info.alId || info.anilist_id || 0),
+      malID: Number(info.malID || info.malId || info.mal_id || 0),
+      alID: Number(info.alID || info.alId || info.anilist_id || 0),
       animeInfo: {
+        malId: Number(info.malID || info.malId || info.mal_id || 0),
+        alId: Number(info.alID || info.alId || info.anilist_id || 0),
+        malID: Number(info.malID || info.malId || info.mal_id || 0),
+        alID: Number(info.alID || info.alId || info.anilist_id || 0),
         Overview: info.description || "",
         Japanese: info.japaneseTitle || info.japanese_title || "",
         Synonyms: Array.isArray(info.synonyms)
