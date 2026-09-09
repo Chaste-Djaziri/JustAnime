@@ -332,27 +332,56 @@ class Hianime extends AnimeParser {
       const res: ISearch<IAnimeResult> = {
         results: [],
       };
-      const {
-        data: { html },
-      } = await this.client.get(`${this.baseUrl}/ajax/schedule/list?tzOffset=360&date=${date}`);
-      const $ = load(html);
 
-      $('li').each((i, ele) => {
-        const card = $(ele);
-        const title = card.find('.film-name');
+      let html = '';
+      try {
+        const dayRes = await this.client.get(
+          `${this.baseUrl}/api/theme/schedule/day?tzOffset=0&date=${date}`
+        );
+        if (dayRes.data?.html) {
+          html = dayRes.data.html;
+        }
+      } catch (_) {}
 
-        const id = card.find('a.tsl-link').attr('href')?.split('/').filter(Boolean).pop()?.split('?')[0];
-        const airingTime = card.find('div.time').text().replace('\n', '').trim();
-        const airingEpisode = card.find('div.film-detail div.fd-play button').text().replace('\n', '').trim();
-        res.results.push({
-          id: id!,
-          title: title.text(),
-          japaneseTitle: title.attr('data-jname'),
-          url: `${this.baseUrl}/${id}`,
-          airingEpisode: airingEpisode,
-          airingTime: airingTime,
+      if (!html) {
+        try {
+          const legacyRes = await this.client.get(
+            `${this.baseUrl}/ajax/schedule/list?tzOffset=360&date=${date}`
+          );
+          if (legacyRes.data?.html) {
+            html = legacyRes.data.html;
+          }
+        } catch (_) {}
+      }
+
+      if (html) {
+        const $ = load(html);
+        $('li').each((i, ele) => {
+          const card = $(ele);
+          const title = card.find('.film-name').text().trim();
+          const href = card.find('a.tsl-link').attr('href') || '';
+          const id = href.split('/').filter(Boolean).pop()?.split('?')[0];
+          const airingTime = card.find('div.time').text().trim();
+          const playBtnText = card.find('div.film-detail div.fd-play button, .btn-play').text().trim();
+          const epMatch = playBtnText.match(/(\d+)/);
+          const episodeNo = epMatch ? epMatch[1] : playBtnText;
+
+          if (id && title) {
+            res.results.push({
+              id,
+              title,
+              name: title,
+              japaneseTitle: card.find('.film-name').attr('data-jname'),
+              url: href.startsWith('http') ? href : `${this.baseUrl}/${id}`,
+              airingEpisode: playBtnText,
+              episode_no: episodeNo,
+              episode: episodeNo,
+              airingTime,
+              time: airingTime,
+            } as any);
+          }
         });
-      });
+      }
 
       return res;
     } catch (err) {
