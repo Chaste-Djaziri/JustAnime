@@ -140,11 +140,23 @@ export default function Profile() {
   }, [activeTab, continueWatchingList, animeLists]);
 
   const resolveAnimeLink = (item) => {
-    if (item.id && !item.id.startsWith("al-") && !item.id.startsWith("mal-")) {
-      return `/watch/${item.id}${item.episodeId ? `?ep=${item.episodeId}` : ""}`;
+    if (!item) return "/search";
+    const idStr = String(item.id || "");
+    const isExternalId =
+      idStr.startsWith("al-") ||
+      idStr.startsWith("mal-") ||
+      typeof item.id === "number" ||
+      /^\d+$/.test(idStr);
+
+    if (item.episodeId || (!isExternalId && idStr)) {
+      return `/watch/${idStr}${item.episodeId ? `?ep=${item.episodeId}` : ""}`;
     }
-    const title = item.media?.title?.english || item.media?.title?.romaji || item.title || "";
-    return `/search?query=${encodeURIComponent(title)}`;
+    const title =
+      item.media?.title?.english ||
+      item.media?.title?.romaji ||
+      item.title ||
+      "";
+    return title ? `/search?query=${encodeURIComponent(title)}` : "/search";
   };
 
   return (
@@ -607,7 +619,7 @@ export default function Profile() {
                     className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300"
                   >
                     <div className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform shadow-2xl">
-                      {item.id && !item.id.startsWith("al-") && !item.id.startsWith("mal-") ? (
+                      {item.episodeId || (item.id && !String(item.id).startsWith("al-") && !String(item.id).startsWith("mal-") && !/^\d+$/.test(String(item.id))) ? (
                         <FontAwesomeIcon icon={faPlay} className="text-base ml-0.5" />
                       ) : (
                         <FontAwesomeIcon icon={faMagnifyingGlass} className="text-sm" />
