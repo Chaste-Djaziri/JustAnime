@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/consumet/:path*",
+      "destination": "https://kizora-api.onrender.com/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
