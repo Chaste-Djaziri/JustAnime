@@ -66,6 +66,9 @@ function Home() {
                 gridClass="grid-cols-2 min-[480px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5"
               />
 
+              {/* Estimated Schedule */}
+              <Schedule />
+
               {/* New On Kizora */}
               {homeInfo.recently_added && homeInfo.recently_added.length > 0 && (
                 <CategoryCard
@@ -76,9 +79,6 @@ function Home() {
                   gridClass="grid-cols-2 min-[480px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5"
                 />
               )}
-
-              {/* Estimated Schedule */}
-              <Schedule />
             </div>
 
             {/* Right Sidebar */}
