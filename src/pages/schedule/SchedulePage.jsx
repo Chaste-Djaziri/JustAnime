@@ -29,6 +29,7 @@ export default function SchedulePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // 'all' | 'upcoming' | 'aired'
   const [viewMode, setViewMode] = useState("grid"); // 'grid' | 'list'
+  const [imageErrors, setImageErrors] = useState({});
   const datesContainerRef = useRef(null);
 
   // Timezone string
@@ -84,11 +85,16 @@ export default function SchedulePage() {
     const fetchSchedule = async () => {
       setLoading(true);
       try {
-        const cached = localStorage.getItem(`sched-page-${selectedDate}`);
+        // Check cache with v2 key (guarantees enriched posters)
+        const cached = localStorage.getItem(`sched-page-v2-${selectedDate}`);
         if (cached) {
           try {
             const parsed = JSON.parse(cached);
-            if (Array.isArray(parsed) && parsed.length > 0) {
+            if (
+              Array.isArray(parsed) &&
+              parsed.length > 0 &&
+              parsed.some((item) => item.poster)
+            ) {
               if (isMounted) {
                 setScheduleData(parsed);
                 setLoading(false);
@@ -104,7 +110,10 @@ export default function SchedulePage() {
           setScheduleData(list);
           if (list.length > 0) {
             try {
-              localStorage.setItem(`sched-page-${selectedDate}`, JSON.stringify(list));
+              localStorage.setItem(
+                `sched-page-v2-${selectedDate}`,
+                JSON.stringify(list)
+              );
             } catch (_) {}
           }
         }
@@ -192,6 +201,10 @@ export default function SchedulePage() {
     return { all: list.length, upcoming, aired };
   }, [scheduleData, currentTime, selectedDate]);
 
+  const handleImageError = (id) => {
+    setImageErrors((prev) => ({ ...prev, [id]: true }));
+  };
+
   return (
     <div className="w-full min-h-screen pt-20 pb-16 px-3 sm:px-6 lg:px-10 max-w-[1920px] mx-auto text-zinc-100">
       {/* Hero Header */}
@@ -218,10 +231,19 @@ export default function SchedulePage() {
               <span>LOCAL TIME ({gmtString})</span>
             </div>
             <div className="text-xl sm:text-2xl font-mono font-bold text-white tracking-wider">
-              {currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+              {currentTime.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              })}
             </div>
             <div className="text-xs text-zinc-400">
-              {currentTime.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric", year: "numeric" })}
+              {currentTime.toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
             </div>
           </div>
         </div>
@@ -230,8 +252,20 @@ export default function SchedulePage() {
       {/* Date Carousel & Navigator */}
       <div className="relative mb-8">
         <div className="flex items-center justify-between gap-2 mb-3">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">Select Date</h2>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
+            Select Date
+          </h2>
           <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => {
+                const today = dates.find((d) => d.isToday);
+                if (today) setSelectedDate(today.fulldate);
+              }}
+              className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white hover:bg-zinc-800 text-xs font-semibold transition-colors"
+              title="Jump to Today"
+            >
+              Today
+            </button>
             <button
               onClick={() => scrollDates("left")}
               className="w-8 h-8 rounded-lg bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center justify-center text-xs"
@@ -249,9 +283,10 @@ export default function SchedulePage() {
           </div>
         </div>
 
+        {/* Date pills container with pt-3.5 to prevent "Today" badge clipping */}
         <div
           ref={datesContainerRef}
-          className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide select-none"
+          className="flex items-center gap-3 overflow-x-auto pt-3.5 pb-2.5 scrollbar-hide select-none"
         >
           {dates.map((d) => {
             const isSelected = selectedDate === d.fulldate;
@@ -274,7 +309,9 @@ export default function SchedulePage() {
                     Today
                   </span>
                 )}
-                <span className="text-xs uppercase tracking-wider mb-1 font-semibold">{d.dayName}</span>
+                <span className="text-xs uppercase tracking-wider mb-1 font-semibold">
+                  {d.dayName}
+                </span>
                 <span className="text-xl sm:text-2xl font-black">{d.dayNumber}</span>
                 <span className="text-[11px] opacity-75">{d.monthName}</span>
               </button>
@@ -339,7 +376,9 @@ export default function SchedulePage() {
             <button
               onClick={() => setViewMode("grid")}
               className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-colors ${
-                viewMode === "grid" ? "bg-zinc-700 text-white" : "text-zinc-400 hover:text-white"
+                viewMode === "grid"
+                  ? "bg-zinc-700 text-white"
+                  : "text-zinc-400 hover:text-white"
               }`}
               title="Grid View"
             >
@@ -348,7 +387,9 @@ export default function SchedulePage() {
             <button
               onClick={() => setViewMode("list")}
               className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-colors ${
-                viewMode === "list" ? "bg-zinc-700 text-white" : "text-zinc-400 hover:text-white"
+                viewMode === "list"
+                  ? "bg-zinc-700 text-white"
+                  : "text-zinc-400 hover:text-white"
               }`}
               title="List View"
             >
@@ -371,7 +412,9 @@ export default function SchedulePage() {
           <div className="w-14 h-14 rounded-2xl bg-zinc-800/60 border border-white/10 flex items-center justify-center text-zinc-400 text-xl mb-4">
             <FontAwesomeIcon icon={faFilm} />
           </div>
-          <h3 className="text-lg font-bold text-white mb-1">No Broadcasts Scheduled</h3>
+          <h3 className="text-lg font-bold text-white mb-1">
+            No Broadcasts Scheduled
+          </h3>
           <p className="text-xs text-zinc-400 max-w-sm mb-6">
             {searchQuery
               ? `No anime in the schedule matched "${searchQuery}".`
@@ -397,111 +440,136 @@ export default function SchedulePage() {
           )}
         </div>
       ) : viewMode === "grid" ? (
-        /* Grid View */
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        /* Grid View: Authentic anime card ratio (aspect-[3/4]) */
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
           {filteredSchedule.map((item, idx) => {
             const status = getItemStatus(item);
             const targetUrl = `/watch/${item.id}`;
+            const isImgBroken = imageErrors[item.id || idx];
+            const hasPoster = Boolean(item.poster) && !isImgBroken;
 
             return (
               <div
                 key={item.id || idx}
-                className="group relative flex flex-col rounded-2xl bg-[#131316] hover:bg-[#18181c] border border-white/5 hover:border-white/20 transition-all duration-300 overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-1"
+                className="group relative flex flex-col rounded-2xl bg-[#141417] hover:bg-[#19191e] border border-white/5 hover:border-white/20 transition-all duration-300 overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-1.5"
               >
-                {/* Poster / Thumbnail Header */}
-                <Link to={targetUrl} className="relative block aspect-[16/9] w-full overflow-hidden bg-zinc-900">
-                  {item.poster ? (
+                {/* Vertical Poster Header (3/4 ratio) */}
+                <Link
+                  to={targetUrl}
+                  className="relative block aspect-[3/4] w-full overflow-hidden bg-gradient-to-br from-zinc-800 to-zinc-900"
+                >
+                  {hasPoster ? (
                     <img
                       src={item.poster}
                       alt={item.title || "Anime"}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={() => handleImageError(item.id || idx)}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                       loading="lazy"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-zinc-700">
-                      <FontAwesomeIcon icon={faFilm} className="text-3xl" />
+                    /* Stylized Gradient Poster Fallback with Initials */
+                    <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-[#1a1c23] via-[#121318] to-[#0a0a0c] text-center">
+                      <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 text-lg mb-2 shadow-inner">
+                        <FontAwesomeIcon icon={faFilm} />
+                      </div>
+                      <span className="text-xs font-bold text-zinc-300 line-clamp-2 px-2">
+                        {item.title}
+                      </span>
                     </div>
                   )}
 
-                  {/* Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#131316] via-transparent to-black/60" />
+                  {/* Gradient vignette */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#141417] via-black/20 to-black/60 pointer-events-none" />
 
-                  {/* Airing Time Badge */}
-                  <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md border border-white/10 text-white font-mono text-xs font-bold shadow-md">
-                    <FontAwesomeIcon icon={faClock} className="text-[10px] text-zinc-400" />
+                  {/* Airing Time Badge (Top-Left) */}
+                  <div className="absolute top-2.5 left-2.5 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/80 backdrop-blur-md border border-white/15 text-white font-mono text-[11px] font-bold shadow-lg">
+                    <FontAwesomeIcon icon={faClock} className="text-[9px] text-zinc-400" />
                     <span>{item.time || "TBA"}</span>
                   </div>
 
-                  {/* Status Indicator */}
+                  {/* Airing Status Badge (Top-Right) */}
                   <div className="absolute top-2.5 right-2.5">
                     {status === "airing" && (
-                      <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase tracking-wider shadow-md">
+                      <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/25 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-lg">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                        Live Now
+                        Live
                       </span>
                     )}
                     {status === "aired" && (
-                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-800/80 text-zinc-400 border border-white/10 text-[10px] font-semibold">
+                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-zinc-400 border border-white/15 text-[10px] font-semibold">
                         <FontAwesomeIcon icon={faCircleCheck} className="text-[9px]" />
                         Aired
                       </span>
                     )}
                     {status === "upcoming" && (
-                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 text-[10px] font-semibold">
+                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/20 backdrop-blur-md text-blue-300 border border-blue-500/30 text-[10px] font-semibold">
                         <FontAwesomeIcon icon={faCircleDot} className="text-[8px] text-blue-400" />
                         Upcoming
                       </span>
                     )}
                   </div>
 
-                  {/* Episode Pill */}
-                  <div className="absolute bottom-2.5 right-2.5 px-2.5 py-0.5 rounded-md bg-white text-black text-xs font-extrabold shadow-md">
+                  {/* Episode Pill (Bottom-Right overlay) */}
+                  <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-md bg-white text-black text-[11px] font-extrabold shadow-lg">
                     EP {item.episode_no || "?"}
                   </div>
+
+                  {/* Score badge (Bottom-Left overlay, if available) */}
+                  {item.score && (
+                    <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/80 backdrop-blur-md border border-white/15 text-amber-400 text-[11px] font-bold">
+                      <FontAwesomeIcon icon={faStar} className="text-[9px]" />
+                      <span>{item.score}</span>
+                    </div>
+                  )}
                 </Link>
 
                 {/* Details Section */}
-                <div className="p-4 flex-1 flex flex-col justify-between">
+                <div className="p-3.5 flex-1 flex flex-col justify-between">
                   <div>
-                    <div className="flex items-center gap-2 text-[11px] text-zinc-400 mb-1.5 font-medium">
-                      {item.format && <span className="uppercase">{item.format}</span>}
-                      {item.format && <span>•</span>}
-                      {item.score && (
-                        <span className="flex items-center gap-1 text-amber-400">
-                          <FontAwesomeIcon icon={faStar} className="text-[10px]" />
-                          <span>{item.score}</span>
+                    {/* Format & First Genre */}
+                    <div className="flex items-center gap-1.5 text-[10px] text-zinc-400 mb-1 font-medium">
+                      {item.format && (
+                        <span className="uppercase font-semibold tracking-wider text-zinc-300">
+                          {item.format}
                         </span>
                       )}
-                      {item.genres?.length > 0 && <span>•</span>}
+                      {item.format && item.genres?.length > 0 && <span>•</span>}
                       {item.genres?.slice(0, 1).map((g) => (
-                        <span key={g} className="truncate max-w-[90px]">{g}</span>
+                        <span key={g} className="truncate text-zinc-400">
+                          {g}
+                        </span>
                       ))}
                     </div>
 
+                    {/* Anime Title */}
                     <Link to={targetUrl} className="block group/title">
-                      <h3 className="text-sm font-bold text-white group-hover/title:text-zinc-200 line-clamp-2 leading-snug mb-1">
+                      <h3
+                        className="text-xs sm:text-sm font-bold text-white group-hover/title:text-zinc-200 line-clamp-2 leading-snug mb-1"
+                        title={item.title}
+                      >
                         {item.title}
                       </h3>
                     </Link>
 
+                    {/* Japanese/Romaji Subtitle */}
                     {item.jname && item.jname !== item.title && (
-                      <p className="text-xs text-zinc-500 line-clamp-1 italic mb-2">
+                      <p className="text-[11px] text-zinc-500 line-clamp-1 italic mb-2">
                         {item.jname}
                       </p>
                     )}
                   </div>
 
-                  {/* Action Link */}
-                  <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
-                    <span className="text-[11px] text-zinc-400">
-                      {status === "aired" ? "Available to watch" : "Broadcast scheduled"}
+                  {/* Action Link Footer */}
+                  <div className="mt-2.5 pt-2.5 border-t border-white/5 flex items-center justify-between">
+                    <span className="text-[10px] text-zinc-500">
+                      {status === "aired" ? "Available now" : "Scheduled"}
                     </span>
                     <Link
                       to={targetUrl}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-white hover:text-zinc-300 transition-colors"
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-white group-hover:text-zinc-300 hover:underline transition-colors"
                     >
                       <span>Watch</span>
-                      <FontAwesomeIcon icon={faArrowRight} className="text-[10px]" />
+                      <FontAwesomeIcon icon={faArrowRight} className="text-[9px]" />
                     </Link>
                   </div>
                 </div>
@@ -510,35 +578,45 @@ export default function SchedulePage() {
           })}
         </div>
       ) : (
-        /* List View */
+        /* List View: Chronological schedule timeline */
         <div className="flex flex-col gap-2 rounded-2xl bg-[#121214] border border-white/5 p-2 sm:p-3 overflow-hidden shadow-xl">
           {filteredSchedule.map((item, idx) => {
             const status = getItemStatus(item);
             const targetUrl = `/watch/${item.id}`;
+            const isImgBroken = imageErrors[item.id || idx];
+            const hasPoster = Boolean(item.poster) && !isImgBroken;
 
             return (
               <div
                 key={item.id || idx}
                 className="flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-transparent hover:bg-white/[0.04] transition-colors gap-3 border-b border-white/5 last:border-0"
               >
-                {/* Left: Time + Poster + Title */}
+                {/* Left: Time + Poster Thumbnail + Title */}
                 <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                   {/* Airing Time */}
-                  <div className="flex flex-col items-center justify-center min-w-[55px] sm:min-w-[65px] px-2 py-1 rounded-lg bg-zinc-900 border border-white/10 font-mono text-xs font-bold text-zinc-200">
+                  <div className="flex flex-col items-center justify-center min-w-[55px] sm:min-w-[65px] px-2 py-1.5 rounded-lg bg-zinc-900 border border-white/10 font-mono text-xs font-bold text-zinc-200 shadow-sm">
                     <span>{item.time || "TBA"}</span>
                   </div>
 
-                  {/* Thumbnail */}
-                  {item.poster && (
-                    <Link to={targetUrl} className="relative w-12 h-16 sm:w-14 sm:h-20 rounded-lg overflow-hidden shrink-0 bg-zinc-800">
+                  {/* Portrait Thumbnail */}
+                  <Link
+                    to={targetUrl}
+                    className="relative w-12 h-16 sm:w-14 sm:h-20 rounded-lg overflow-hidden shrink-0 bg-zinc-800 border border-white/5"
+                  >
+                    {hasPoster ? (
                       <img
                         src={item.poster}
                         alt={item.title || "Anime"}
+                        onError={() => handleImageError(item.id || idx)}
                         className="w-full h-full object-cover"
                         loading="lazy"
                       />
-                    </Link>
-                  )}
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-600">
+                        <FontAwesomeIcon icon={faFilm} className="text-sm" />
+                      </div>
+                    )}
+                  </Link>
 
                   {/* Title & Metadata */}
                   <div className="min-w-0 flex-1">
@@ -557,16 +635,20 @@ export default function SchedulePage() {
                         </span>
                       )}
                       {status === "aired" && (
-                        <span className="text-zinc-500 text-[11px]">
-                          • Aired
-                        </span>
+                        <span className="text-zinc-500 text-[11px]">• Aired</span>
                       )}
                       {status === "upcoming" && (
-                        <span className="text-blue-400 text-[11px]">
-                          • Upcoming
+                        <span className="text-blue-400 text-[11px]">• Upcoming</span>
+                      )}
+                      {item.score && (
+                        <span className="text-amber-400 text-[11px] flex items-center gap-1">
+                          <FontAwesomeIcon icon={faStar} className="text-[9px]" />
+                          {item.score}
                         </span>
                       )}
-                      {item.format && <span className="text-zinc-500">• {item.format}</span>}
+                      {item.format && (
+                        <span className="text-zinc-500 text-[11px]">• {item.format}</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -589,3 +671,4 @@ export default function SchedulePage() {
     </div>
   );
 }
+
