@@ -35,11 +35,11 @@
         "ioredis": "^5.2.4",
         "reconnecting-websocket": "^4.4.0",
         "ts-node": "^10.9.1",
+        "typescript": "5.3.3",
         "ws": "^8.8.1"
     },
     "devDependencies": {
         "nodemon": "3.0.1",
-        "prettier": "^3.0.0",
-        "typescript": "5.3.3"
+        "prettier": "^3.0.0"
     }
 }
