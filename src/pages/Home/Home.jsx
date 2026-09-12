@@ -6,6 +6,7 @@ import FeaturedColumns from "@/src/components/featured/FeaturedColumns.jsx";
 import CategoryCard from "@/src/components/categorycard/CategoryCard.jsx";
 import SidebarGenres from "@/src/components/genres/SidebarGenres.jsx";
 import Topten from "@/src/components/topten/Topten.jsx";
+import Sidecard from "@/src/components/sidecard/Sidecard.jsx";
 import Loader from "@/src/components/Loader/Loader.jsx";
 import Error from "@/src/components/error/Error.jsx";
 import { useHomeInfo } from "@/src/context/HomeInfoContext.jsx";
@@ -79,17 +80,6 @@ function Home() {
 
               {/* Estimated Schedule */}
               <Schedule />
-
-              {/* Top Upcoming */}
-              {homeInfo.top_upcoming && homeInfo.top_upcoming.length > 0 && (
-                <CategoryCard
-                  label="Top Upcoming"
-                  data={homeInfo.top_upcoming}
-                  path="top-upcoming"
-                  limit={20}
-                  gridClass="grid-cols-2 min-[480px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5"
-                />
-              )}
             </div>
 
             {/* Right Sidebar */}
@@ -99,6 +89,16 @@ function Home() {
 
               {/* Top 10 Today / Week / Month */}
               <Topten data={homeInfo.topten} />
+
+              {/* Top Upcoming */}
+              {homeInfo.top_upcoming && homeInfo.top_upcoming.length > 0 && (
+                <Sidecard
+                  data={homeInfo.top_upcoming}
+                  label="Top Upcoming"
+                  path="top-upcoming"
+                  limit={10}
+                />
+              )}
             </aside>
           </div>
         </div>
