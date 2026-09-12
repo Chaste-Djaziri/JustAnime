@@ -8,6 +8,7 @@ import { faCircleExclamation } from "@fortawesome/free-solid-svg-icons";
 export default function AuthCallback() {
   const navigate = useNavigate();
   const { handleOAuthToken } = useAuth();
+  const [errorMsg, setErrorMsg] = useState(null);
   const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
