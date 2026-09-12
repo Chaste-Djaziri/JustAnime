@@ -31,6 +31,17 @@ export const useWatch = (animeId, initialEpisodeId) => {
   const [activeServerId, setActiveServerId] = useState(null);
   const [activeServerType, setActiveServerType] = useState(null);
   const [activeServerName, setActiveServerName] = useState(null);
+  const activeServerNameRef = useRef(activeServerName);
+  const activeServerTypeRef = useRef(activeServerType);
+
+  useEffect(() => {
+    activeServerNameRef.current = activeServerName;
+  }, [activeServerName]);
+
+  useEffect(() => {
+    activeServerTypeRef.current = activeServerType;
+  }, [activeServerType]);
+
   const [serverLoading, setServerLoading] = useState(true);
   const [nextEpisodeSchedule, setNextEpisodeSchedule] = useState(null);
   const isServerFetchInProgress = useRef(false);
@@ -162,20 +173,69 @@ export const useWatch = (animeId, initialEpisodeId) => {
           }
         }
 
-        // Choose initial server
-        const savedServerName = localStorage.getItem("server_name");
-        const savedServerType = localStorage.getItem("server_type");
+        // Choose initial server according to user preference
+        let savedServerName = null;
+        let savedServerType = null;
+        try {
+          savedServerName = localStorage.getItem("server_name");
+          savedServerType = localStorage.getItem("server_type");
+        } catch (e) {
+          console.warn("Could not read server preferences from localStorage:", e);
+        }
+
+        if (!savedServerName && activeServerNameRef.current) {
+          savedServerName = activeServerNameRef.current;
+        }
+        if (!savedServerType && activeServerTypeRef.current) {
+          savedServerType = activeServerTypeRef.current;
+        }
+
         const initialServer =
-          serverList.find((s) => s.serverName === savedServerName && s.type === savedServerType) ||
-          serverList.find((s) => s.serverName === savedServerName) ||
-          serverList.find((s) => s.serverName === "ZokoAnime" && s.type === (savedServerType || "sub")) ||
-          serverList.find((s) => s.serverName === "HD-1" && s.type === (savedServerType || "sub")) ||
+          (savedServerName &&
+            savedServerType &&
+            serverList.find(
+              (s) =>
+                s.serverName?.toLowerCase() === savedServerName.toLowerCase() &&
+                s.type?.toLowerCase() === savedServerType.toLowerCase()
+            )) ||
+          (savedServerName &&
+            serverList.find(
+              (s) => s.serverName?.toLowerCase() === savedServerName.toLowerCase()
+            )) ||
+          (savedServerType &&
+            serverList.find(
+              (s) =>
+                s.serverName?.toLowerCase() === "zokoanime" &&
+                s.type?.toLowerCase() === savedServerType.toLowerCase()
+            )) ||
+          (savedServerType &&
+            serverList.find(
+              (s) =>
+                s.serverName?.toLowerCase() === "hd-1" &&
+                s.type?.toLowerCase() === savedServerType.toLowerCase()
+            )) ||
+          (savedServerType &&
+            serverList.find(
+              (s) => s.type?.toLowerCase() === savedServerType.toLowerCase()
+            )) ||
+          serverList.find((s) => s.serverName?.toLowerCase() === "zokoanime") ||
+          serverList.find((s) => s.serverName?.toLowerCase() === "hd-1") ||
           serverList[0];
 
         setServers(serverList);
         setActiveServerType(initialServer?.type || "sub");
         setActiveServerName(initialServer?.serverName || "ZokoAnime");
         setActiveServerId(initialServer?.data_id || null);
+
+        // If no server preference was previously stored, save this default preference
+        if (!savedServerName && initialServer?.serverName) {
+          try {
+            localStorage.setItem("server_name", initialServer.serverName);
+            localStorage.setItem("server_type", initialServer.type || "sub");
+          } catch (e) {
+            // Ignore storage errors
+          }
+        }
       } catch (error) {
         console.error("Error fetching servers:", error);
         setError(error.message || "An error occurred.");
@@ -261,6 +321,19 @@ export const useWatch = (animeId, initialEpisodeId) => {
 
   const activeServer = servers?.find((srv) => srv.data_id === activeServerId) || null;
 
+  const changeServer = (server) => {
+    if (!server) return;
+    setActiveServerId(server.data_id);
+    setActiveServerType(server.type);
+    setActiveServerName(server.serverName);
+    try {
+      localStorage.setItem("server_name", server.serverName);
+      localStorage.setItem("server_type", server.type);
+    } catch (e) {
+      console.error("Failed to save server preference to localStorage:", e);
+    }
+  };
+
   return {
     error,
     buffering,
@@ -291,6 +364,7 @@ export const useWatch = (animeId, initialEpisodeId) => {
     setActiveServerType,
     activeServerName,
     setActiveServerName,
+    changeServer,
   };
 };
 
