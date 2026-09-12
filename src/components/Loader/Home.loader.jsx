@@ -79,6 +79,8 @@ function HomeLoader() {
           <CategoryCardLoader 
             className="mt-[60px]"
             title="Latest Episode"
+            gridClass="grid-cols-2 min-[480px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5"
+            count={20}
           />
           <ScheduleLoader />
           <TabbedAnimeSectionLoader />
