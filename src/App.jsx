@@ -78,6 +78,8 @@ function App() {
               />
             ))}
             {/* Render A to Z routes */}
+            <Route path="/az-list" element={<AtoZ />} />
+            <Route path="/az-list/:letter" element={<AtoZ />} />
             {azRoute.map((path) => (
               <Route
                 key={path}
