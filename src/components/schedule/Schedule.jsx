@@ -125,9 +125,14 @@ const Schedule = () => {
     <>
       <div className="w-full mt-8 max-[480px]:mt-6">
         <div className="flex items-center justify-between max-[570px]:flex-col max-[570px]:items-start max-[570px]:gap-y-2">
-          <div className="font-bold text-2xl text-white max-[478px]:text-[18px]">
-            Estimated Schedule
-          </div>
+          <Link
+            to="/schedule"
+            className="font-bold text-2xl text-white max-[478px]:text-[18px] hover:text-zinc-300 transition-colors flex items-center gap-2 group"
+            title="View Full Airing Schedule"
+          >
+            <span>Estimated Schedule</span>
+            <span className="text-base text-zinc-400 group-hover:translate-x-1 transition-transform">→</span>
+          </Link>
           <p className="leading-[28px] px-3 bg-zinc-800 text-white rounded-md text-[14px] font-medium max-[478px]:text-[12px] max-[275px]:text-[10px]">
             ({GMTOffset}) {currentTime.toLocaleDateString()}{" "}
             {currentTime.toLocaleTimeString()}
@@ -233,14 +238,23 @@ const Schedule = () => {
               </div>
             </Link>
           ))}
-          {scheduleData.length > 7 && (
-            <button
-              onClick={toggleShowAll}
-              className="text-zinc-400 py-3 hover:text-white font-medium transition-all duration-200 max-sm:text-[13px]"
+          <div className="w-full flex items-center justify-between pt-2">
+            {scheduleData.length > 7 && (
+              <button
+                onClick={toggleShowAll}
+                className="text-zinc-400 py-3 hover:text-white font-medium transition-all duration-200 max-sm:text-[13px]"
+              >
+                {showAll ? "Show Less" : "Show More"}
+              </button>
+            )}
+            <Link
+              to="/schedule"
+              className="text-xs font-semibold text-zinc-400 hover:text-white transition-colors py-3 ml-auto flex items-center gap-1.5"
             >
-              {showAll ? "Show Less" : "Show More"}
-            </button>
-          )}
+              <span>Full Schedule Page</span>
+              <span>→</span>
+            </Link>
+          </div>
         </div>
       )}
     </>
