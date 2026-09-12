@@ -73,6 +73,7 @@ export default function Watch() {
     setActiveServerType,
     activeServerName,
     setActiveServerName,
+    changeServer,
     serverLoading,
   } = useWatch(animeId, initialEpisodeId);
 
@@ -341,6 +342,8 @@ export default function Watch() {
                   setActiveServerType={setActiveServerType}
                   activeServerType={activeServerType}
                   setActiveServerName={setActiveServerName}
+                  activeServerName={activeServerName}
+                  changeServer={changeServer}
                 />
               </div>
             </div>
