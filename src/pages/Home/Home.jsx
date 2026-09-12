@@ -4,7 +4,6 @@ import Genre from "@/src/components/genres/Genre.jsx";
 import TrendingCarousel from "@/src/components/trending/TrendingCarousel.jsx";
 import FeaturedColumns from "@/src/components/featured/FeaturedColumns.jsx";
 import CategoryCard from "@/src/components/categorycard/CategoryCard.jsx";
-import SidebarGenres from "@/src/components/genres/SidebarGenres.jsx";
 import Topten from "@/src/components/topten/Topten.jsx";
 import Sidecard from "@/src/components/sidecard/Sidecard.jsx";
 import Loader from "@/src/components/Loader/Loader.jsx";
@@ -84,9 +83,6 @@ function Home() {
 
             {/* Right Sidebar */}
             <aside className="w-full space-y-8 min-w-0">
-              {/* Genres Widget */}
-              <SidebarGenres genres={homeInfo.genres} />
-
               {/* Top 10 Today / Week / Month */}
               <Topten data={homeInfo.topten} />
 
