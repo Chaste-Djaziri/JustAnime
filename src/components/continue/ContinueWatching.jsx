@@ -43,8 +43,9 @@ const ContinueWatching = () => {
   };
 
   const getWatchLink = (item) => {
-    if (item?.id && !item.id.startsWith("al-") && !item.id.startsWith("mal-")) {
-      return `/watch/${item.id}${item.episodeId ? `?ep=${item.episodeId}` : ""}`;
+    const idStr = String(item?.id || "");
+    if (idStr && !idStr.startsWith("al-") && !idStr.startsWith("mal-")) {
+      return `/watch/${idStr}${item.episodeId ? `?ep=${item.episodeId}` : ""}`;
     }
     return `/search?query=${encodeURIComponent(item?.title || "")}`;
   };
