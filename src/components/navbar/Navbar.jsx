@@ -7,6 +7,7 @@ import {
   faXmark,
   faUser,
   faSliders,
+  faCalendarDays,
 } from "@fortawesome/free-solid-svg-icons";
 import { useLanguage } from "@/src/context/LanguageContext";
 import { useAuth } from "@/src/context/AuthContext";
@@ -82,6 +83,15 @@ function Navbar() {
           <div className="flex-1 flex justify-center items-center max-w-none mx-8 hidden md:flex">
             <div className="flex items-center gap-2 w-[600px]">
               <WebSearch />
+              <Link
+                to="/schedule"
+                className={`p-[10px] aspect-square bg-[#2a2a2a]/75 text-white/50 hover:text-white rounded-lg transition-colors flex items-center justify-center ${
+                  location.pathname === "/schedule" ? "text-white bg-zinc-700" : ""
+                }`}
+                title="Airing Schedule"
+              >
+                <FontAwesomeIcon icon={faCalendarDays} className="text-lg" />
+              </Link>
               <Link
                 to="/filter"
                 className="p-[10px] aspect-square bg-[#2a2a2a]/75 text-white/50 hover:text-white rounded-lg transition-colors flex items-center justify-center"
