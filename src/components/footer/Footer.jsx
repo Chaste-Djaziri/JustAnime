@@ -39,6 +39,12 @@ function Footer() {
             </div>
             <div className="flex gap-4 flex-wrap justify-center sm:justify-start mt-4">
               <Link
+                to="/schedule"
+                className="text-sm text-white/60 hover:text-white transition-colors"
+              >
+                Release Schedule
+              </Link>
+              <Link
                 to="/terms-of-service"
                 className="text-sm text-white/60 hover:text-white transition-colors"
               >
