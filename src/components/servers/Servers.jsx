@@ -16,7 +16,10 @@ function Servers({
   setActiveServerId,
   serverLoading,
   setActiveServerType,
+  activeServerType,
   setActiveServerName,
+  activeServerName,
+  changeServer,
 }) {
   const subServers =
     servers?.filter((server) => server.type === "sub") || [];
@@ -25,33 +28,68 @@ function Servers({
   const rawServers =
     servers?.filter((server) => server.type === "raw") || [];
 
-  useEffect(() => {
-    const savedServerName = localStorage.getItem("server_name");
-    if (savedServerName) {
-      const matchingServer = servers?.find(
-        (server) => server.serverName === savedServerName,
-      );
-
-      if (matchingServer) {
-        setActiveServerId(matchingServer.data_id);
-        setActiveServerType(matchingServer.type);
-      } else if (servers && servers.length > 0) {
-        setActiveServerId(servers[0].data_id);
-        setActiveServerType(servers[0].type);
+  const handleServerSelect = (server) => {
+    if (!server) return;
+    if (changeServer) {
+      changeServer(server);
+    } else {
+      setActiveServerId?.(server.data_id);
+      setActiveServerType?.(server.type);
+      setActiveServerName?.(server.serverName);
+      try {
+        localStorage.setItem("server_name", server.serverName);
+        localStorage.setItem("server_type", server.type);
+      } catch (e) {
+        console.error("Failed to save server preference:", e);
       }
-    } else if (servers && servers.length > 0) {
-      setActiveServerId(servers[0].data_id);
-      setActiveServerType(servers[0].type);
+    }
+  };
+
+  useEffect(() => {
+    if (!servers || servers.length === 0 || activeServerId) return;
+    let savedServerName = null;
+    let savedServerType = null;
+    try {
+      savedServerName = localStorage.getItem("server_name");
+      savedServerType = localStorage.getItem("server_type");
+    } catch (e) {
+      // Ignore
+    }
+
+    const matchingServer =
+      (savedServerName &&
+        savedServerType &&
+        servers.find(
+          (s) =>
+            s.serverName?.toLowerCase() === savedServerName.toLowerCase() &&
+            s.type?.toLowerCase() === savedServerType.toLowerCase()
+        )) ||
+      (savedServerName &&
+        servers.find(
+          (s) => s.serverName?.toLowerCase() === savedServerName.toLowerCase()
+        )) ||
+      servers[0];
+
+    if (matchingServer) {
+      handleServerSelect(matchingServer);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [servers]);
+  }, [servers, activeServerId]);
 
-  const handleServerSelect = (server) => {
-    setActiveServerId(server.data_id);
-    setActiveServerType(server.type);
-    setActiveServerName(server.serverName);
-    localStorage.setItem("server_name", server.serverName);
-    localStorage.setItem("server_type", server.type);
+  const isServerActive = (item) => {
+    if (!item) return false;
+    if (activeServerId && item?.data_id && activeServerId === item.data_id) {
+      return true;
+    }
+    if (
+      activeServerName &&
+      activeServerType &&
+      item?.serverName?.toLowerCase() === activeServerName?.toLowerCase() &&
+      item?.type?.toLowerCase() === activeServerType?.toLowerCase()
+    ) {
+      return true;
+    }
+    return false;
   };
 
   return (
@@ -94,7 +132,7 @@ function Servers({
                     <div
                       key={index}
                       className={`px-6 py-[5px] rounded-lg cursor-pointer ${
-                        activeServerId === item?.data_id
+                        isServerActive(item)
                           ? "bg-[#e0e0e0] text-black"
                           : "bg-[#373737] text-white"
                       } max-[700px]:px-3 max-[600px]:px-2 max-[600px]:py-1`}
@@ -124,7 +162,7 @@ function Servers({
                     <div
                       key={index}
                       className={`px-6 py-[5px] rounded-lg cursor-pointer ${
-                        activeServerId === item?.data_id
+                        isServerActive(item)
                           ? "bg-[#e0e0e0] text-black"
                           : "bg-[#373737] text-white"
                       } max-[700px]:px-3 max-[600px]:px-2 max-[600px]:py-1`}
@@ -154,7 +192,7 @@ function Servers({
                     <div
                       key={index}
                       className={`px-6 py-[5px] rounded-lg cursor-pointer ${
-                        activeServerId === item?.data_id
+                        isServerActive(item)
                           ? "bg-[#e0e0e0] text-black"
                           : "bg-[#373737] text-white"
                       } max-[700px]:px-3 max-[600px]:px-2 max-[600px]:py-1`}
