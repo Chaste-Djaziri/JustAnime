@@ -24,6 +24,7 @@ import Terms from "./pages/terms/Terms";
 import DMCA from "./pages/dmca/DMCA";
 import Contact from "./pages/contact/Contact";
 import Genres from "./pages/genres/Genres";
+import SchedulePage from "./pages/schedule/SchedulePage";
 
 function App() {
   const location = useLocation();
@@ -50,6 +51,9 @@ function App() {
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/watch/:id" element={<Watch />} />
               <Route path="/random" element={<AnimeInfo random={true} />} />
+              <Route path="/schedule" element={<SchedulePage />} />
+              <Route path="/scheduled" element={<SchedulePage />} />
+              <Route path="/estimated-schedule" element={<SchedulePage />} />
               <Route path="/404-not-found-page" element={<Error error="404" />} />
               <Route path="/error-page" element={<Error />} />
               <Route path="/terms-of-service" element={<Terms />} />
