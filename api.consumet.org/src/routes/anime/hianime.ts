@@ -134,6 +134,35 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     }
   };
 
+  const handleAZList = async (request: FastifyRequest, reply: FastifyReply) => {
+    const letter = (request.params as { letter?: string })?.letter;
+    const page = Number((request.query as { page?: number })?.page) || 1;
+    const targetPath = letter ? `/az-list/${encodeURIComponent(letter.toLowerCase())}` : '/az-list';
+
+    try {
+      const baseUrl = (hianime as any).baseUrl || 'https://hianime.at';
+      const targetUrl = `${baseUrl}${targetPath}?page=${page}`;
+
+      let res = redis
+        ? await cache.fetch(
+            redis as Redis,
+            `hianime:az-list:${letter || 'all'}:${page}`,
+            async () => await (hianime as any).scrapeCardPage(targetUrl),
+            REDIS_TTL,
+          )
+        : await (hianime as any).scrapeCardPage(targetUrl);
+
+      reply.status(200).send(res);
+    } catch (err) {
+      reply
+        .status(500)
+        .send({ message: 'Something went wrong. Contact developer for help.' });
+    }
+  };
+
+  fastify.get('/az-list', handleAZList);
+  fastify.get('/az-list/:letter', handleAZList);
+
   fastify.get('/filter', handleAdvancedSearch);
   fastify.get('/advanced-search', handleAdvancedSearch);
 
