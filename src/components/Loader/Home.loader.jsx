@@ -90,6 +90,9 @@ function HomeLoader() {
           <div className="mt-12">
             <SidecardLoader title="Top 10" />
           </div>
+          <div className="mt-12">
+            <SidecardLoader title="Top Upcoming" />
+          </div>
         </div>
       </div>
     </div>
