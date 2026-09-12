@@ -5,7 +5,7 @@ const ANILIST_GRAPHQL_URL = "https://graphql.anilist.co";
 /**
  * Executes an AniList GraphQL query/mutation
  */
-async function queryAniList(query, variables = {}, token = null) {
+async function queryAniList(query, variables = {}, token = null, retries = 2) {
   const headers = {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -14,18 +14,44 @@ async function queryAniList(query, variables = {}, token = null) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await axios.post(
-    ANILIST_GRAPHQL_URL,
-    { query, variables },
-    { headers }
-  );
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const response = await axios.post(
+        ANILIST_GRAPHQL_URL,
+        { query, variables },
+        { headers }
+      );
 
-  if (response.data.errors) {
-    const errorMsg = response.data.errors.map((e) => e.message).join(", ");
-    throw new Error(errorMsg || "AniList GraphQL error");
+      if (response.data.errors) {
+        const errorMsg = response.data.errors.map((e) => e.message).join(", ");
+        throw new Error(errorMsg || "AniList GraphQL error");
+      }
+
+      return response.data.data;
+    } catch (err) {
+      const is429 = err.response?.status === 429;
+      if (is429 && attempt < retries) {
+        const retryAfterHeader = err.response?.headers?.["retry-after"];
+        const retryAfterSec = retryAfterHeader ? parseInt(retryAfterHeader, 10) : 0;
+        const delayMs =
+          retryAfterSec > 0 && retryAfterSec <= 10
+            ? retryAfterSec * 1000
+            : (attempt + 1) * 1500;
+        console.warn(
+          `AniList 429 rate limit hit. Retrying in ${delayMs}ms (attempt ${attempt + 1}/${retries})...`
+        );
+        await new Promise((res) => setTimeout(res, delayMs));
+        continue;
+      }
+
+      if (is429) {
+        throw new Error(
+          "AniList rate limit reached (Too Many Requests). Please wait a few moments and try again."
+        );
+      }
+      throw err;
+    }
   }
-
-  return response.data.data;
 }
 
 /**
