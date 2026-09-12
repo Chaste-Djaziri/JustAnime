@@ -137,12 +137,32 @@ export function AuthProvider({ children }) {
         isOAuth: true,
       };
 
-      // 2. Fetch full list
-      const collection = await fetchAniListUserAnime(viewer.id, newToken);
-      const organizedLists = organizeAniListCollection(collection);
+      // 2. Fetch full list safely (don't fail login if collection is rate-limited)
+      let organizedLists = {
+        current: [],
+        completed: [],
+        planning: [],
+        paused: [],
+        dropped: [],
+        repeating: [],
+      };
+
+      try {
+        const collection = await fetchAniListUserAnime(viewer.id, newToken);
+        if (collection) {
+          organizedLists = organizeAniListCollection(collection);
+        }
+      } catch (listErr) {
+        console.warn(
+          "Could not immediately fetch AniList anime list (rate limited):",
+          listErr.message || listErr
+        );
+      }
 
       persistUserData(userData, organizedLists);
-      syncToContinueWatching(organizedLists.current, "anilist");
+      if (organizedLists.current?.length > 0) {
+        syncToContinueWatching(organizedLists.current, "anilist");
+      }
 
       return userData;
     } catch (err) {
