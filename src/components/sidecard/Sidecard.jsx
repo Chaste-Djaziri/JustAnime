@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import useToolTipPosition from "@/src/hooks/useToolTipPosition";
 import Qtip from "../qtip/Qtip";
 
-function Sidecard({ data, label, className }) {
+function Sidecard({ data, label, className, path, limit }) {
   const { language } = useLanguage();
   const [hoverTimeout, setHoverTimeout] = useState(null);
   const handleMouseEnter = (item, index) => {
@@ -24,17 +24,28 @@ function Sidecard({ data, label, className }) {
   };
 
   const [hoveredItem, setHoveredItem] = useState(null);
+  const displayData = limit && Array.isArray(data) ? data.slice(0, limit) : data || [];
   const { tooltipPosition, tooltipHorizontalPosition, cardRefs } =
-    useToolTipPosition(hoveredItem, data);
+    useToolTipPosition(hoveredItem, displayData);
 
   return (
-    <div className={`flex flex-col ${className}`}>
+    <div className={`flex flex-col space-y-4 ${className || ""}`}>
       {label && (
-        <h2 className="font-medium text-lg text-neutral-200 mb-4">{label}</h2>
+        <div className="flex justify-between items-center">
+          <h2 className="font-bold text-2xl text-white tracking-tight">{label}</h2>
+          {path && (
+            <Link
+              to={`/${path}`}
+              className="text-xs text-zinc-400 hover:text-white transition-colors"
+            >
+              View all
+            </Link>
+          )}
+        </div>
       )}
-      <div className="flex flex-col space-y-2 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-track-[#1a1a1a] scrollbar-thumb-[#2a2a2a] hover:scrollbar-thumb-[#333] scrollbar-thumb-rounded">
-        {data &&
-          data.map((item, index) => (
+      <div className="flex flex-col space-y-2">
+        {displayData &&
+          displayData.map((item, index) => (
             <div
               key={index}
               className="group"
