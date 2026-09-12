@@ -8,6 +8,7 @@ import { useLanguage } from "@/src/context/LanguageContext";
 import { Link, useNavigate } from "react-router-dom";
 import useToolTipPosition from "@/src/hooks/useToolTipPosition";
 import Qtip from "../qtip/Qtip";
+import { hasBadgeCount } from "../categorycard/CategoryCard";
 
 function Topten({ data, className }) {
   const { language } = useLanguage();
@@ -144,7 +145,7 @@ function Topten({ data, className }) {
                     {language === "EN" ? (item.title || item.name) : (item.japanese_title || item.japaneseTitle || item.title || item.name)}
                   </Link>
                   <div className="flex flex-wrap items-center w-fit space-x-2 max-[350px]:gap-y-[3px]">
-                    {item.tvInfo?.sub && (
+                    {hasBadgeCount(item.tvInfo?.sub) && (
                       <div className="flex space-x-1 justify-center items-center bg-white bg-opacity-10 backdrop-blur-sm rounded-md px-1.5 py-0.5 transition-colors duration-200 hover:bg-opacity-20">
                         <FontAwesomeIcon
                           icon={faClosedCaptioning}
@@ -155,7 +156,7 @@ function Topten({ data, className }) {
                         </p>
                       </div>
                     )}
-                    {item.tvInfo?.dub && (
+                    {hasBadgeCount(item.tvInfo?.dub) && (
                       <div className="flex space-x-1 justify-center items-center bg-white bg-opacity-10 backdrop-blur-sm rounded-md px-1.5 py-0.5 transition-colors duration-200 hover:bg-opacity-20">
                         <FontAwesomeIcon
                           icon={faMicrophone}

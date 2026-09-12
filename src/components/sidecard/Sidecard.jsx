@@ -8,6 +8,7 @@ import { useLanguage } from "@/src/context/LanguageContext";
 import { Link } from "react-router-dom";
 import useToolTipPosition from "@/src/hooks/useToolTipPosition";
 import Qtip from "../qtip/Qtip";
+import { hasBadgeCount } from "../categorycard/CategoryCard";
 
 function Sidecard({ data, label, className, path, limit }) {
   const { language } = useLanguage();
@@ -84,7 +85,7 @@ function Sidecard({ data, label, className, path, limit }) {
                       {language === "EN" ? item.title : item.japanese_title}
                     </span>
                     <div className="flex flex-wrap items-center gap-2">
-                      {item.tvInfo?.sub && (
+                      {hasBadgeCount(item.tvInfo?.sub) && (
                         <div className="flex items-center gap-1 px-1.5 py-0.5 bg-[#2a2a2a] rounded text-gray-300">
                           <FontAwesomeIcon
                             icon={faClosedCaptioning}
@@ -95,7 +96,7 @@ function Sidecard({ data, label, className, path, limit }) {
                           </span>
                         </div>
                       )}
-                      {item.tvInfo?.dub && (
+                      {hasBadgeCount(item.tvInfo?.dub) && (
                         <div className="flex items-center gap-1 px-1.5 py-0.5 bg-[#2a2a2a] rounded text-gray-300">
                           <FontAwesomeIcon
                             icon={faMicrophone}

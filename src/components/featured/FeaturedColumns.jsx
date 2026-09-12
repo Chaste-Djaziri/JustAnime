@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { FaChevronRight, FaClosedCaptioning, FaMicrophone } from "react-icons/fa";
 import PropTypes from "prop-types";
+import { hasBadgeCount } from "../categorycard/CategoryCard";
 
 export default function FeaturedColumns({
   topAiring = [],
@@ -44,13 +45,13 @@ export default function FeaturedColumns({
                       {item.title || item.name}
                     </h3>
                     <div className="flex items-center gap-2 mt-1.5 text-xs text-zinc-400">
-                      {item.tvInfo?.sub !== undefined && item.tvInfo?.sub !== null ? (
+                      {hasBadgeCount(item.tvInfo?.sub) ? (
                         <span className="flex items-center gap-1 bg-zinc-800 px-1.5 py-0.5 rounded text-[10px] text-zinc-300">
                           <FaClosedCaptioning className="text-[10px]" />
                           {item.tvInfo.sub}
                         </span>
                       ) : null}
-                      {item.tvInfo?.dub !== undefined && item.tvInfo?.dub !== null && item.tvInfo?.dub > 0 ? (
+                      {hasBadgeCount(item.tvInfo?.dub) ? (
                         <span className="flex items-center gap-1 bg-zinc-800 px-1.5 py-0.5 rounded text-[10px] text-zinc-300">
                           <FaMicrophone className="text-[10px]" />
                           {item.tvInfo.dub}
