@@ -29,7 +29,7 @@ function Footer() {
             <div className="flex flex-wrap gap-1.5 justify-center sm:justify-start">
               {["All", "#", "0-9", ...Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i))].map((item, index) => (
                 <Link
-                  to={`az-list/${item === "All" ? "" : item}`}
+                  to={item === "All" ? "/az-list" : item === "#" ? "/az-list/other" : `/az-list/${item.toLowerCase()}`}
                   key={index}
                   className="px-2.5 py-1 text-sm bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded transition-colors"
                 >
