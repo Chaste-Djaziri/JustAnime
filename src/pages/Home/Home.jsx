@@ -62,7 +62,8 @@ function Home() {
                 label="Latest Episode"
                 data={homeInfo.latest_episode}
                 path="recently-updated"
-                limit={16}
+                limit={20}
+                gridClass="grid-cols-2 min-[480px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5"
               />
 
               {/* New On Kizora */}
@@ -71,7 +72,8 @@ function Home() {
                   label="New On Kizora"
                   data={homeInfo.recently_added}
                   path="recently-added"
-                  limit={16}
+                  limit={20}
+                  gridClass="grid-cols-2 min-[480px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5"
                 />
               )}
 
@@ -84,7 +86,8 @@ function Home() {
                   label="Top Upcoming"
                   data={homeInfo.top_upcoming}
                   path="top-upcoming"
-                  limit={16}
+                  limit={20}
+                  gridClass="grid-cols-2 min-[480px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5"
                 />
               )}
             </div>
